@@ -1,48 +1,48 @@
 import { Link, useNavigate } from 'react-router-dom';
-
-const AUTH_LOGOUT_URL = 'http://localhost:3000/auth/logout';
+import { jwtDecode } from 'jwt-decode';
 
 function Navbar({ isAuthenticated }) {
   const navigate = useNavigate();
-  const hasToken = !!localStorage.getItem('token');
+  const token = localStorage.getItem('token');
+  const hasToken = !!token;
+  
+  let role = '';
+  if (hasToken) {
+    try {
+      role = jwtDecode(token).role;
+    } catch(e) {}
+  }
 
-  const handleLogout = async () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        await fetch(AUTH_LOGOUT_URL, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } catch (e) {
-        // ignore
-      }
-      localStorage.removeItem('token');
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 2rem', background: '#333', color: '#fff' }}>
       <div className="navbar-brand">
-        <Link to="/">SMS</Link>
+        <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontWeight: 'bold' }}>SMS Hub</Link>
       </div>
-      <div className="navbar-links">
+      <div className="navbar-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
         {hasToken ? (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/students">Students</Link>
-            <Link to="/add-student">Add Student</Link>
-            <button type="button" className="btn-logout" onClick={handleLogout}>
+            <Link to="/dashboard" style={{ color: '#fff' }}>Dashboard</Link>
+            <Link to="/timetable" style={{ color: '#fff' }}>Timetable</Link>
+            
+            {['student', 'faculty', 'advisor', 'hod'].includes(role) && (
+              <Link to="/leave" style={{ color: '#fff' }}>Leaves</Link>
+            )}
+            
+            <Link to="/change-password" style={{ color: '#fff' }}>Settings</Link>
+            
+            <button type="button" className="btn-logout" onClick={handleLogout} style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '0.3rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>
               Logout
             </button>
           </>
         ) : (
           <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+            <Link to="/login" style={{ color: '#fff' }}>Login</Link>
+            <Link to="/register" style={{ color: '#fff' }}>Register</Link>
           </>
         )}
       </div>

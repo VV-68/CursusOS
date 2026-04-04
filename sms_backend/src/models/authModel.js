@@ -1,14 +1,20 @@
-const db = require("../db/connection");
+const pool = require("../db/connection");
 
 const AuthModel = {
-  createUser: (username, hashedPassword, callback) => {
-    const sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-    db.query(sql, [username, hashedPassword], callback);
+  createUser: async (username, hashedPassword) => {
+    const { rows } = await pool.query(
+      "INSERT INTO users (username, password_hash, role, full_name) VALUES ($1, $2, 'student', $1) RETURNING *",
+      [username, hashedPassword]
+    );
+    return rows[0];
   },
 
-  findUserByUsername: (username, callback) => {
-    const sql = "SELECT * FROM users WHERE username = ?";
-    db.query(sql, [username], callback);
+  findUserByUsername: async (username) => {
+    const { rows } = await pool.query(
+      "SELECT * FROM users WHERE username = $1 AND is_active = true",
+      [username]
+    );
+    return rows[0];
   }
 };
 

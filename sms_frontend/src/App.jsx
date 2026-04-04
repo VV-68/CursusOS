@@ -4,9 +4,29 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Students from './pages/Students';
-import AddStudent from './pages/AddStudent';
-import EditStudent from './pages/EditStudent';
+
+import ChangePassword from './pages/shared/ChangePassword';
+import Users from './pages/admin/Users';
+import CreateUser from './pages/admin/CreateUser';
+import Departments from './pages/admin/Departments';
+import AssignHOD from './pages/admin/AssignHOD';
+import Classes from './pages/hod/Classes';
+import AssignAdvisors from './pages/hod/AssignAdvisors';
+import Courses from './pages/hod/Courses';
+import AssignCourse from './pages/hod/AssignCourse';
+import Timetable from './pages/advisor/Timetable';
+import TimetableView from './pages/shared/TimetableView';
+import MarkAttendance from './pages/faculty/MarkAttendance';
+import AttendanceSummary from './pages/student/AttendanceSummary';
+import LowAttendance from './pages/advisor/LowAttendance';
+import MarkGrades from './pages/faculty/MarkGrades';
+import Marks from './pages/student/Marks';
+import LeaveRequests from './pages/shared/LeaveRequests';
+import ApproveLeaves from './pages/shared/ApproveLeaves';
+import Notices from './pages/shared/Notices';
+import CreateNotice from './pages/admin/CreateNotice';
+
+// We delete the old AddStudent boilerplate so we have clean slate
 import './App.css';
 
 function App() {
@@ -37,30 +57,127 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/students"
-            element={
-              <ProtectedRoute>
-                <Students />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/add-student"
-            element={
-              <ProtectedRoute>
-                <AddStudent />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/edit/:id"
-            element={
-              <ProtectedRoute>
-                <EditStudent />
-              </ProtectedRoute>
-            }
-          />
+
+          <Route path="/change-password" element={
+            <ProtectedRoute roles={['admin','hod','advisor','faculty','student']}>
+              <ChangePassword />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/users" element={
+            <ProtectedRoute roles={['admin']}>
+              <Users />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/users/create" element={
+            <ProtectedRoute roles={['admin']}>
+              <CreateUser />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/departments" element={
+            <ProtectedRoute roles={['admin']}>
+              <Departments />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/departments/:id/assign-hod" element={
+            <ProtectedRoute roles={['admin']}>
+              <AssignHOD />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/classes" element={
+            <ProtectedRoute roles={['hod']}>
+              <Classes />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/classes/:id/assign-advisors" element={
+            <ProtectedRoute roles={['hod']}>
+              <AssignAdvisors />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/courses" element={
+            <ProtectedRoute roles={['hod']}>
+              <Courses />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/assign-course" element={
+            <ProtectedRoute roles={['hod']}>
+              <AssignCourse />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/advisor/timetable" element={
+            <ProtectedRoute roles={['advisor']}>
+              <Timetable />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/timetable" element={
+            <ProtectedRoute roles={['student','faculty','advisor','hod','admin']}>
+              <TimetableView />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/attendance/mark" element={
+            <ProtectedRoute roles={['faculty']}>
+              <MarkAttendance />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/attendance" element={
+            <ProtectedRoute roles={['student']}>
+              <AttendanceSummary />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/advisor/attendance/low" element={
+            <ProtectedRoute roles={['advisor', 'hod', 'admin']}>
+              <LowAttendance />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/marks/update" element={
+            <ProtectedRoute roles={['faculty']}>
+              <MarkGrades />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/marks" element={
+            <ProtectedRoute roles={['student']}>
+              <Marks />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/leave" element={
+            <ProtectedRoute roles={['student', 'faculty', 'advisor', 'hod']}>
+              <LeaveRequests />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/approvals/leave" element={
+            <ProtectedRoute roles={['hod', 'advisor']}>
+              <ApproveLeaves />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/notices" element={
+            <ProtectedRoute roles={['student', 'faculty', 'advisor', 'hod', 'admin']}>
+              <Notices />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/notices/create" element={
+            <ProtectedRoute roles={['admin', 'hod']}>
+              <CreateNotice />
+            </ProtectedRoute>
+          } />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

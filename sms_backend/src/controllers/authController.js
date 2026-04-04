@@ -1,114 +1,68 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const AuthModel = require("../models/authModel");
-const db = require("../db/connection");
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const userModel = require('../models/userModel');
 
-const SECRET = "mysecretkey";
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 const AuthController = {
-  register: (req, res) => {
+  login: async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({
-        message: "Username and password required"
-      });
+      return res.status(400).json({ message: "Username and password required" });
     }
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
-
-    AuthModel.createUser(username, hashedPassword, (err) => {
-      if (err) {
-        if (err.code === "ER_DUP_ENTRY") {
-          return res.status(400).json({
-            message: "Username already exists"
-          });
-        }
-
-        return res.status(500).json({
-          message: "Error creating user",
-          error: err.message
-        });
+    try {
+      const user = await userModel.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      res.json({
-        message: "User registered successfully"
-      });
-    });
-  },
-
-  login: (req, res) => {
-    const { username, password } = req.body;
-
-    AuthModel.findUserByUsername(username, (err, results) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Error during login"
-        });
-      }
-
-      if (results.length === 0) {
-        return res.status(401).json({
-          message: "Invalid username"
-        });
-      }
-
-      const user = results[0];
-
-      // Block if already logged in
-      if (user.active_token) {
-        return res.status(403).json({
-          message: "User already logged in. Please logout first."
-        });
-      }
-
-      const isMatch = bcrypt.compareSync(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({
-          message: "Invalid password"
-        });
+      const isValid = await bcrypt.compare(password, user.password_hash);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const token = jwt.sign(
-        { id: user.id, username: user.username },
-        SECRET,
-        { expiresIn: "1h" }
+        { id: user.id, role: user.role, dept_id: user.dept_id, must_change_password: user.must_change_password },
+        JWT_SECRET,
+        { expiresIn: '24h' }
       );
 
-      // Save token as active session
-      const sql = "UPDATE users SET active_token = ? WHERE id = ?";
-      db.query(sql, [token, user.id], (err) => {
-        if (err) {
-          return res.status(500).json({
-            message: "Error saving session"
-          });
-        }
-
-        res.json({
-          message: "Login successful",
-          token
-        });
+      res.json({
+        message: "Login successful",
+        token,
+        must_change_password: user.must_change_password
       });
-    });
+    } catch (err) {
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
   },
 
-  logout: (req, res) => {
-    // req.user is set by verifyToken middleware
-    const userId = req.user.id;
+  changePassword: async (req, res) => {
+    const { current_password, new_password } = req.body;
+    
+    if (!current_password || !new_password) {
+      return res.status(400).json({ error: "Passwords required" });
+    }
 
-    const sql = "UPDATE users SET active_token = NULL WHERE id = ?";
-    db.query(sql, [userId], (err) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Logout failed"
-        });
+    try {
+      const hashObj = await userModel.getUserPasswordHash(req.user.id);
+      const isValid = await bcrypt.compare(current_password, hashObj.password_hash);
+      
+      if (!isValid) {
+        return res.status(400).json({ error: "Invalid current password" });
       }
 
-      res.json({
-        message: "Logged out successfully"
-      });
-    });
+      await userModel.changePassword(req.user.id, new_password);
+      res.json({ message: "Password changed successfully" });
+    } catch (err) {
+      res.status(500).json({ error: "Server error", error: err.message });
+    }
+  },
+
+  logout: async (req, res) => {
+    res.json({ message: "Logged out successfully" });
   }
 };
 
