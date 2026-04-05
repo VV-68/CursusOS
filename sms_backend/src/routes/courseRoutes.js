@@ -11,7 +11,7 @@ router.get('/', authMiddleware, roleGuard('admin', 'hod', 'faculty'), courseCont
 router.post('/', authMiddleware, roleGuard('hod'), courseController.createCourse);
 
 // GET /api/courses/assignments/mine → faculty gets their own course assignments
-router.get('/assignments/mine', authMiddleware, roleGuard('faculty', 'advisor', 'hod'), courseController.getMyCourseAssignments);
+router.get('/assignments/mine', authMiddleware, roleGuard('faculty', 'advisor', 'hod'), courseController.getMine);
 
 // POST /api/courses/assignments → hod assigns
 router.post('/assignments', authMiddleware, roleGuard('hod'), courseController.createCourseAssignment);

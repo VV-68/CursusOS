@@ -3,6 +3,7 @@ const userModel = require('../models/userModel');
 const classModel = require('../models/classModel');
 const { logAudit } = require('./userController');
 const { getFacultyAssignments } = require('../utils/authorizationHelpers');
+const pool = require('../db/connection');
 
 const getCourses = async (req, res) => {
   try {
@@ -88,10 +89,36 @@ const deleteCourseAssignment = async (req, res) => {
   }
 };
 
-const getMyCourseAssignments = async (req, res) => {
+const getMine = async (req, res) => {
   try {
-    const assignments = await getFacultyAssignments(req.user.id);
-    res.json(assignments);
+    const { semester_id } = req.query;
+
+    // If no semester_id given, use active semester
+    let semId = semester_id;
+    if (!semId) {
+      const { rows } = await pool.query(
+        'SELECT id FROM semesters WHERE is_active = TRUE LIMIT 1'
+      );
+      if (!rows.length) return res.status(400).json({ error: 'No active semester' });
+      semId = rows[0].id;
+    }
+
+    const { rows } = await pool.query(
+      `SELECT ca.id AS course_assignment_id,
+              c.name AS course_name, c.code AS course_code,
+              cl.name AS class_name, cl.year, cl.section,
+              d.name AS dept_name,
+              s.name AS semester_name
+       FROM course_assignments ca
+       JOIN courses     c  ON c.id  = ca.course_id
+       JOIN classes     cl ON cl.id = ca.class_id
+       JOIN departments d  ON d.id  = cl.dept_id
+       JOIN semesters   s  ON s.id  = ca.semester_id
+       WHERE ca.faculty_id = $1 AND ca.semester_id = $2
+       ORDER BY d.code, cl.name, c.code`,
+      [req.user.id, semId]
+    );
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -104,5 +131,5 @@ module.exports = {
   createCourseAssignment,
   getCourseAssignments,
   deleteCourseAssignment,
-  getMyCourseAssignments
+  getMine
 };

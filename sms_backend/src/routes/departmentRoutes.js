@@ -16,4 +16,17 @@ router.patch('/:id/hod', authMiddleware, roleGuard('admin'), departmentControlle
 // GET /api/departments/:id/classes → admin, hod
 router.get('/:id/classes', authMiddleware, roleGuard('admin', 'hod'), departmentController.getClassesInDepartment);
 
+// POST /api/departments/:id/courses/upload → hod
+router.post('/:id/courses/upload',
+  authMiddleware, roleGuard('hod'),
+  departmentController.uploadMiddleware,
+  departmentController.uploadCourses
+);
+
+// GET /api/departments/:id/courses
+router.get('/:id/courses',
+  authMiddleware,
+  departmentController.getDeptCourses
+);
+
 module.exports = router;

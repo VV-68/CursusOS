@@ -103,6 +103,23 @@ export const departmentAPI = {
   create: (data) => fetch(`${BASE_URL}/api/departments`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   assignHOD: (id, data) => fetch(`${BASE_URL}/api/departments/${id}/hod`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   getClasses: (id) => fetch(`${BASE_URL}/api/departments/${id}/classes`, { headers: getHeaders(true) }).then(handleResponse),
+  uploadCourses: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = getToken();
+    return fetch(`${BASE_URL}/api/departments/${id}/courses/upload`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
+    }).then(handleResponse);
+  },
+  getCourses: (id, semester_id) => fetch(`${BASE_URL}/api/departments/${id}/courses?semester_id=${semester_id}`, { headers: getHeaders(true) }).then(handleResponse),
+};
+
+// ─── Semesters ─────────────────────────────────────────────────
+
+export const semesterAPI = {
+  getAll: () => fetch(`${BASE_URL}/api/semesters`, { headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Classes ─────────────────────────────────────────────────
@@ -132,6 +149,7 @@ export const courseAPI = {
 export const timetableAPI = {
   get: (classId) => fetch(`${BASE_URL}/api/timetable/${classId}`, { headers: getHeaders(true) }).then(handleResponse),
   upload: (data) => fetch(`${BASE_URL}/api/timetable`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  getAvailableCourses: (classId) => fetch(`${BASE_URL}/api/timetable/available-courses/${classId}`, { headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Attendance ──────────────────────────────────────────────

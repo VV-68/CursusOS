@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { studyMaterialAPI } from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
+import CourseSemesterSelector from '../../components/CourseSemesterSelector';
 
 const TYPES = ['notes', 'slides', 'reference', 'video', 'question_bank'];
 const TYPE_COLORS = { notes: '#818cf8', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7' };
@@ -42,23 +43,32 @@ const s = {
 };
 
 function FacultyStudyMaterials() {
-  const { course_assignment_id } = useParams();
+  const { course_assignment_id: initial_ca } = useParams();
   const navigate = useNavigate();
   const [materials, setMaterials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ title: '', description: '', drive_link: '', material_type: 'notes' });
+  const [selectedCA, setSelectedCA] = useState(initial_ca || '');
 
   const token = localStorage.getItem('token');
   let userId = '';
   try { userId = jwtDecode(token).id; } catch {}
 
-  useEffect(() => { fetchData(); }, [course_assignment_id]);
+  useEffect(() => { 
+    if (selectedCA) {
+      setLoading(true);
+      fetchData(); 
+    } else {
+      setMaterials([]);
+      setLoading(false);
+    }
+  }, [selectedCA]);
 
   const fetchData = async () => {
     try {
-      const data = await studyMaterialAPI.listByCourse(course_assignment_id);
+      const data = await studyMaterialAPI.listByCourse(selectedCA);
       setMaterials(data);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -69,7 +79,7 @@ function FacultyStudyMaterials() {
     if (!form.title || !form.drive_link) return setError('Title and link are required');
     try { new URL(form.drive_link); } catch { return setError('Please enter a valid URL'); }
     try {
-      await studyMaterialAPI.create({ ...form, course_assignment_id });
+      await studyMaterialAPI.create({ ...form, course_assignment_id: selectedCA });
       setShowModal(false);
       setForm({ title: '', description: '', drive_link: '', material_type: 'notes' });
       fetchData();
@@ -91,17 +101,21 @@ function FacultyStudyMaterials() {
           <button style={s.backBtn} onClick={() => navigate('/faculty/courses')}>← Back</button>
           <h1 style={s.title}>Study Materials</h1>
         </div>
-        <button style={s.addBtn} onClick={() => setShowModal(true)}>+ Add Material</button>
+        {selectedCA && <button style={s.addBtn} onClick={() => setShowModal(true)}>+ Add Material</button>}
       </div>
 
+      <CourseSemesterSelector onSelect={setSelectedCA} />
+
+      {!selectedCA && <div style={s.empty}>Please select a semester and course to view materials.</div>}
+      
       {error && <div style={s.error}>{error}</div>}
 
-      {materials.length === 0 ? (
+      {selectedCA && materials.length === 0 && !loading ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No materials posted</p>
           <p>Share study materials with your students.</p>
         </div>
-      ) : (
+      ) : selectedCA && materials.length > 0 ? (
         <div style={s.grid}>
           {materials.map((m) => (
             <div key={m.id} style={s.card}>
@@ -120,7 +134,7 @@ function FacultyStudyMaterials() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
 
       {showModal && (
         <div style={s.overlay} onClick={() => setShowModal(false)}>

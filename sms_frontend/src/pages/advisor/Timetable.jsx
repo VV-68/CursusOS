@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { timetableAPI, courseAPI, classAPI } from '../../services/api';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const PERIODS = [1, 2, 3, 4, 5, 6, 7];
+const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 function Timetable() {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
-  const [courseAssignments, setCourseAssignments] = useState([]);
+  const [availableCourses, setAvailableCourses] = useState([]);
   const [slots, setSlots] = useState({});
 
   useEffect(() => {
@@ -32,11 +32,11 @@ function Timetable() {
 
   const fetchClassData = async () => {
     try {
-      const [timetable, assignments] = await Promise.all([
+      const [timetable, courses] = await Promise.all([
         timetableAPI.get(selectedClass),
-        courseAPI.getAssignments({ class_id: selectedClass })
+        timetableAPI.getAvailableCourses(selectedClass)
       ]);
-      setCourseAssignments(assignments);
+      setAvailableCourses(courses);
       
       const newSlots = {};
       timetable.forEach(t => {
@@ -82,6 +82,9 @@ function Timetable() {
     }
   };
 
+  const unassignedCourses = availableCourses.filter(c => !c.course_assignment_id);
+  const assignedCourses = availableCourses.filter(c => c.course_assignment_id);
+
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Manage Timetable</h2>
@@ -92,7 +95,7 @@ function Timetable() {
 
       {selectedClass && (
         <>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginBottom: '1rem' }}>
             <thead>
               <tr style={{ background: '#eee' }}>
                 <th>Period / Day</th>
@@ -111,10 +114,10 @@ function Timetable() {
                         style={{ width: '100%' }}
                       >
                         <option value="">Off</option>
-                        {courseAssignments.map(ca => (
-                          // Ideally show course short name or subject, here we just show assignment UUID or course id
-                          // The `v_timetable` actually shows name.
-                          <option key={ca.id} value={ca.id}>Ref: {ca.course_id.substring(0,6)}...</option>
+                        {assignedCourses.map(ca => (
+                          <option key={ca.course_assignment_id} value={ca.course_assignment_id}>
+                            {ca.code} — {ca.course_name} ({ca.faculty_name})
+                          </option>
                         ))}
                       </select>
                     </td>
@@ -123,6 +126,17 @@ function Timetable() {
               ))}
             </tbody>
           </table>
+          
+          <div style={{ marginTop: '1rem', color: '#666', fontSize: '0.9em' }}>
+            <strong>Unassigned Courses (Cannot be scheduled):</strong>
+            <ul>
+              {unassignedCourses.map(c => (
+                <li key={c.course_id}>{c.code} — No faculty assigned yet</li>
+              ))}
+              {unassignedCourses.length === 0 && <li>None</li>}
+            </ul>
+          </div>
+
           <button onClick={handleSave} style={{ marginTop: '2rem' }}>Save Timetable</button>
         </>
       )}

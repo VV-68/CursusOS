@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { assignmentAPI } from '../../services/api';
+import CourseSemesterSelector from '../../components/CourseSemesterSelector';
 
 const s = {
   page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
@@ -30,21 +31,30 @@ const s = {
 };
 
 function Assignments() {
-  const { course_assignment_id } = useParams();
+  const { course_assignment_id: initial_ca } = useParams();
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
+  const [selectedCA, setSelectedCA] = useState(initial_ca || '');
   const [form, setForm] = useState({
     title: '', description: '', due_date: '', max_marks: 100, allow_late_submission: false
   });
 
-  useEffect(() => { fetchData(); }, [course_assignment_id]);
+  useEffect(() => { 
+    if (selectedCA) {
+      setLoading(true);
+      fetchData(); 
+    } else {
+      setAssignments([]);
+      setLoading(false);
+    }
+  }, [selectedCA]);
 
   const fetchData = async () => {
     try {
-      const data = await assignmentAPI.listByCourse(course_assignment_id);
+      const data = await assignmentAPI.listByCourse(selectedCA);
       setAssignments(data);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -55,7 +65,7 @@ function Assignments() {
     if (!form.title || !form.due_date) return setError('Title and due date are required');
     try {
       const created = await assignmentAPI.create({
-        ...form, course_assignment_id,
+        ...form, course_assignment_id: selectedCA,
         max_marks: Number(form.max_marks) || 100,
       });
       if (publish) {
@@ -85,17 +95,20 @@ function Assignments() {
           <button style={s.backBtn} onClick={() => navigate('/faculty/courses')}>← Back</button>
           <h1 style={s.title}>Assignments</h1>
         </div>
-        <button style={s.newBtn} onClick={() => setShowModal(true)}>+ New Assignment</button>
+        {selectedCA && <button style={s.newBtn} onClick={() => setShowModal(true)}>+ New Assignment</button>}
       </div>
 
+      <CourseSemesterSelector onSelect={setSelectedCA} />
+      
+      {!selectedCA && <div style={s.empty}>Please select a semester and course to view assignments.</div>}
       {error && <div style={s.error}>{error}</div>}
 
-      {assignments.length === 0 ? (
+      {selectedCA && assignments.length === 0 && !loading ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No assignments yet</p>
           <p>Create your first assignment to get started.</p>
         </div>
-      ) : (
+      ) : selectedCA && assignments.length > 0 ? (
         <div style={{ overflowX: 'auto', borderRadius: '12px' }}>
           <table style={s.table}>
             <thead>
@@ -133,7 +146,7 @@ function Assignments() {
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
 
       {showModal && (
         <div style={s.overlay} onClick={() => setShowModal(false)}>

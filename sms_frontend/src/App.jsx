@@ -13,6 +13,7 @@ import AssignHOD from './pages/admin/AssignHOD';
 import Classes from './pages/hod/Classes';
 import AssignAdvisors from './pages/hod/AssignAdvisors';
 import Courses from './pages/hod/Courses';
+import UploadCourses from './pages/hod/UploadCourses';
 import AssignCourse from './pages/hod/AssignCourse';
 import Timetable from './pages/advisor/Timetable';
 import TimetableView from './pages/shared/TimetableView';
@@ -116,6 +117,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/hod/upload-courses" element={
+            <ProtectedRoute roles={['hod']}>
+              <UploadCourses />
+            </ProtectedRoute>
+          } />
+
           <Route path="/hod/assign-course" element={
             <ProtectedRoute roles={['hod']}>
               <AssignCourse />
@@ -195,19 +202,19 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/faculty/assignments/:course_assignment_id" element={
+          <Route path="/faculty/assignments/:course_assignment_id?" element={
             <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <Assignments />
             </ProtectedRoute>
           } />
 
-          <Route path="/faculty/submissions/:assignment_id" element={
+          <Route path="/faculty/submissions/:assignment_id?" element={
             <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <ViewSubmissions />
             </ProtectedRoute>
           } />
 
-          <Route path="/faculty/materials/:course_assignment_id" element={
+          <Route path="/faculty/materials/:course_assignment_id?" element={
             <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <FacultyStudyMaterials />
             </ProtectedRoute>

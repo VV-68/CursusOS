@@ -1,5 +1,11 @@
 const departmentModel = require('../models/departmentModel');
 const logAudit = require('../utils/auditLogger');
+const multer  = require('multer');
+const pool    = require('../db/connection');
+
+const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1 * 1024 * 1024 } });
+const uploadMiddleware = upload.single('file');
+
 
 const getAllDepartments = async (req, res) => {
   try {
@@ -71,4 +77,98 @@ const getClassesInDepartment = async (req, res) => {
   }
 };
 
-module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment };
+const uploadCourses = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'JSON file required' });
+
+    let payload;
+    try {
+      payload = JSON.parse(req.file.buffer.toString());
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON file' });
+    }
+
+    const { semester_id, courses } = payload;
+    if (!semester_id || !Array.isArray(courses) || courses.length === 0) {
+      return res.status(400).json({ error: 'semester_id and courses array are required' });
+    }
+
+    // Validate semester exists
+    const { rows: semRows } = await pool.query(
+      'SELECT id FROM semesters WHERE id = $1', [semester_id]
+    );
+    if (!semRows.length) return res.status(400).json({ error: 'Semester not found' });
+
+    const dept_id = req.user.dept_id;
+    const results = [];
+
+    for (const course of courses) {
+      if (!course.name || !course.code || !course.credits) {
+        return res.status(400).json({ error: `Invalid course entry: ${JSON.stringify(course)}` });
+      }
+
+      // Upsert course into courses table
+      const { rows: courseRows } = await pool.query(
+        `INSERT INTO courses (name, code, credits, dept_id)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (code)
+         DO UPDATE SET name = EXCLUDED.name, credits = EXCLUDED.credits
+         RETURNING id, name, code, credits`,
+        [course.name.trim(), course.code.trim().toUpperCase(), course.credits, dept_id]
+      );
+      const savedCourse = courseRows[0];
+
+      // Link course to dept+semester
+      await pool.query(
+        `INSERT INTO department_semester_courses (dept_id, semester_id, course_id, added_by)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (dept_id, semester_id, course_id) DO UPDATE SET is_active = TRUE`,
+        [dept_id, semester_id, savedCourse.id, req.user.id]
+      );
+
+      results.push(savedCourse);
+    }
+
+    // Deactivate any old courses for this dept+sem not in the new upload
+    const uploadedIds = results.map(r => r.id);
+    await pool.query(
+      `UPDATE department_semester_courses
+       SET is_active = FALSE
+       WHERE dept_id = $1 AND semester_id = $2
+         AND course_id != ALL($3::uuid[])`,
+      [dept_id, semester_id, uploadedIds]
+    );
+
+    await logAudit(req.user.id, 'COURSES_UPLOADED', 'department', dept_id, null,
+      { semester_id, count: results.length }
+    );
+
+    res.status(200).json({ message: `${results.length} courses synced`, courses: results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getDeptCourses = async (req, res) => {
+  try {
+    const { semester_id } = req.query;
+    if (!semester_id) return res.status(400).json({ error: 'semester_id query param required' });
+
+    const { rows } = await pool.query(
+      `SELECT c.id, c.name, c.code, c.credits
+       FROM department_semester_courses dsc
+       JOIN courses c ON c.id = dsc.course_id
+       WHERE dsc.dept_id = $1 AND dsc.semester_id = $2 AND dsc.is_active = TRUE
+       ORDER BY c.code ASC`,
+      [req.params.id, semester_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses };
+

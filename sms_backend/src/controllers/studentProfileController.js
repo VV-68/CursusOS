@@ -96,3 +96,24 @@ exports.getClassStudents = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+// GET /api/profile/my-courses
+exports.getMyCourses = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT c.name, c.code, c.credits,
+              u.full_name AS faculty_name,
+              ca.id AS course_assignment_id
+       FROM course_assignments ca
+       JOIN courses c   ON c.id  = ca.course_id
+       JOIN users u     ON u.id  = ca.faculty_id
+       JOIN student_profiles sp ON sp.class_id = ca.class_id AND sp.user_id = $1
+       JOIN semesters s ON s.id  = ca.semester_id AND s.is_active = TRUE
+       ORDER BY c.code`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
