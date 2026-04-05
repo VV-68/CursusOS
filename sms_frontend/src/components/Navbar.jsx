@@ -41,26 +41,47 @@ function Navbar() {
   const displayName = userInfo?.full_name || role || '';
   const roleColor = ROLE_COLORS[role] || '#6c757d';
 
+  const linkStyle = { color: '#ecf0f1', textDecoration: 'none', fontSize: '0.9rem' };
+
   return (
     <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.8rem 2rem', background: '#2c3e50', color: '#fff', alignItems: 'center' }}>
       <div className="navbar-brand">
         <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.2rem' }}>SMS Hub</Link>
       </div>
-      <div className="navbar-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      <div className="navbar-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
         {hasToken ? (
           <>
-            <Link to="/dashboard" style={{ color: '#ecf0f1', textDecoration: 'none' }}>Dashboard</Link>
-            <Link to="/timetable" style={{ color: '#ecf0f1', textDecoration: 'none' }}>Timetable</Link>
+            <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
+            <Link to="/timetable" style={linkStyle}>Timetable</Link>
+            <Link to="/notices" style={linkStyle}>Notices</Link>
 
             {['student', 'faculty', 'advisor', 'hod'].includes(role) && (
-              <Link to="/leave" style={{ color: '#ecf0f1', textDecoration: 'none' }}>Leaves</Link>
+              <Link to="/leave" style={linkStyle}>Leaves</Link>
+            )}
+
+            {/* Faculty-specific links */}
+            {['faculty', 'advisor', 'hod'].includes(role) && (
+              <Link to="/faculty/courses" style={linkStyle}>My Courses</Link>
+            )}
+
+            {/* Student-specific links */}
+            {role === 'student' && (
+              <>
+                <Link to="/student/assignments" style={linkStyle}>Assignments</Link>
+                <Link to="/student/profile" style={linkStyle}>Profile</Link>
+              </>
+            )}
+
+            {/* Advisor-specific links */}
+            {['advisor', 'hod'].includes(role) && (
+              <Link to="/advisor/students" style={linkStyle}>Students</Link>
             )}
 
             {role === 'hod' && (
-              <Link to="/admin/users/create" style={{ color: '#ecf0f1', textDecoration: 'none' }}>Add Faculty</Link>
+              <Link to="/admin/users/create" style={linkStyle}>Add Faculty</Link>
             )}
 
-            <Link to="/change-password" style={{ color: '#ecf0f1', textDecoration: 'none' }}>Settings</Link>
+            <Link to="/change-password" style={linkStyle}>Settings</Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem', padding: '0.2rem 0.6rem', background: 'rgba(255,255,255,0.1)', borderRadius: '16px' }}>
               <span style={{ fontSize: '0.85rem', color: '#ecf0f1' }}>{displayName}</span>

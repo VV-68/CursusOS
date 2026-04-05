@@ -13,4 +13,7 @@ router.post('/update', authMiddleware, roleGuard('faculty'), marksController.upd
 // GET /api/marks/student/:student_id
 router.get('/student/:student_id', authMiddleware, marksController.getMarksByStudent);
 
+// GET /api/marks/consolidated/:course_assignment_id — consolidated view
+router.get('/consolidated/:course_assignment_id', authMiddleware, roleGuard('faculty', 'advisor', 'hod'), marksController.getConsolidated);
+
 module.exports = router;

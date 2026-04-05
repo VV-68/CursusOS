@@ -10,6 +10,9 @@ router.get('/', authMiddleware, roleGuard('admin', 'hod', 'faculty'), courseCont
 // POST /api/courses → hod creates course in their dept
 router.post('/', authMiddleware, roleGuard('hod'), courseController.createCourse);
 
+// GET /api/courses/assignments/mine → faculty gets their own course assignments
+router.get('/assignments/mine', authMiddleware, roleGuard('faculty', 'advisor', 'hod'), courseController.getMyCourseAssignments);
+
 // POST /api/courses/assignments → hod assigns
 router.post('/assignments', authMiddleware, roleGuard('hod'), courseController.createCourseAssignment);
 

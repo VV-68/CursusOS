@@ -205,3 +205,92 @@ export const deleteStudent = async (id) => {
   const response = await fetch(`${BASE_URL}/students/${id}`, { method: 'DELETE', headers: getHeaders(true) });
   return handleResponse(response);
 };
+
+// ─── Course Assignments (Faculty) ────────────────────────────────────────
+
+export const courseAssignmentAPI = {
+  getMine: () => fetch(`${BASE_URL}/api/courses/assignments/mine`, { headers: getHeaders(true) }).then(handleResponse),
+};
+
+// ─── Assignments ─────────────────────────────────────────────────────────
+
+export const assignmentAPI = {
+  create: (data) => fetch(`${BASE_URL}/api/assignments`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  publish: (id, is_published) => fetch(`${BASE_URL}/api/assignments/${id}/publish`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ is_published })
+  }).then(handleResponse),
+
+  listByCourse: (courseAssignmentId) => fetch(`${BASE_URL}/api/assignments/course/${courseAssignmentId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  submit: (assignmentId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = getToken();
+    return fetch(`${BASE_URL}/api/assignments/${assignmentId}/submit`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
+    }).then(handleResponse);
+  },
+
+  getMySubmission: (assignmentId) => fetch(`${BASE_URL}/api/assignments/${assignmentId}/my-submission`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  listSubmissions: (assignmentId) => fetch(`${BASE_URL}/api/assignments/${assignmentId}/submissions`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  evaluate: (submissionId, data) => fetch(`${BASE_URL}/api/assignments/submissions/${submissionId}/evaluate`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+};
+
+// ─── Study Materials ─────────────────────────────────────────────────────
+
+export const studyMaterialAPI = {
+  create: (data) => fetch(`${BASE_URL}/api/study-materials`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  listByCourse: (courseAssignmentId) => fetch(`${BASE_URL}/api/study-materials/course/${courseAssignmentId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  delete: (id) => fetch(`${BASE_URL}/api/study-materials/${id}`, {
+    method: 'DELETE', headers: getHeaders(true)
+  }).then(handleResponse),
+};
+
+// ─── Student Profile ─────────────────────────────────────────────────────
+
+export const profileAPI = {
+  getMyProfile: () => fetch(`${BASE_URL}/api/profile/me`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  updateMyProfile: (data) => fetch(`${BASE_URL}/api/profile/me`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  getStudentProfile: (studentId) => fetch(`${BASE_URL}/api/profile/student/${studentId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  getClassStudents: (classId) => fetch(`${BASE_URL}/api/profile/class/${classId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+};
+
+// ─── Consolidated Marks ──────────────────────────────────────────────────
+
+export const consolidatedMarksAPI = {
+  get: (courseAssignmentId) => fetch(`${BASE_URL}/api/marks/consolidated/${courseAssignmentId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+};

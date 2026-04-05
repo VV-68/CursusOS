@@ -2,6 +2,7 @@ const courseModel = require('../models/courseModel');
 const userModel = require('../models/userModel');
 const classModel = require('../models/classModel');
 const { logAudit } = require('./userController');
+const { getFacultyAssignments } = require('../utils/authorizationHelpers');
 
 const getCourses = async (req, res) => {
   try {
@@ -87,10 +88,21 @@ const deleteCourseAssignment = async (req, res) => {
   }
 };
 
+const getMyCourseAssignments = async (req, res) => {
+  try {
+    const assignments = await getFacultyAssignments(req.user.id);
+    res.json(assignments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getCourses,
   createCourse,
   createCourseAssignment,
   getCourseAssignments,
-  deleteCourseAssignment
+  deleteCourseAssignment,
+  getMyCourseAssignments
 };

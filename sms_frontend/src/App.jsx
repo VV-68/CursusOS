@@ -26,7 +26,17 @@ import ApproveLeaves from './pages/shared/ApproveLeaves';
 import Notices from './pages/shared/Notices';
 import CreateNotice from './pages/admin/CreateNotice';
 
-// We delete the old AddStudent boilerplate so we have clean slate
+// New pages
+import MyCourses from './pages/faculty/MyCourses';
+import Assignments from './pages/faculty/Assignments';
+import ViewSubmissions from './pages/faculty/ViewSubmissions';
+import FacultyStudyMaterials from './pages/faculty/StudyMaterials';
+import MyAssignments from './pages/student/MyAssignments';
+import StudentStudyMaterials from './pages/student/StudyMaterials';
+import ProfilePage from './pages/student/ProfilePage';
+import MyStudents from './pages/advisor/MyStudents';
+import StudentProfile from './pages/advisor/StudentProfile';
+
 import './App.css';
 
 function App() {
@@ -175,6 +185,63 @@ function App() {
           <Route path="/admin/notices/create" element={
             <ProtectedRoute roles={['admin', 'hod']}>
               <CreateNotice />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Faculty: Courses, Assignments, Materials ─── */}
+          <Route path="/faculty/courses" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
+              <MyCourses />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/assignments/:course_assignment_id" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
+              <Assignments />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/submissions/:assignment_id" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
+              <ViewSubmissions />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/materials/:course_assignment_id" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
+              <FacultyStudyMaterials />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Student: Assignments, Materials, Profile ─── */}
+          <Route path="/student/assignments" element={
+            <ProtectedRoute roles={['student']}>
+              <MyAssignments />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/materials/:course_assignment_id" element={
+            <ProtectedRoute roles={['student']}>
+              <StudentStudyMaterials />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/profile" element={
+            <ProtectedRoute roles={['student']}>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Advisor: Students ─── */}
+          <Route path="/advisor/students" element={
+            <ProtectedRoute roles={['advisor', 'hod', 'admin']}>
+              <MyStudents />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/advisor/student/:student_id" element={
+            <ProtectedRoute roles={['advisor', 'hod', 'admin']}>
+              <StudentProfile />
             </ProtectedRoute>
           } />
 
