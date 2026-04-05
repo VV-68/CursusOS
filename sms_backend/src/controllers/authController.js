@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const { comparePassword, hashPassword } = require('../utils/passwordUtils');
 const userModel = require('../models/userModel');
+const pool = require('../db/connection');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
@@ -9,60 +10,109 @@ const AuthController = {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ message: "Username and password required" });
+      return res.status(400).json({ error: 'Username and password are required' });
     }
 
     try {
-      const user = await userModel.getUserByUsername(username);
+      const user = await userModel.getUserByUsername(username.trim().toLowerCase());
       if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const isValid = await bcrypt.compare(password, user.password_hash);
+      if (!user.is_active) {
+        return res.status(401).json({ error: 'Account is disabled' });
+      }
+
+      const isValid = await comparePassword(password, user.password_hash);
       if (!isValid) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       const token = jwt.sign(
-        { id: user.id, role: user.role, dept_id: user.dept_id, must_change_password: user.must_change_password },
+        {
+          id: user.id,
+          role: user.role,
+          dept_id: user.dept_id,
+          must_change_password: user.must_change_password
+        },
         JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: '8h' }
       );
 
       res.json({
-        message: "Login successful",
         token,
-        must_change_password: user.must_change_password
+        must_change_password: user.must_change_password,
+        role: user.role,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          full_name: user.full_name,
+          must_change_password: user.must_change_password
+        }
       });
     } catch (err) {
-      res.status(500).json({ message: "Server error", error: err.message });
+      console.error('Login error:', err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   },
 
   changePassword: async (req, res) => {
     const { current_password, new_password } = req.body;
-    
+
     if (!current_password || !new_password) {
-      return res.status(400).json({ error: "Passwords required" });
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    // Validate new password: min 8 chars, one uppercase, one number
+    if (new_password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    if (!/[A-Z]/.test(new_password)) {
+      return res.status(400).json({ error: 'Password must contain at least one uppercase letter' });
+    }
+    if (!/[0-9]/.test(new_password)) {
+      return res.status(400).json({ error: 'Password must contain at least one number' });
     }
 
     try {
       const hashObj = await userModel.getUserPasswordHash(req.user.id);
-      const isValid = await bcrypt.compare(current_password, hashObj.password_hash);
-      
-      if (!isValid) {
-        return res.status(400).json({ error: "Invalid current password" });
+      if (!hashObj) {
+        return res.status(404).json({ error: 'User not found' });
       }
 
-      await userModel.changePassword(req.user.id, new_password);
-      res.json({ message: "Password changed successfully" });
+      const isValid = await comparePassword(current_password, hashObj.password_hash);
+      if (!isValid) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+
+      const newHash = await hashPassword(new_password);
+      await userModel.changePassword(req.user.id, newHash);
+
+      res.json({ message: 'Password changed successfully' });
     } catch (err) {
-      res.status(500).json({ error: "Server error", error: err.message });
+      console.error('Change password error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  },
+
+  me: async (req, res) => {
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, username, role, full_name, email, phone, dept_id, must_change_password
+         FROM users WHERE id = $1 AND is_active = TRUE`,
+        [req.user.id]
+      );
+      if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Me endpoint error:', err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   },
 
   logout: async (req, res) => {
-    res.json({ message: "Logged out successfully" });
+    res.json({ message: 'Logged out successfully' });
   }
 };
 

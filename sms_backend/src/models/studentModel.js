@@ -25,8 +25,7 @@ const StudentModel = {
     const { rows } = await pool.query(
       `SELECT u.id, u.username, u.full_name, u.email, u.phone,
               p.roll_no, p.class_id, p.dob, p.gender, p.blood_group, p.address,
-              p.guardian_name, p.guardian_phone, p.guardian_email,
-              p.bank_name, p.account_no, p.ifsc_code
+              p.guardian_name, p.guardian_phone, p.guardian_email
        FROM users u
        JOIN student_profiles p ON p.user_id = u.id
        WHERE u.id = $1 AND u.role = 'student'`,

@@ -1,36 +1,60 @@
 import { useState, useEffect } from 'react';
-import { userAPI } from '../../services/api';
+import { userAPI, departmentAPI } from '../../services/api';
 import { Link } from 'react-router-dom';
 
 function Users() {
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [filterDept, setFilterDept] = useState('');
+  const [filterRole, setFilterRole] = useState('');
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [filterDept, filterRole]);
 
-  const fetchUsers = async () => {
+  const fetchDepartments = async () => {
     try {
-      const data = await userAPI.getAll();
-      setUsers(data);
+      const data = await departmentAPI.getAll();
+      setDepartments(data);
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to load departments:', err);
     }
   };
 
-  const handleReset = async (id) => {
-    if (!window.confirm('Reset this user password?')) return;
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = {};
+      if (filterDept) params.dept_id = filterDept;
+      if (filterRole) params.role = filterRole;
+      const data = await userAPI.getAll(params);
+      setUsers(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async (id, name) => {
+    if (!window.confirm(`Reset password for "${name}"? They will get the default password.`)) return;
     try {
       await userAPI.resetPassword(id);
-      alert('Password reset successfully');
+      alert('Password reset to Welcome@123. User must change on next login.');
     } catch (err) {
       alert(err.message);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this user?')) return;
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Deactivate user "${name}"? This cannot be easily undone.`)) return;
     try {
       await userAPI.delete(id);
       fetchUsers();
@@ -39,42 +63,94 @@ function Users() {
     }
   };
 
+  const roleBadge = (role) => {
+    const colors = { admin: '#6f42c1', hod: '#0d6efd', advisor: '#20c997', faculty: '#198754', student: '#fd7e14' };
+    return (
+      <span style={{
+        background: colors[role] || '#6c757d',
+        color: '#fff',
+        padding: '0.15rem 0.5rem',
+        borderRadius: '12px',
+        fontSize: '0.8rem',
+        fontWeight: '500',
+        textTransform: 'uppercase',
+      }}>{role}</span>
+    );
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h2>User Management</h2>
         <Link to="/admin/users/create">
-          <button>Create User</button>
+          <button style={{ padding: '0.5rem 1rem', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            + Create User
+          </button>
         </Link>
       </div>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <table style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
-            <th>Username</th>
-            <th>Full Name</th>
-            <th>Role</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} style={{ borderBottom: '1px solid #ccc' }}>
-              <td>{u.username}</td>
-              <td>{u.full_name}</td>
-              <td>{u.role}</td>
-              <td>{u.email}</td>
-              <td>{u.phone}</td>
-              <td>
-                <button onClick={() => handleReset(u.id)} style={{ marginRight: '8px' }}>Reset Password</button>
-                <button onClick={() => handleDelete(u.id)} style={{ color: 'red' }}>Delete</button>
-              </td>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+          <option value="">All Departments</option>
+          {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.code})</option>)}
+        </select>
+        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="hod">HOD</option>
+          <option value="advisor">Advisor</option>
+          <option value="faculty">Faculty</option>
+          <option value="student">Student</option>
+        </select>
+      </div>
+
+      {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+
+      {loading ? (
+        <div>Loading users...</div>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
+              <th style={{ padding: '0.75rem' }}>Username</th>
+              <th style={{ padding: '0.75rem' }}>Full Name</th>
+              <th style={{ padding: '0.75rem' }}>Role</th>
+              <th style={{ padding: '0.75rem' }}>Email</th>
+              <th style={{ padding: '0.75rem' }}>Phone</th>
+              <th style={{ padding: '0.75rem' }}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.length === 0 ? (
+              <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>No users found</td></tr>
+            ) : (
+              users.map((u) => (
+                <tr key={u.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '0.75rem' }}>{u.username}</td>
+                  <td style={{ padding: '0.75rem' }}>{u.full_name}</td>
+                  <td style={{ padding: '0.75rem' }}>{roleBadge(u.role)}</td>
+                  <td style={{ padding: '0.75rem' }}>{u.email || '—'}</td>
+                  <td style={{ padding: '0.75rem' }}>{u.phone || '—'}</td>
+                  <td style={{ padding: '0.75rem' }}>
+                    <button
+                      onClick={() => handleReset(u.id, u.full_name)}
+                      style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#ffc107', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Reset Password
+                    </button>
+                    <button
+                      onClick={() => handleDelete(u.id, u.full_name)}
+                      style={{ padding: '0.3rem 0.6rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Deactivate
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

@@ -24,6 +24,8 @@ function Dashboard() {
 
         {role === 'hod' && (
           <>
+            <Link to="/admin/users/create" className="btn btn-primary">Add Faculty / Advisor</Link>
+            <Link to="/admin/users" className="btn btn-primary">View Dept Users</Link>
             <Link to="/hod/classes" className="btn btn-primary">Manage Dept Classes</Link>
             <Link to="/hod/courses" className="btn btn-primary">Manage Dept Courses</Link>
             <Link to="/approvals/leave" className="btn btn-secondary">Pending Leaves</Link>

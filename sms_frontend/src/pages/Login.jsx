@@ -24,10 +24,16 @@ function Login() {
     }
 
     try {
-      const data = await login({ username, password });
+      const data = await login({ username: username.trim(), password });
       if (data.token) {
         localStorage.setItem('token', data.token);
-        navigate(from, { replace: true });
+
+        // Check if user must change password first
+        if (data.must_change_password) {
+          navigate('/change-password', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
       } else {
         setError(data.message || 'Login failed');
       }

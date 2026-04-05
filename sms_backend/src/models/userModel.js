@@ -1,47 +1,47 @@
 const pool = require('../db/connection');
-const bcrypt = require('bcryptjs');
 
-const getAllUsers = async (deptId = null) => {
-  let query = 'SELECT id, username, full_name, role, dept_id, email, phone, is_active FROM users WHERE is_active = true';
-  const params = [];
-  if (deptId) {
-    query += ' AND dept_id = $1';
-    params.push(deptId);
-  }
-  const { rows } = await pool.query(query, params);
-  return rows;
-};
-
-const createUser = async (userData) => {
-  const { username, full_name, role, dept_id, email, phone } = userData;
-  const password_hash = await bcrypt.hash('Welcome@123', 10);
-  
+const createUser = async ({ username, full_name, role, dept_id, email, phone, password_hash }) => {
   const { rows } = await pool.query(
-    `INSERT INTO users (username, full_name, role, dept_id, email, phone, password_hash, must_change_password) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING id`,
-    [username, full_name, role, dept_id, email, phone, password_hash]
+    `INSERT INTO users
+       (username, password_hash, role, full_name, email, phone, dept_id, must_change_password, is_active)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, TRUE)
+     RETURNING id, username, role, full_name, email, phone, dept_id, must_change_password, is_active, created_at`,
+    [username, password_hash, role, full_name, email || null, phone || null, dept_id]
   );
   return rows[0];
 };
 
-const resetPassword = async (id) => {
-  const password_hash = await bcrypt.hash('Welcome@123', 10);
-  await pool.query(
-    'UPDATE users SET password_hash = $1, must_change_password = true WHERE id = $2',
-    [password_hash, id]
-  );
+const getAllUsers = async (deptId = null, roleFilter = null) => {
+  let query = 'SELECT id, username, full_name, role, dept_id, email, phone, is_active, created_at FROM users WHERE is_active = true';
+  const params = [];
+  if (deptId) {
+    params.push(deptId);
+    query += ` AND dept_id = $${params.length}`;
+  }
+  if (roleFilter && roleFilter.length > 0) {
+    params.push(roleFilter);
+    query += ` AND role = ANY($${params.length})`;
+  }
+  query += ' ORDER BY full_name ASC';
+  const { rows } = await pool.query(query, params);
+  return rows;
 };
 
-const changePassword = async (id, newPassword) => {
-  const password_hash = await bcrypt.hash(newPassword, 10);
-  await pool.query(
-    'UPDATE users SET password_hash = $1, must_change_password = false WHERE id = $2',
-    [password_hash, id]
+const getUserById = async (id) => {
+  const { rows } = await pool.query(
+    `SELECT id, username, role, full_name, email, phone, dept_id, must_change_password, is_active
+     FROM users WHERE id = $1`,
+    [id]
   );
+  return rows[0];
 };
 
-const deleteUser = async (id) => {
-  await pool.query('UPDATE users SET is_active = false WHERE id = $1', [id]);
+const getUserByUsername = async (username) => {
+  const { rows } = await pool.query(
+    'SELECT id, username, password_hash, role, dept_id, is_active, must_change_password, full_name FROM users WHERE username = $1',
+    [username]
+  );
+  return rows[0];
 };
 
 const getUserPasswordHash = async (id) => {
@@ -49,17 +49,39 @@ const getUserPasswordHash = async (id) => {
   return rows[0];
 };
 
-const getUserByUsername = async (username) => {
-  const { rows } = await pool.query('SELECT * FROM users WHERE username = $1 AND is_active = true', [username]);
+const resetUserPassword = async (id, password_hash) => {
+  const { rows } = await pool.query(
+    `UPDATE users SET password_hash = $1, must_change_password = TRUE, updated_at = NOW()
+     WHERE id = $2
+     RETURNING id, username, role`,
+    [password_hash, id]
+  );
+  return rows[0];
+};
+
+const changePassword = async (id, password_hash) => {
+  await pool.query(
+    'UPDATE users SET password_hash = $1, must_change_password = FALSE, updated_at = NOW() WHERE id = $2',
+    [password_hash, id]
+  );
+};
+
+const deactivateUser = async (id) => {
+  const { rows } = await pool.query(
+    `UPDATE users SET is_active = FALSE, updated_at = NOW()
+     WHERE id = $1 RETURNING id`,
+    [id]
+  );
   return rows[0];
 };
 
 module.exports = {
-  getAllUsers,
   createUser,
-  resetPassword,
-  changePassword,
-  deleteUser,
+  getAllUsers,
+  getUserById,
+  getUserByUsername,
   getUserPasswordHash,
-  getUserByUsername
+  resetUserPassword,
+  changePassword,
+  deactivateUser
 };

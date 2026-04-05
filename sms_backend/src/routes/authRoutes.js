@@ -8,6 +8,7 @@ const verifyToken = require("../middleware/authMiddleware");
 router.post("/login", AuthController.login);
 
 // Token required
+router.get("/me", verifyToken, AuthController.me);
 router.post("/logout", verifyToken, AuthController.logout);
 router.patch("/change-password", verifyToken, AuthController.changePassword);
 

@@ -34,7 +34,7 @@ function App() {
 
   return (
     <div className="app">
-      <Navbar isAuthenticated={isAuthenticated} />
+      <Navbar />
       <main className="main-content">
         <Routes>
           <Route
@@ -65,13 +65,13 @@ function App() {
           } />
 
           <Route path="/admin/users" element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute roles={['admin', 'hod']}>
               <Users />
             </ProtectedRoute>
           } />
           
           <Route path="/admin/users/create" element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute roles={['admin', 'hod']}>
               <CreateUser />
             </ProtectedRoute>
           } />
