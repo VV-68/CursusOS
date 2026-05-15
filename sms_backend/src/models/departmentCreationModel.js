@@ -262,7 +262,7 @@ const codeExists = async (code) => {
  * List department courses for manage page with optional assignment info.
  */
 const getManageCourses = async (deptId, filters = {}) => {
-  const { period_number, class_id, semester_id } = filters;
+  const { class_id, semester_id } = filters;
 
   const { rows: deptRows } = await pool.query(
     `SELECT id, name, code, department_type, structure_count FROM departments WHERE id = $1`,
@@ -271,15 +271,41 @@ const getManageCourses = async (deptId, filters = {}) => {
   if (!deptRows.length) return null;
   const department = deptRows[0];
 
+  let effectiveStructureCount = parseInt(department.structure_count, 10) || 0;
+  if (!effectiveStructureCount) {
+    const { rows: maxRows } = await pool.query(
+      `SELECT COALESCE(MAX(period_number), 0) AS max_period FROM department_courses WHERE dept_id = $1`,
+      [deptId]
+    );
+    effectiveStructureCount = parseInt(maxRows[0]?.max_period, 10) || 8;
+  }
+
+  let classMeta = null;
+  let periodNumbers = null;
+
+  if (class_id) {
+    const { rows: clsRows } = await pool.query(
+      `SELECT id, name, year, section FROM classes WHERE id = $1 AND dept_id = $2`,
+      [class_id, deptId]
+    );
+    if (!clsRows.length) throw new Error('CLASS_NOT_FOUND');
+    classMeta = clsRows[0];
+    periodNumbers = resolveClassPeriods(
+      department.department_type,
+      classMeta.year,
+      effectiveStructureCount
+    );
+  }
+
   let courseQuery = `
     SELECT dc.id, dc.period_number, dc.course_name, dc.course_code, dc.credits, dc.is_elective
     FROM department_courses dc
     WHERE dc.dept_id = $1
   `;
   const params = [deptId];
-  if (period_number) {
-    params.push(parseInt(period_number, 10));
-    courseQuery += ` AND dc.period_number = $${params.length}`;
+  if (periodNumbers && periodNumbers.length) {
+    params.push(periodNumbers);
+    courseQuery += ` AND dc.period_number = ANY($${params.length}::int[])`;
   }
   courseQuery += ' ORDER BY dc.period_number ASC, dc.course_code ASC';
   const { rows: courses } = await pool.query(courseQuery, params);
@@ -301,7 +327,7 @@ const getManageCourses = async (deptId, filters = {}) => {
   }
 
   const periods = [];
-  for (let i = 1; i <= (department.structure_count || 0); i++) {
+  for (let i = 1; i <= effectiveStructureCount; i++) {
     periods.push({ period_number: i, label: `${department.department_type === 'year_wise' ? 'Year' : 'Semester'} ${i}` });
   }
 
@@ -309,6 +335,8 @@ const getManageCourses = async (deptId, filters = {}) => {
     department,
     period_label: department.department_type === 'year_wise' ? 'Year' : 'Semester',
     periods,
+    class: classMeta,
+    applicable_periods: periodNumbers || [],
     courses: courses.map(c => ({
       ...c,
       assignment: assignmentByCode[c.course_code] || null
@@ -319,61 +347,95 @@ const getManageCourses = async (deptId, filters = {}) => {
 /**
  * Assign faculty to a department course (syncs catalog + semester link + assignment).
  */
+/** Map department_courses.credits (numeric) to courses.credits (smallint, must be > 0). */
+const catalogCreditsFromDeptCourse = (rawCredits) => {
+  const n = Number(rawCredits);
+  const rounded = Number.isFinite(n) ? Math.round(n) : 0;
+  return Math.max(1, rounded);
+};
+
 const assignFacultyToDeptCourse = async (deptId, data, userId) => {
   const { department_course_id, faculty_id, class_id, semester_id } = data;
+  console.log('[assignFacultyToDeptCourse] start', { deptId, department_course_id, faculty_id, class_id, semester_id, userId });
   const client = await pool.connect();
   try {
+    console.log('[assignFacultyToDeptCourse] BEGIN');
     await client.query('BEGIN');
 
+    console.log('[assignFacultyToDeptCourse] before SELECT department_courses', { department_course_id, deptId });
     const { rows: dcRows } = await client.query(
       'SELECT * FROM department_courses WHERE id = $1 AND dept_id = $2',
       [department_course_id, deptId]
     );
+    console.log('[assignFacultyToDeptCourse] after SELECT department_courses', { rowCount: dcRows.length });
     if (!dcRows.length) throw new Error('NOT_FOUND');
     const dc = dcRows[0];
 
+    const catalogCredits = catalogCreditsFromDeptCourse(dc.credits);
+    console.log('[assignFacultyToDeptCourse] before INSERT/UPSERT courses', {
+      course_code: dc.course_code,
+      rawCredits: dc.credits,
+      catalogCredits
+    });
     const { rows: courseRows } = await client.query(
       `INSERT INTO courses (name, code, credits, dept_id)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (code) DO UPDATE SET
          name = EXCLUDED.name, credits = EXCLUDED.credits, dept_id = EXCLUDED.dept_id
        RETURNING *`,
-      [dc.course_name, dc.course_code, dc.credits, deptId]
+      [dc.course_name, dc.course_code, catalogCredits, deptId]
     );
     const course = courseRows[0];
+    console.log('[assignFacultyToDeptCourse] after INSERT/UPSERT courses', { courseId: course.id });
 
+    console.log('[assignFacultyToDeptCourse] before INSERT department_semester_courses');
     await client.query(
       `INSERT INTO department_semester_courses (dept_id, semester_id, course_id, added_by)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (dept_id, semester_id, course_id) DO UPDATE SET is_active = TRUE`,
       [deptId, semester_id, course.id, userId]
     );
+    console.log('[assignFacultyToDeptCourse] after INSERT department_semester_courses');
 
+    console.log('[assignFacultyToDeptCourse] before SELECT course_assignments');
     const { rows: existing } = await client.query(
       `SELECT id FROM course_assignments
        WHERE course_id = $1 AND class_id = $2 AND semester_id = $3`,
       [course.id, class_id, semester_id]
     );
+    console.log('[assignFacultyToDeptCourse] after SELECT course_assignments', { existingCount: existing.length });
 
     let assignment;
     if (existing.length) {
+      console.log('[assignFacultyToDeptCourse] before UPDATE course_assignments', { assignmentId: existing[0].id });
       const { rows } = await client.query(
         `UPDATE course_assignments SET faculty_id = $1 WHERE id = $2 RETURNING *`,
         [faculty_id, existing[0].id]
       );
       assignment = rows[0];
+      console.log('[assignFacultyToDeptCourse] after UPDATE course_assignments', { assignmentId: assignment.id });
     } else {
+      console.log('[assignFacultyToDeptCourse] before INSERT course_assignments');
       const { rows } = await client.query(
         `INSERT INTO course_assignments (faculty_id, course_id, class_id, semester_id)
          VALUES ($1, $2, $3, $4) RETURNING *`,
         [faculty_id, course.id, class_id, semester_id]
       );
       assignment = rows[0];
+      console.log('[assignFacultyToDeptCourse] after INSERT course_assignments', { assignmentId: assignment.id });
     }
 
     await client.query('COMMIT');
+    console.log('[assignFacultyToDeptCourse] COMMIT ok');
     return { course, assignment, department_course: dc };
   } catch (e) {
+    console.error('[assignFacultyToDeptCourse] ROLLBACK', {
+      message: e.message,
+      code: e.code,
+      detail: e.detail,
+      constraint: e.constraint,
+      stack: e.stack
+    });
     await client.query('ROLLBACK');
     throw e;
   } finally {
@@ -381,12 +443,30 @@ const assignFacultyToDeptCourse = async (deptId, data, userId) => {
   }
 };
 
+const SEMESTERS_PER_YEAR = 2;
+
 /**
- * Resolve period_number for a class based on department structure type.
+ * All period numbers for a class academic year (e.g. year 1 → [1, 2]).
  */
-const resolveClassPeriod = (departmentType, classYear) => {
+const resolveClassPeriods = (departmentType, classYear, structureCount = 8) => {
   const year = parseInt(classYear, 10) || 1;
-  return Math.max(1, year);
+  const max = parseInt(structureCount, 10) || 8;
+  if (departmentType === 'year_wise') {
+    return year <= max ? [year] : [];
+  }
+  const start = (year - 1) * SEMESTERS_PER_YEAR + 1;
+  const periods = [];
+  for (let i = 0; i < SEMESTERS_PER_YEAR; i++) {
+    const p = start + i;
+    if (p <= max) periods.push(p);
+  }
+  return periods;
+};
+
+/** Single period (legacy); prefer resolveClassPeriods */
+const resolveClassPeriod = (departmentType, classYear) => {
+  const periods = resolveClassPeriods(departmentType, classYear);
+  return periods[0] || 1;
 };
 
 /**
@@ -411,5 +491,6 @@ module.exports = {
   updateFullDepartment,
   getManageCourses,
   assignFacultyToDeptCourse,
-  resolveClassPeriod
+  resolveClassPeriod,
+  resolveClassPeriods
 };

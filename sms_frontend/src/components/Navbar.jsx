@@ -54,6 +54,9 @@ function Navbar() {
             <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
             <Link to="/timetable" style={linkStyle}>Timetable</Link>
             <Link to="/notices" style={linkStyle}>Notices</Link>
+            {['admin', 'hod'].includes(role) && (
+              <Link to="/notices/post" style={linkStyle}>Post Notice</Link>
+            )}
 
             {['student', 'faculty', 'advisor', 'hod'].includes(role) && (
               <Link to="/leave" style={linkStyle}>Leaves</Link>
@@ -79,7 +82,7 @@ function Navbar() {
 
             {role === 'hod' && (
               <>
-                <Link to="/hod/department/edit" style={linkStyle}>Dept Courses</Link>
+                <Link to="/hod/courses" style={linkStyle}>Dept Courses</Link>
                 <Link to="/admin/users/create" style={linkStyle}>Add Faculty</Link>
               </>
             )}

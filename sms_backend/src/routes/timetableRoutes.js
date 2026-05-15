@@ -13,7 +13,7 @@ router.post('/', authMiddleware, roleGuard('advisor'), timetableController.repla
 
 // GET /api/timetable/available-courses/:class_id
 router.get('/available-courses/:class_id',
-  authMiddleware, roleGuard('advisor'),
+  authMiddleware, roleGuard('advisor', 'hod', 'admin'),
   timetableController.getAvailableCourses
 );
 

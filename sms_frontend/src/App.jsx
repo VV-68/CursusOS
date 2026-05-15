@@ -14,6 +14,7 @@ import CreateDepartment from './pages/admin/CreateDepartment';
 import EditDepartment from './pages/shared/EditDepartment';
 import Classes from './pages/hod/Classes';
 import AssignAdvisors from './pages/hod/AssignAdvisors';
+import ClassTimetableView from './pages/hod/ClassTimetableView';
 import Courses from './pages/hod/Courses';
 
 import AssignCourse from './pages/hod/AssignCourse';
@@ -27,7 +28,7 @@ import Marks from './pages/student/Marks';
 import LeaveRequests from './pages/shared/LeaveRequests';
 import ApproveLeaves from './pages/shared/ApproveLeaves';
 import Notices from './pages/shared/Notices';
-import CreateNotice from './pages/admin/CreateNotice';
+import PostNotice from './pages/shared/PostNotice';
 
 // New pages
 import MyCourses from './pages/faculty/MyCourses';
@@ -131,6 +132,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/hod/classes/:classId/timetable" element={
+            <ProtectedRoute roles={['hod']}>
+              <ClassTimetableView />
+            </ProtectedRoute>
+          } />
+
           <Route path="/hod/courses" element={
             <ProtectedRoute roles={['hod']}>
               <Courses />
@@ -205,9 +212,14 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/notices/post" element={
+            <ProtectedRoute roles={['admin', 'hod']}>
+              <PostNotice />
+            </ProtectedRoute>
+          } />
           <Route path="/admin/notices/create" element={
             <ProtectedRoute roles={['admin', 'hod']}>
-              <CreateNotice />
+              <PostNotice />
             </ProtectedRoute>
           } />
 

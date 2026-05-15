@@ -27,7 +27,6 @@ function Dashboard() {
             <Link to="/admin/users/create" className="btn btn-primary">Add Faculty / Advisor</Link>
             <Link to="/admin/users" className="btn btn-primary">View Dept Users</Link>
             <Link to="/hod/classes" className="btn btn-primary">Manage Dept Classes</Link>
-            <Link to="/hod/department/edit" className="btn btn-primary">Edit Dept Courses</Link>
             <Link to="/hod/courses" className="btn btn-primary">Manage Dept Courses</Link>
             <Link to="/approvals/leave" className="btn btn-secondary">Pending Leaves</Link>
           </>
@@ -55,11 +54,13 @@ function Dashboard() {
           </>
         )}
 
-        <Link to="/timetable" className="btn btn-secondary">View Timetable</Link>
+        {role !== 'hod' && (
+          <Link to="/timetable" className="btn btn-secondary">View Timetable</Link>
+        )}
         <Link to="/notices" className="btn btn-secondary">Notice Board</Link>
         
         {['admin', 'hod'].includes(role) && (
-          <Link to="/admin/notices/create" className="btn btn-primary">Post Notice</Link>
+          <Link to="/notices/post" className="btn btn-primary">Post Notice</Link>
         )}
 
         {['student', 'faculty', 'advisor', 'hod'].includes(role) && (

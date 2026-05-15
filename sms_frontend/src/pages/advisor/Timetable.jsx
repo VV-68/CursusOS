@@ -1,49 +1,84 @@
 import { useState, useEffect } from 'react';
-import { timetableAPI, classAPI } from '../../services/api';
+import { timetableAPI, classAPI, semesterAPI } from '../../services/api';
+import { downloadTimetablePdf } from '../../utils/timetablePdf';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 function Timetable() {
   const [classes, setClasses] = useState([]);
+  const [semesters, setSemesters] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
   const [classInfo, setClassInfo] = useState(null);
+  const [periodOptions, setPeriodOptions] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [timetableRows, setTimetableRows] = useState([]);
   const [slots, setSlots] = useState({});
 
   useEffect(() => {
-    fetchInitialData();
+    (async () => {
+      try {
+        const [clData, semData] = await Promise.all([
+          classAPI.getAll(),
+          semesterAPI.getAll()
+        ]);
+        setClasses(clData);
+        setSemesters(semData);
+        const active = semData.find(s => s.is_active);
+        if (active) setSelectedSemester(active.id);
+        if (clData.length) setSelectedClass(clData[0].id);
+      } catch (err) {
+        alert(err.message);
+      }
+    })();
   }, []);
 
   useEffect(() => {
-    if (selectedClass) fetchClassData();
-  }, [selectedClass]);
-
-  const fetchInitialData = async () => {
-    try {
-      const clData = await classAPI.getAll();
-      setClasses(clData);
-      if (clData.length) setSelectedClass(clData[0].id);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+    if (selectedClass && selectedSemester) fetchClassData();
+  }, [selectedClass, selectedSemester, selectedPeriod]);
 
   const fetchClassData = async () => {
     try {
+      const bootstrap = await timetableAPI.getAvailableCourses(selectedClass, {
+        semester_id: selectedSemester,
+        ...(selectedPeriod ? { period_number: selectedPeriod } : {})
+      });
+
+      setClassInfo(bootstrap.class);
+      const opts = (bootstrap.class?.applicable_periods || []).map(p => ({
+        period_number: p,
+        label: `${bootstrap.class?.period_label || 'Semester'} ${p}`
+      }));
+      setPeriodOptions(opts);
+
+      const period = selectedPeriod || (opts[0] ? String(opts[0].period_number) : '');
+      if (!selectedPeriod && period) {
+        setSelectedPeriod(period);
+        return;
+      }
+      if (!period) return;
+
       const [timetable, courseData] = await Promise.all([
-        timetableAPI.get(selectedClass),
-        timetableAPI.getAvailableCourses(selectedClass)
+        timetableAPI.get(selectedClass, selectedSemester),
+        timetableAPI.getAvailableCourses(selectedClass, {
+          semester_id: selectedSemester,
+          period_number: period
+        })
       ]);
 
-      const courses = Array.isArray(courseData) ? courseData : (courseData.courses || []);
-      setClassInfo(Array.isArray(courseData) ? null : courseData.class);
-      setAvailableCourses(courses);
+      setAvailableCourses(courseData.courses || []);
+      setTimetableRows(timetable);
 
       const newSlots = {};
       timetable.forEach(t => {
         const key = `${t.day_of_week}-${t.period_no}`;
-        newSlots[key] = t.course_assignment_id;
+        if (t.department_course_id) {
+          newSlots[key] = `dc:${t.department_course_id}`;
+        } else if (t.course_assignment_id) {
+          newSlots[key] = t.course_assignment_id;
+        }
       });
       setSlots(newSlots);
     } catch (err) {
@@ -52,69 +87,108 @@ function Timetable() {
   };
 
   const handleSlotChange = (day, period, value) => {
-    const key = `${day}-${period}`;
-    setSlots({ ...slots, [key]: value });
+    setSlots({ ...slots, [`${day}-${period}`]: value });
   };
 
   const handleSave = async () => {
     const payloadSlots = [];
     Object.keys(slots).forEach(key => {
       const [day_of_week, period_no] = key.split('-');
-      if (slots[key]) {
-        const start_time = `${8 + parseInt(period_no, 10)}:00:00`;
-        const end_time = `${9 + parseInt(period_no, 10)}:00:00`;
-        payloadSlots.push({
-          course_assignment_id: slots[key],
-          day_of_week,
-          period_no: parseInt(period_no, 10),
-          start_time,
-          end_time
-        });
+      const val = slots[key];
+      if (!val) return;
+      const slot = {
+        day_of_week,
+        period_no: parseInt(period_no, 10),
+        start_time: `${8 + parseInt(period_no, 10)}:00:00`,
+        end_time: `${9 + parseInt(period_no, 10)}:00:00`
+      };
+      if (String(val).startsWith('dc:')) {
+        slot.department_course_id = val.replace('dc:', '');
+      } else {
+        slot.course_assignment_id = val;
       }
+      payloadSlots.push(slot);
     });
 
     try {
-      await timetableAPI.upload({ class_id: selectedClass, slots: payloadSlots });
+      await timetableAPI.upload({
+        class_id: selectedClass,
+        semester_id: selectedSemester,
+        slots: payloadSlots
+      });
       alert('Timetable saved successfully');
+      fetchClassData();
     } catch (err) {
       alert('Error saving timetable: ' + err.message);
     }
   };
 
-  const assignedCourses = availableCourses.filter(c => c.course_assignment_id);
-  const unassignedCourses = availableCourses.filter(c => !c.course_assignment_id);
+  const handleDownloadPdf = () => {
+    const cls = classes.find(c => c.id === selectedClass);
+    const sem = semesters.find(s => s.id === selectedSemester);
+    downloadTimetablePdf({
+      title: `Timetable — ${cls?.name || 'Class'} ${cls?.section || ''}`,
+      subtitle: `${sem?.name || ''} | ${classInfo?.period_label || 'Semester'} ${selectedPeriod}`,
+      timetable: timetableRows
+    });
+  };
+
   const periodLabel = classInfo?.period_label || 'Semester';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h2>Manage Class Timetable</h2>
       <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-        Build a timetable from courses assigned to your class for the matching {periodLabel.toLowerCase()}/year.
+        Select class, academic semester, and {periodLabel.toLowerCase()} for the class year. Faculty assignment is optional.
       </p>
 
-      <select
-        value={selectedClass}
-        onChange={e => setSelectedClass(e.target.value)}
-        style={{ marginBottom: '1rem', padding: '0.5rem', minWidth: '280px' }}
-      >
-        <option value="">Select your class…</option>
-        {classes.map(c => (
-          <option key={c.id} value={c.id}>{c.name} — {c.section} (Year {c.year})</option>
-        ))}
-      </select>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <select
+          value={selectedClass}
+          onChange={e => { setSelectedClass(e.target.value); setSelectedPeriod(''); setClassInfo(null); }}
+          style={{ padding: '0.5rem', minWidth: '220px' }}
+        >
+          <option value="">Select class…</option>
+          {classes.map(c => (
+            <option key={c.id} value={c.id}>{c.name} — {c.section} (Year {c.year})</option>
+          ))}
+        </select>
 
-      {selectedClass && classInfo && (
-        <div style={{
-          background: '#eef2ff', padding: '0.75rem 1rem', borderRadius: '8px',
-          marginBottom: '1.5rem', fontSize: '.9rem', color: '#4338ca'
-        }}>
-          Showing courses for <strong>{periodLabel} {classInfo.period_number}</strong>
-          {' '}(Class year: {classInfo.year})
-        </div>
-      )}
+        <select
+          value={selectedSemester}
+          onChange={e => setSelectedSemester(e.target.value)}
+          style={{ padding: '0.5rem', minWidth: '200px' }}
+        >
+          <option value="">Academic semester…</option>
+          {semesters.map(s => (
+            <option key={s.id} value={s.id}>{s.name} {s.is_active ? '(Active)' : ''}</option>
+          ))}
+        </select>
 
-      {selectedClass && (
+        <select
+          value={selectedPeriod}
+          onChange={e => setSelectedPeriod(e.target.value)}
+          style={{ padding: '0.5rem', minWidth: '160px' }}
+          disabled={!periodOptions.length}
+        >
+          <option value="">{periodLabel}…</option>
+          {periodOptions.map(p => (
+            <option key={p.period_number} value={p.period_number}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {selectedClass && selectedSemester && (selectedPeriod || periodOptions.length > 0) && (
         <>
+          {classInfo && (
+            <div style={{
+              background: '#eef2ff', padding: '0.75rem 1rem', borderRadius: '8px',
+              marginBottom: '1rem', fontSize: '.9rem', color: '#4338ca'
+            }}>
+              Class Year {classInfo.year} — scheduling <strong>{periodLabel} {selectedPeriod}</strong>
+            </div>
+          )}
+
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginBottom: '1rem' }}>
             <thead>
               <tr style={{ background: '#eee' }}>
@@ -131,13 +205,13 @@ function Timetable() {
                       <select
                         value={slots[`${day}-${period}`] || ''}
                         onChange={e => handleSlotChange(day, period, e.target.value)}
-                        style={{ width: '100%', fontSize: '.8rem' }}
+                        style={{ width: '100%', fontSize: '.75rem' }}
                       >
                         <option value="">— Off —</option>
-                        {assignedCourses.map(ca => (
-                          <option key={ca.course_assignment_id} value={ca.course_assignment_id}>
-                            {ca.code} — {ca.course_name || ca.name}
-                            {ca.faculty_name ? ` (${ca.faculty_name})` : ''}
+                        {availableCourses.map(c => (
+                          <option key={c.department_course_id} value={`dc:${c.department_course_id}`}>
+                            {c.code} — {c.course_name}
+                            {c.faculty_name ? ` (${c.faculty_name})` : ''}
                           </option>
                         ))}
                       </select>
@@ -148,35 +222,28 @@ function Timetable() {
             </tbody>
           </table>
 
-          <div style={{ marginTop: '1rem', color: '#666', fontSize: '0.9em' }}>
-            <strong>Not yet assigned to faculty (cannot schedule):</strong>
-            <ul>
-              {unassignedCourses.map(c => (
-                <li key={c.course_id || c.code}>
-                  {c.code} — {c.course_name || c.name}
-                </li>
-              ))}
-              {unassignedCourses.length === 0 && <li>None — all courses have faculty assigned</li>}
-            </ul>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleSave}
+              style={{
+                padding: '0.6rem 1.5rem', background: '#4f46e5', color: '#fff',
+                border: 'none', borderRadius: '8px', cursor: 'pointer'
+              }}
+            >
+              Save Timetable
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              style={{
+                padding: '0.6rem 1.5rem', background: '#fff', color: '#4f46e5',
+                border: '2px solid #4f46e5', borderRadius: '8px', cursor: 'pointer'
+              }}
+            >
+              Download PDF
+            </button>
           </div>
-
-          {assignedCourses.length === 0 && (
-            <p style={{ color: '#b45309', background: '#fffbeb', padding: '0.75rem', borderRadius: '8px' }}>
-              No faculty-assigned courses for this class&apos;s {periodLabel.toLowerCase()}.
-              Ask your HOD to assign faculty first.
-            </p>
-          )}
-
-          <button
-            type="button"
-            onClick={handleSave}
-            style={{
-              marginTop: '1.5rem', padding: '0.6rem 1.5rem',
-              background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer'
-            }}
-          >
-            Save Timetable
-          </button>
         </>
       )}
     </div>

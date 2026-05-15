@@ -6,7 +6,8 @@ const pool = require('../db/connection');
 const getTimetable = async (req, res) => {
   try {
     const { class_id } = req.params;
-    const timetable = await timetableModel.getTimetable(class_id);
+    const { semester_id } = req.query;
+    const timetable = await timetableModel.getTimetable(class_id, semester_id || null);
     res.json(timetable);
   } catch (err) {
     console.error(err);
@@ -16,9 +17,11 @@ const getTimetable = async (req, res) => {
 
 const replaceTimetable = async (req, res) => {
   try {
-    const { class_id, slots } = req.body;
-    
-    // Validation: Advisor must own the class
+    const { class_id, semester_id, slots } = req.body;
+    if (!semester_id) {
+      return res.status(400).json({ error: 'semester_id is required' });
+    }
+
     const classObj = (await classModel.getAllClasses()).find(c => c.id === class_id);
     if (!classObj) return res.status(404).json({ error: 'Class not found' });
 
@@ -27,14 +30,14 @@ const replaceTimetable = async (req, res) => {
     }
 
     try {
-      await timetableModel.replaceTimetable(class_id, slots);
+      await timetableModel.replaceTimetable(class_id, semester_id, slots);
     } catch (dbErr) {
       if (dbErr.code === '23505') {
         return res.status(400).json({ error: 'Timetable conflict on day and period' });
       }
       throw dbErr;
     }
-    
+
     res.json({ message: 'Timetable updated successfully' });
   } catch (err) {
     console.error(err);
@@ -45,27 +48,49 @@ const replaceTimetable = async (req, res) => {
 const getAvailableCourses = async (req, res) => {
   try {
     const { class_id } = req.params;
+    const { semester_id, period_number } = req.query;
 
     const { rows: clsRows } = await pool.query(
       `SELECT c.id, c.dept_id, c.year, c.semester_id, c.name AS class_name, c.section,
               d.department_type, d.structure_count
        FROM classes c
        JOIN departments d ON d.id = c.dept_id
-       WHERE c.id = $1 AND (c.advisor1_id = $2 OR c.advisor2_id = $2)`,
-      [class_id, req.user.id]
+       WHERE c.id = $1
+         AND (
+           c.advisor1_id = $2 OR c.advisor2_id = $2
+           OR ($3 = 'hod' AND c.dept_id = $4)
+           OR $3 = 'admin'
+         )`,
+      [class_id, req.user.id, req.user.role, req.user.dept_id]
     );
     if (!clsRows.length) return res.status(403).json({ error: 'Not your class' });
 
     const cls = clsRows[0];
-    const periodNumber = deptCreationModel.resolveClassPeriod(cls.department_type, cls.year);
-    const semesterId = cls.semester_id;
+    const periodLabel = cls.department_type === 'year_wise' ? 'Year' : 'Semester';
+    const applicablePeriods = deptCreationModel.resolveClassPeriods(
+      cls.department_type,
+      cls.year,
+      cls.structure_count
+    );
 
-    if (!semesterId) {
-      return res.status(400).json({ error: 'Class has no semester assigned' });
+    let targetPeriod = period_number ? parseInt(period_number, 10) : null;
+    if (!targetPeriod) {
+      targetPeriod = applicablePeriods[0] || 1;
+    }
+    if (!applicablePeriods.includes(targetPeriod)) {
+      return res.status(400).json({
+        error: `Invalid period for this class. Choose one of: ${applicablePeriods.join(', ')}`
+      });
+    }
+
+    const semId = semester_id || cls.semester_id;
+    if (!semId) {
+      return res.status(400).json({ error: 'semester_id is required' });
     }
 
     const { rows } = await pool.query(
       `SELECT
+         dc.id AS department_course_id,
          dc.course_code AS code,
          dc.course_name,
          dc.credits,
@@ -81,7 +106,7 @@ const getAvailableCourses = async (req, res) => {
        LEFT JOIN users u ON u.id = ca.faculty_id
        WHERE dc.dept_id = $3 AND dc.period_number = $4
        ORDER BY dc.course_code`,
-      [class_id, semesterId, cls.dept_id, periodNumber]
+      [class_id, semId, cls.dept_id, targetPeriod]
     );
 
     res.json({
@@ -90,9 +115,11 @@ const getAvailableCourses = async (req, res) => {
         name: cls.class_name,
         section: cls.section,
         year: cls.year,
-        period_number: periodNumber,
-        period_label: cls.department_type === 'year_wise' ? 'Year' : 'Semester'
+        period_number: targetPeriod,
+        period_label: periodLabel,
+        applicable_periods: applicablePeriods
       },
+      semester_id: semId,
       courses: rows
     });
   } catch (err) {

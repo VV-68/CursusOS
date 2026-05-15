@@ -1,19 +1,31 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   departmentCreationAPI, getMe, userAPI, classAPI, semesterAPI, courseAPI
 } from '../../services/api';
+import { periodLabel } from '../../utils/periodUtils';
 import '../admin/CreateDepartment.css';
+
+function groupCoursesByPeriod(courses, applicablePeriods) {
+  const periodNumbers = applicablePeriods?.length
+    ? applicablePeriods
+    : [...new Set(courses.map(c => Number(c.period_number)))].filter(Boolean).sort((a, b) => a - b);
+  return periodNumbers.map(pn => ({
+    period_number: pn,
+    courses: courses.filter(c => Number(c.period_number) === Number(pn))
+  }));
+}
 
 function Courses() {
   const [deptId, setDeptId] = useState(null);
-  const [periodLabel, setPeriodLabel] = useState('Semester');
-  const [periods, setPeriods] = useState([]);
+  const [deptType, setDeptType] = useState('semester_wise');
+  const [periodLabelText, setPeriodLabelText] = useState('Semester');
+  const [applicablePeriods, setApplicablePeriods] = useState([]);
+  const [selectedClassMeta, setSelectedClassMeta] = useState(null);
   const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [periodFilter, setPeriodFilter] = useState('');
   const [semesters, setSemesters] = useState([]);
   const [classes, setClasses] = useState([]);
   const [faculty, setFaculty] = useState([]);
@@ -23,7 +35,6 @@ function Courses() {
   const [assignModal, setAssignModal] = useState(null);
   const [assignForm, setAssignForm] = useState({ faculty_id: '' });
   const [assigning, setAssigning] = useState(false);
-  const periodInitialized = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -31,7 +42,7 @@ function Courses() {
         const user = await getMe();
         setDeptId(user.dept_id);
         const [semData, classData, userData] = await Promise.all([
-          semesterAPI.getAll(),
+          semesterAPI.getAll().catch(() => []),
           classAPI.getAll(),
           userAPI.getAll()
         ]);
@@ -40,7 +51,7 @@ function Courses() {
         setFaculty(userData.filter(u => u.role === 'faculty' || u.role === 'advisor'));
         const active = semData.find(s => s.is_active);
         if (active) setSelectedSemester(active.id);
-        if (classData.length) setSelectedClass(classData[0].id);
+        else if (semData.length) setSelectedSemester(semData[0].id);
       } catch (err) {
         setError(err.message);
       }
@@ -48,32 +59,33 @@ function Courses() {
   }, []);
 
   const loadCourses = useCallback(async () => {
-    if (!deptId) return;
+    if (!deptId || !selectedClass || !selectedSemester) {
+      setCourses([]);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (periodFilter) params.period_number = periodFilter;
-      if (selectedClass) params.class_id = selectedClass;
-      if (selectedSemester) params.semester_id = selectedSemester;
-      const data = await departmentCreationAPI.getManageCourses(deptId, params);
-      setPeriodLabel(data.period_label || 'Semester');
-      setPeriods(data.periods || []);
+      const data = await departmentCreationAPI.getManageCourses(deptId, {
+        class_id: selectedClass,
+        semester_id: selectedSemester
+      });
+      setDeptType(data.department?.department_type || 'semester_wise');
+      setPeriodLabelText(data.period_label || periodLabel(data.department?.department_type));
+      setApplicablePeriods(data.applicable_periods || []);
+      setSelectedClassMeta(data.class);
       setCourses(data.courses || []);
-      if (!periodInitialized.current && data.periods?.length) {
-        setPeriodFilter(String(data.periods[0].period_number));
-        periodInitialized.current = true;
-      }
     } catch (err) {
       setError(err.message);
+      setCourses([]);
     } finally {
       setLoading(false);
     }
-  }, [deptId, periodFilter, selectedClass, selectedSemester]);
+  }, [deptId, selectedClass, selectedSemester]);
 
   useEffect(() => {
-    if (deptId) loadCourses();
-  }, [deptId, loadCourses]);
+    loadCourses();
+  }, [loadCourses]);
 
   const openAssign = (course) => {
     setAssignModal(course);
@@ -82,10 +94,7 @@ function Courses() {
 
   const handleAssign = async (e) => {
     e.preventDefault();
-    if (!assignModal || !selectedClass || !selectedSemester) {
-      alert('Select a class and semester first');
-      return;
-    }
+    if (!assignModal || !selectedClass || !selectedSemester) return;
     setAssigning(true);
     try {
       await departmentCreationAPI.assignFaculty(deptId, {
@@ -113,9 +122,9 @@ function Courses() {
     }
   };
 
-  const filteredCourses = periodFilter
-    ? courses.filter(c => String(c.period_number) === String(periodFilter))
-    : courses;
+  const coursesByPeriod = groupCoursesByPeriod(courses, applicablePeriods);
+
+  const canShowCourses = selectedClass && selectedSemester;
 
   return (
     <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
@@ -137,25 +146,25 @@ function Courses() {
       )}
 
       <div className="dept-card">
-        <div className="dept-card__title"><span className="icon">🔍</span> Filters</div>
-        <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className="dept-card__title"><span className="icon">🔍</span> Select Class & Semester</div>
+        <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           <div className="dept-field">
-            <label>{periodLabel}</label>
+            <label>Class *</label>
             <select
-              value={periodFilter}
-              onChange={e => setPeriodFilter(e.target.value)}
+              value={selectedClass}
+              onChange={e => setSelectedClass(e.target.value)}
               style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}
             >
-              <option value="">All {periodLabel}s</option>
-              {periods.map(p => (
-                <option key={p.period_number} value={p.period_number}>
-                  {periodLabel} {p.period_number}
+              <option value="">Select class…</option>
+              {classes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name} — {c.section} (Year {c.year})
                 </option>
               ))}
             </select>
           </div>
           <div className="dept-field">
-            <label>Academic Semester</label>
+            <label>Academic Semester *</label>
             <select
               value={selectedSemester}
               onChange={e => setSelectedSemester(e.target.value)}
@@ -169,98 +178,96 @@ function Courses() {
               ))}
             </select>
           </div>
-          <div className="dept-field">
-            <label>Class (for assignments)</label>
-            <select
-              value={selectedClass}
-              onChange={e => setSelectedClass(e.target.value)}
-              style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}
-            >
-              <option value="">Select class…</option>
-              {classes.map(c => (
-                <option key={c.id} value={c.id}>{c.name} — {c.section} (Year {c.year})</option>
-              ))}
-            </select>
-          </div>
         </div>
-        <p style={{ fontSize: '.82rem', color: '#64748b', margin: '1rem 0 0' }}>
-          Courses are listed by {periodLabel.toLowerCase()}. Assign faculty per class and semester to enable timetable scheduling.
-        </p>
-      </div>
-
-      <div className="dept-card" style={{ marginTop: '1rem' }}>
-        <div className="dept-card__title" style={{ marginBottom: '1rem' }}>
-          <span className="icon">📋</span>
-          {periodFilter ? `${periodLabel} ${periodFilter} Courses` : 'All Courses'}
-          <span style={{ fontWeight: 400, color: '#64748b', marginLeft: '0.5rem' }}>
-            ({filteredCourses.length})
-          </span>
-        </div>
-
-        {loading ? (
-          <p style={{ color: '#64748b' }}>Loading courses…</p>
-        ) : filteredCourses.length === 0 ? (
-          <div className="dept-alert dept-alert--info">
+        {canShowCourses && applicablePeriods.length > 0 && (
+          <div className="dept-alert dept-alert--info" style={{ marginTop: '1rem' }}>
             <span className="dept-alert__icon">ℹ️</span>
             <span>
-              No courses found.
-              {' '}
-              <Link to="/hod/department/edit">Add courses</Link>
+              Showing courses for <strong>Year {selectedClassMeta?.year}</strong>
+              {' '}({applicablePeriods.map(p => `${periodLabelText} ${p}`).join(', ')})
             </span>
           </div>
-        ) : (
-          <table className="json-preview-table" style={{ width: '100%' }}>
-            <thead>
-              <tr>
-                <th>{periodLabel}</th>
-                <th>Code</th>
-                <th>Course Name</th>
-                <th>Credits</th>
-                <th>Elective</th>
-                <th>Faculty</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCourses.map(c => (
-                <tr key={c.id}>
-                  <td><span className="period-badge">{c.period_number}</span></td>
-                  <td><code>{c.course_code}</code></td>
-                  <td>{c.course_name}</td>
-                  <td>{c.credits}</td>
-                  <td>
-                    <span className={`elective-badge ${c.is_elective ? 'yes' : 'no'}`}>
-                      {c.is_elective ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td>{c.assignment?.faculty_name || '—'}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    <button
-                      type="button"
-                      className="dept-btn dept-btn--primary"
-                      style={{ padding: '0.35rem 0.75rem', fontSize: '.8rem' }}
-                      onClick={() => openAssign(c)}
-                      disabled={!selectedClass || !selectedSemester}
-                    >
-                      Assign Faculty
-                    </button>
-                    {c.assignment?.assignment_id && (
-                      <button
-                        type="button"
-                        className="dept-btn dept-btn--secondary"
-                        style={{ padding: '0.35rem 0.75rem', fontSize: '.8rem', marginLeft: '0.35rem', color: '#dc2626' }}
-                        onClick={() => handleRemoveAssignment(c.assignment.assignment_id)}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        )}
+        {!canShowCourses && (
+          <p style={{ fontSize: '.82rem', color: '#64748b', margin: '1rem 0 0' }}>
+            Select a class and academic semester to view courses for that class year.
+          </p>
         )}
       </div>
+
+      {canShowCourses && (
+        <div className="dept-card" style={{ marginTop: '1rem' }}>
+          {loading ? (
+            <p style={{ color: '#64748b' }}>Loading courses…</p>
+          ) : courses.length === 0 ? (
+            <div className="dept-alert dept-alert--info">
+              <span className="dept-alert__icon">ℹ️</span>
+              <span>
+                No courses for this class year.
+                <Link to="/hod/department/edit" style={{ marginLeft: '0.5rem' }}>Add courses</Link>
+              </span>
+            </div>
+          ) : (
+            coursesByPeriod.map(group => (
+              <div key={group.period_number} style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', color: '#4338ca', marginBottom: '0.75rem' }}>
+                  {periodLabelText} {group.period_number}
+                  <span style={{ fontWeight: 400, color: '#64748b', marginLeft: '0.5rem' }}>
+                    ({group.courses.length} courses)
+                  </span>
+                </h3>
+                <table className="json-preview-table" style={{ width: '100%' }}>
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Course Name</th>
+                      <th>Credits</th>
+                      <th>Elective</th>
+                      <th>Faculty</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.courses.map(c => (
+                      <tr key={c.id}>
+                        <td><code>{c.course_code}</code></td>
+                        <td>{c.course_name}</td>
+                        <td>{c.credits}</td>
+                        <td>
+                          <span className={`elective-badge ${c.is_elective ? 'yes' : 'no'}`}>
+                            {c.is_elective ? 'Yes' : 'No'}
+                          </span>
+                        </td>
+                        <td>{c.assignment?.faculty_name || '—'}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <button
+                            type="button"
+                            className="dept-btn dept-btn--primary"
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '.8rem' }}
+                            onClick={() => openAssign(c)}
+                          >
+                            Assign Faculty
+                          </button>
+                          {c.assignment?.assignment_id && (
+                            <button
+                              type="button"
+                              className="dept-btn dept-btn--secondary"
+                              style={{ padding: '0.35rem 0.75rem', fontSize: '.8rem', marginLeft: '0.35rem', color: '#dc2626' }}
+                              onClick={() => handleRemoveAssignment(c.assignment.assignment_id)}
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {assignModal && (
         <div className="json-upload-overlay" onClick={(e) => e.target === e.currentTarget && setAssignModal(null)}>
@@ -269,11 +276,11 @@ function Courses() {
               <h2>Assign Faculty</h2>
               <button type="button" className="json-upload-modal__close" onClick={() => setAssignModal(null)}>×</button>
             </div>
-            <form id="assign-faculty-form" onSubmit={handleAssign} className="json-upload-modal__body">
+            <form onSubmit={handleAssign} className="json-upload-modal__body">
               <p style={{ margin: '0 0 1rem', color: '#475569' }}>
                 <strong>{assignModal.course_code}</strong> — {assignModal.course_name}
                 <br />
-                <span style={{ fontSize: '.85rem' }}>{periodLabel} {assignModal.period_number}</span>
+                <span style={{ fontSize: '.85rem' }}>{periodLabelText} {assignModal.period_number}</span>
               </p>
               <div className="dept-field">
                 <label>Faculty *</label>
@@ -289,13 +296,13 @@ function Courses() {
                   ))}
                 </select>
               </div>
+              <div className="json-upload-modal__footer" style={{ padding: 0, border: 'none', marginTop: '1rem' }}>
+                <button type="button" className="dept-btn dept-btn--secondary" onClick={() => setAssignModal(null)}>Cancel</button>
+                <button type="submit" className="dept-btn dept-btn--success" disabled={assigning}>
+                  {assigning ? 'Saving…' : 'Save Assignment'}
+                </button>
+              </div>
             </form>
-            <div className="json-upload-modal__footer">
-              <button type="button" className="dept-btn dept-btn--secondary" onClick={() => setAssignModal(null)}>Cancel</button>
-              <button type="submit" form="assign-faculty-form" className="dept-btn dept-btn--success" disabled={assigning}>
-                {assigning ? 'Saving…' : 'Save Assignment'}
-              </button>
-            </div>
           </div>
         </div>
       )}

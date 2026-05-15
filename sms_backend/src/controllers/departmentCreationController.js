@@ -296,15 +296,20 @@ const getManageCourses = async (req, res) => {
     if (req.user.role === 'hod' && req.user.dept_id !== deptId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    const { period_number, class_id, semester_id } = req.query;
+    const { class_id, semester_id } = req.query;
+    if (!class_id) {
+      return res.status(400).json({ error: 'class_id query parameter is required' });
+    }
     const result = await deptCreationModel.getManageCourses(deptId, {
-      period_number,
       class_id,
       semester_id
     });
     if (!result) return res.status(404).json({ error: 'Department not found' });
     res.json(result);
   } catch (err) {
+    if (err.message === 'CLASS_NOT_FOUND') {
+      return res.status(404).json({ error: 'Class not found in your department' });
+    }
     console.error('getManageCourses error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -314,9 +319,11 @@ const getManageCourses = async (req, res) => {
  * POST /api/department-creation/:id/assign-faculty
  */
 const assignFaculty = async (req, res) => {
+  const deptId = req.params.id;
+  console.log('[assignFaculty] POST', { deptId, body: req.body, userId: req.user?.id, role: req.user?.role });
   try {
-    const deptId = req.params.id;
     if (req.user.role === 'hod' && req.user.dept_id !== deptId) {
+      console.log('[assignFaculty] forbidden: hod dept mismatch', { hodDept: req.user.dept_id, deptId });
       return res.status(403).json({ error: 'Forbidden' });
     }
     const { department_course_id, faculty_id, class_id, semester_id } = req.body;
@@ -328,11 +335,20 @@ const assignFaculty = async (req, res) => {
       { department_course_id, faculty_id, class_id, semester_id },
       req.user.id
     );
+    console.log('[assignFaculty] success', { assignmentId: result.assignment?.id, courseId: result.course?.id });
     res.status(201).json({ message: 'Faculty assigned successfully', ...result });
   } catch (err) {
     if (err.message === 'NOT_FOUND') return res.status(404).json({ error: 'Course not found' });
     if (err.code === '23505') return res.status(400).json({ error: 'Assignment already exists' });
-    console.error('assignFaculty error:', err);
+    if (err.code === '23503') return res.status(400).json({ error: 'Invalid faculty, class, or semester reference' });
+    if (err.code === '23514') return res.status(400).json({ error: 'Course credits must be greater than zero' });
+    console.error('[assignFaculty] error:', {
+      message: err.message,
+      code: err.code,
+      detail: err.detail,
+      constraint: err.constraint,
+      stack: err.stack
+    });
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -266,6 +266,9 @@ function Classes() {
                     <Link to={`/hod/classes/${c.id}/assign-advisors`}>
                       <button style={btnStyle('#0ea5e9')}>👥 Advisors</button>
                     </Link>
+                    <Link to={`/hod/classes/${c.id}/timetable`}>
+                      <button style={btnStyle('#6366f1')}>📅 Timetable</button>
+                    </Link>
                     <button
                       style={btnStyle(deleting === c.id ? '#94a3b8' : '#ef4444')}
                       onClick={() => handleDelete(c)}

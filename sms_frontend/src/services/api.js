@@ -149,9 +149,15 @@ export const courseAPI = {
 // ─── Timetable ───────────────────────────────────────────────
 
 export const timetableAPI = {
-  get: (classId) => fetch(`${BASE_URL}/api/timetable/${classId}`, { headers: getHeaders(true) }).then(handleResponse),
+  get: (classId, semesterId) => {
+    const qs = semesterId ? `?semester_id=${semesterId}` : '';
+    return fetch(`${BASE_URL}/api/timetable/${classId}${qs}`, { headers: getHeaders(true) }).then(handleResponse);
+  },
   upload: (data) => fetch(`${BASE_URL}/api/timetable`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
-  getAvailableCourses: (classId) => fetch(`${BASE_URL}/api/timetable/available-courses/${classId}`, { headers: getHeaders(true) }).then(handleResponse),
+  getAvailableCourses: (classId, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return fetch(`${BASE_URL}/api/timetable/available-courses/${classId}?${qs}`, { headers: getHeaders(true) }).then(handleResponse);
+  },
 };
 
 // ─── Attendance ──────────────────────────────────────────────
@@ -185,6 +191,7 @@ export const leaveAPI = {
 export const noticeAPI = {
   getAll: () => fetch(`${BASE_URL}/api/notices`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/notices`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  remove: (id) => fetch(`${BASE_URL}/api/notices/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Students (legacy) ──────────────────────────────────────
