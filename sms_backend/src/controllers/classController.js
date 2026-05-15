@@ -25,9 +25,17 @@ const getAllClasses = async (req, res) => {
 
 const createClass = async (req, res) => {
   try {
-    const newClass = await classModel.createClass(req.body);
+    const { name, year, section, dept_id, semester_id } = req.body;
+    
+    // If HOD, they can only create class for their own department
+    if (req.user.role === 'hod' && req.user.dept_id !== dept_id) {
+      return res.status(403).json({ error: 'Forbidden. You can only create classes for your own department.' });
+    }
+
+    const newClass = await classModel.createClass({ name, year, section, dept_id, semester_id });
     res.status(201).json(newClass);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -68,9 +76,52 @@ const getStudentsInClass = async (req, res) => {
   }
 };
 
+const updateClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, year, section, semester_id } = req.body;
+
+    const allClasses = await classModel.getAllClasses();
+    const classObj = allClasses.find(c => c.id === id);
+    if (!classObj) return res.status(404).json({ error: 'Class not found' });
+
+    if (req.user.role === 'hod' && classObj.dept_id !== req.user.dept_id) {
+      return res.status(403).json({ error: 'Forbidden. Not your department.' });
+    }
+
+    const updatedClass = await classModel.updateClass(id, { name, year, section, semester_id });
+    res.json(updatedClass);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const deleteClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const allClasses = await classModel.getAllClasses();
+    const classObj = allClasses.find(c => c.id === id);
+    if (!classObj) return res.status(404).json({ error: 'Class not found' });
+
+    if (req.user.role === 'hod' && classObj.dept_id !== req.user.dept_id) {
+      return res.status(403).json({ error: 'Forbidden. Not your department.' });
+    }
+
+    await classModel.deleteClass(id);
+    res.json({ message: 'Class deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getAllClasses,
   createClass,
   assignAdvisors,
-  getStudentsInClass
+  getStudentsInClass,
+  updateClass,
+  deleteClass
 };

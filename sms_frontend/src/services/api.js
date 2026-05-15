@@ -127,6 +127,8 @@ export const semesterAPI = {
 export const classAPI = {
   getAll: () => fetch(`${BASE_URL}/api/classes`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/classes`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  update: (id, data) => fetch(`${BASE_URL}/api/classes/${id}`, { method: 'PUT', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  delete: (id) => fetch(`${BASE_URL}/api/classes/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
   assignAdvisors: (id, data) => fetch(`${BASE_URL}/api/classes/${id}/advisors`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   getStudents: (id) => fetch(`${BASE_URL}/api/classes/${id}/students`, { headers: getHeaders(true) }).then(handleResponse),
 };
@@ -310,5 +312,52 @@ export const profileAPI = {
 export const consolidatedMarksAPI = {
   get: (courseAssignmentId) => fetch(`${BASE_URL}/api/marks/consolidated/${courseAssignmentId}`, {
     headers: getHeaders(true)
+  }).then(handleResponse),
+};
+
+// ─── Department Creation ─────────────────────────────────────────────────
+
+export const departmentCreationAPI = {
+  create: (data) => fetch(`${BASE_URL}/api/department-creation`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  getDetails: (id) => fetch(`${BASE_URL}/api/department-creation/${id}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  update: (id, data) => fetch(`${BASE_URL}/api/department-creation/${id}`, {
+    method: 'PUT', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  delete: (id) => fetch(`${BASE_URL}/api/department-creation/${id}`, {
+    method: 'DELETE', headers: getHeaders(true)
+  }).then(handleResponse),
+
+  saveDraft: (data) => fetch(`${BASE_URL}/api/department-creation/draft`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  getDraft: () => fetch(`${BASE_URL}/api/department-creation/draft`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  deleteDraft: () => fetch(`${BASE_URL}/api/department-creation/draft`, {
+    method: 'DELETE', headers: getHeaders(true)
+  }).then(handleResponse),
+
+  validateCode: (code) => fetch(`${BASE_URL}/api/department-creation/validate-code`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify({ code })
+  }).then(handleResponse),
+
+  getManageCourses: (id, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return fetch(`${BASE_URL}/api/department-creation/${id}/manage-courses?${qs}`, {
+      headers: getHeaders(true)
+    }).then(handleResponse);
+  },
+
+  assignFaculty: (id, data) => fetch(`${BASE_URL}/api/department-creation/${id}/assign-faculty`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
   }).then(handleResponse),
 };

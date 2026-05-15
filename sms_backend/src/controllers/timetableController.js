@@ -1,5 +1,6 @@
 const timetableModel = require('../models/timetableModel');
 const classModel = require('../models/classModel');
+const deptCreationModel = require('../models/departmentCreationModel');
 const pool = require('../db/connection');
 
 const getTimetable = async (req, res) => {
@@ -45,31 +46,55 @@ const getAvailableCourses = async (req, res) => {
   try {
     const { class_id } = req.params;
 
-    // Verify advisor owns this class
     const { rows: clsRows } = await pool.query(
-      `SELECT dept_id FROM classes
-       WHERE id = $1 AND (advisor1_id = $2 OR advisor2_id = $2)`,
+      `SELECT c.id, c.dept_id, c.year, c.semester_id, c.name AS class_name, c.section,
+              d.department_type, d.structure_count
+       FROM classes c
+       JOIN departments d ON d.id = c.dept_id
+       WHERE c.id = $1 AND (c.advisor1_id = $2 OR c.advisor2_id = $2)`,
       [class_id, req.user.id]
     );
     if (!clsRows.length) return res.status(403).json({ error: 'Not your class' });
 
+    const cls = clsRows[0];
+    const periodNumber = deptCreationModel.resolveClassPeriod(cls.department_type, cls.year);
+    const semesterId = cls.semester_id;
+
+    if (!semesterId) {
+      return res.status(400).json({ error: 'Class has no semester assigned' });
+    }
+
     const { rows } = await pool.query(
       `SELECT
-         c.id AS course_id, c.name AS course_name, c.code, c.credits,
+         dc.course_code AS code,
+         dc.course_name,
+         dc.credits,
+         dc.period_number,
+         dc.is_elective,
+         c.id AS course_id,
          ca.id AS course_assignment_id,
          u.full_name AS faculty_name
-       FROM department_semester_courses dsc
-       JOIN courses c ON c.id = dsc.course_id
-       JOIN semesters s ON s.id = dsc.semester_id AND s.is_active = TRUE
+       FROM department_courses dc
+       LEFT JOIN courses c ON c.code = dc.course_code AND c.dept_id = dc.dept_id
        LEFT JOIN course_assignments ca
-         ON ca.course_id = c.id AND ca.class_id = $1 AND ca.semester_id = s.id
+         ON ca.course_id = c.id AND ca.class_id = $1 AND ca.semester_id = $2
        LEFT JOIN users u ON u.id = ca.faculty_id
-       WHERE dsc.dept_id = $2 AND dsc.is_active = TRUE
-       ORDER BY c.code`,
-      [class_id, clsRows[0].dept_id]
+       WHERE dc.dept_id = $3 AND dc.period_number = $4
+       ORDER BY dc.course_code`,
+      [class_id, semesterId, cls.dept_id, periodNumber]
     );
 
-    res.json(rows);
+    res.json({
+      class: {
+        id: cls.id,
+        name: cls.class_name,
+        section: cls.section,
+        year: cls.year,
+        period_number: periodNumber,
+        period_label: cls.department_type === 'year_wise' ? 'Year' : 'Semester'
+      },
+      courses: rows
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

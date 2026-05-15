@@ -10,10 +10,12 @@ import Users from './pages/admin/Users';
 import CreateUser from './pages/admin/CreateUser';
 import Departments from './pages/admin/Departments';
 import AssignHOD from './pages/admin/AssignHOD';
+import CreateDepartment from './pages/admin/CreateDepartment';
+import EditDepartment from './pages/shared/EditDepartment';
 import Classes from './pages/hod/Classes';
 import AssignAdvisors from './pages/hod/AssignAdvisors';
 import Courses from './pages/hod/Courses';
-import UploadCourses from './pages/hod/UploadCourses';
+
 import AssignCourse from './pages/hod/AssignCourse';
 import Timetable from './pages/advisor/Timetable';
 import TimetableView from './pages/shared/TimetableView';
@@ -99,6 +101,24 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/admin/departments/create" element={
+            <ProtectedRoute roles={['admin']}>
+              <CreateDepartment />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/departments/:id/edit" element={
+            <ProtectedRoute roles={['admin']}>
+              <EditDepartment />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/department/edit" element={
+            <ProtectedRoute roles={['hod']}>
+              <EditDepartment />
+            </ProtectedRoute>
+          } />
+
           <Route path="/hod/classes" element={
             <ProtectedRoute roles={['hod']}>
               <Classes />
@@ -117,11 +137,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/hod/upload-courses" element={
-            <ProtectedRoute roles={['hod']}>
-              <UploadCourses />
-            </ProtectedRoute>
-          } />
+
 
           <Route path="/hod/assign-course" element={
             <ProtectedRoute roles={['hod']}>

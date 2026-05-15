@@ -40,9 +40,25 @@ const getStudentsInClass = async (classId) => {
   return rows;
 };
 
+const updateClass = async (classId, classData) => {
+  const { name, year, section, semester_id } = classData;
+  const { rows } = await pool.query(
+    'UPDATE classes SET name = $1, year = $2, section = $3, semester_id = $4 WHERE id = $5 RETURNING *',
+    [name, year, section, semester_id, classId]
+  );
+  return rows[0];
+};
+
+const deleteClass = async (classId) => {
+  const { rows } = await pool.query('DELETE FROM classes WHERE id = $1 RETURNING *', [classId]);
+  return rows[0];
+};
+
 module.exports = {
   getAllClasses,
   createClass,
   assignAdvisors,
-  getStudentsInClass
+  getStudentsInClass,
+  updateClass,
+  deleteClass
 };

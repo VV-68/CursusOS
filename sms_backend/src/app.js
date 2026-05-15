@@ -65,6 +65,7 @@ const noticeRoutes = require("./routes/noticeRoutes");
 const assignmentRoutes = require("./routes/assignmentRoutes");
 const studyMaterialRoutes = require("./routes/studyMaterialRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const departmentCreationRoutes = require("./routes/departmentCreationRoutes");
 
 
 app.use("/api/users", userRoutes);
@@ -80,6 +81,7 @@ app.use("/api/students", studentRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/study-materials", studyMaterialRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/department-creation", departmentCreationRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -78,7 +78,10 @@ function Navbar() {
             )}
 
             {role === 'hod' && (
-              <Link to="/admin/users/create" style={linkStyle}>Add Faculty</Link>
+              <>
+                <Link to="/hod/department/edit" style={linkStyle}>Dept Courses</Link>
+                <Link to="/admin/users/create" style={linkStyle}>Add Faculty</Link>
+              </>
             )}
 
             <Link to="/change-password" style={linkStyle}>Settings</Link>
