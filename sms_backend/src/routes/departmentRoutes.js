@@ -13,6 +13,12 @@ router.post('/', authMiddleware, roleGuard('admin'), departmentController.create
 // PATCH /api/departments/:id/hod → admin
 router.patch('/:id/hod', authMiddleware, roleGuard('admin'), departmentController.assignHOD);
 
+// PATCH /api/departments/:id/hod/approve → hod
+router.patch('/:id/hod/approve', authMiddleware, roleGuard('hod'), departmentController.approveHODChange);
+
+// PATCH /api/departments/:id/hod/reject → hod
+router.patch('/:id/hod/reject', authMiddleware, roleGuard('hod'), departmentController.rejectHODChange);
+
 // GET /api/departments/:id/classes → admin, hod
 router.get('/:id/classes', authMiddleware, roleGuard('admin', 'hod'), departmentController.getClassesInDepartment);
 

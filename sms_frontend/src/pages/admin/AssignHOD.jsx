@@ -26,7 +26,12 @@ function AssignHOD() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await departmentAPI.assignHOD(id, { hod_id: selectedHod });
+      const res = await departmentAPI.assignHOD(id, { hod_id: selectedHod });
+      if (res.pending) {
+        alert(res.message);
+      } else {
+        alert('HOD assigned successfully');
+      }
       navigate('/admin/departments');
     } catch (err) {
       alert(err.message);
@@ -40,7 +45,7 @@ function AssignHOD() {
         <select value={selectedHod} onChange={(e) => setSelectedHod(e.target.value)} required>
           <option value="">Select Faculty...</option>
           {faculty.map((f) => (
-            <option key={f.id} value={f.id}>{f.full_name} ({f.username})</option>
+            <option key={f.id} value={f.id}>{f.full_name} {f.faculty_code ? `(${f.faculty_code})` : `(${f.username})`}</option>
           ))}
         </select>
         <button type="submit">Assign as HOD</button>

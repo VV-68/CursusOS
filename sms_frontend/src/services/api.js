@@ -94,6 +94,7 @@ export const userAPI = {
   create: (data) => fetch(`${BASE_URL}/api/users`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   resetPassword: (id) => fetch(`${BASE_URL}/api/users/${id}/reset-password`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   delete: (id) => fetch(`${BASE_URL}/api/users/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
+  updateRole: (id, role) => fetch(`${BASE_URL}/api/users/${id}/role`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ role }) }).then(handleResponse),
 };
 
 // ─── Departments ─────────────────────────────────────────────
@@ -102,6 +103,8 @@ export const departmentAPI = {
   getAll: () => fetch(`${BASE_URL}/api/departments`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/departments`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   assignHOD: (id, data) => fetch(`${BASE_URL}/api/departments/${id}/hod`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  approveHOD: (id) => fetch(`${BASE_URL}/api/departments/${id}/hod/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
+  rejectHOD: (id) => fetch(`${BASE_URL}/api/departments/${id}/hod/reject`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   getClasses: (id) => fetch(`${BASE_URL}/api/departments/${id}/classes`, { headers: getHeaders(true) }).then(handleResponse),
   uploadCourses: (id, file) => {
     const formData = new FormData();

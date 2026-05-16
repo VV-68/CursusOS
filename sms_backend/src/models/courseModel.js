@@ -26,10 +26,10 @@ const getCourseById = async (id) => {
 };
 
 const createCourseAssignment = async (assignmentData) => {
-  const { faculty_id, course_id, class_id, semester_id } = assignmentData;
+  const { faculty1_id, faculty2_id, course_id, class_id, semester_id } = assignmentData;
   const { rows } = await pool.query(
-    'INSERT INTO course_assignments (faculty_id, course_id, class_id, semester_id) VALUES ($1, $2, $3, $4) RETURNING *',
-    [faculty_id, course_id, class_id, semester_id]
+    'INSERT INTO course_assignments (faculty1_id, faculty2_id, course_id, class_id, semester_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [faculty1_id || null, faculty2_id || null, course_id, class_id, semester_id]
   );
   return rows[0];
 };
@@ -43,7 +43,7 @@ const getCourseAssignments = async (class_id = null, faculty_id = null) => {
   }
   if (faculty_id) {
     params.push(faculty_id);
-    query += ` AND faculty_id = $${params.length}`;
+    query += ` AND (faculty1_id = $${params.length} OR faculty2_id = $${params.length})`;
   }
   const { rows } = await pool.query(query, params);
   return rows;

@@ -98,12 +98,14 @@ const getAvailableCourses = async (req, res) => {
          dc.is_elective,
          c.id AS course_id,
          ca.id AS course_assignment_id,
-         u.full_name AS faculty_name
+         u1.full_name AS faculty1_name,
+         u2.full_name AS faculty2_name
        FROM department_courses dc
        LEFT JOIN courses c ON c.code = dc.course_code AND c.dept_id = dc.dept_id
        LEFT JOIN course_assignments ca
          ON ca.course_id = c.id AND ca.class_id = $1 AND ca.semester_id = $2
-       LEFT JOIN users u ON u.id = ca.faculty_id
+       LEFT JOIN users u1 ON u1.id = ca.faculty1_id
+       LEFT JOIN users u2 ON u2.id = ca.faculty2_id
        WHERE dc.dept_id = $3 AND dc.period_number = $4
        ORDER BY dc.course_code`,
       [class_id, semId, cls.dept_id, targetPeriod]

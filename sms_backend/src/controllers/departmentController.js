@@ -53,6 +53,13 @@ const assignHOD = async (req, res) => {
     const existing = await departmentModel.getDepartmentById(id);
     if (!existing) return res.status(404).json({ error: 'Department not found' });
 
+    // If an HOD exists, request permission
+    if (existing.hod_id) {
+      await departmentModel.requestHODChange(id, hod_id);
+      return res.json({ message: 'HOD change requested. Awaiting approval from current HOD.', pending: true });
+    }
+
+    // No existing HOD, assign directly
     const oldHodId = await departmentModel.assignHOD(id, hod_id);
 
     await logAudit(req.user.id, 'HOD_ASSIGNED', 'department', id,
@@ -61,6 +68,47 @@ const assignHOD = async (req, res) => {
     );
 
     res.json({ message: 'HOD assigned successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const approveHODChange = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await departmentModel.getDepartmentById(id);
+    if (!existing) return res.status(404).json({ error: 'Department not found' });
+
+    if (existing.hod_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the current HOD can approve this change' });
+    }
+
+    const pendingHodId = await departmentModel.getPendingHOD(id);
+    if (!pendingHodId) return res.status(400).json({ error: 'No pending HOD change' });
+
+    const oldHodId = await departmentModel.assignHOD(id, pendingHodId);
+    
+    await logAudit(req.user.id, 'HOD_ASSIGNED', 'department', id, { hod_id: oldHodId }, { hod_id: pendingHodId });
+    res.json({ message: 'HOD change approved successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const rejectHODChange = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await departmentModel.getDepartmentById(id);
+    if (!existing) return res.status(404).json({ error: 'Department not found' });
+
+    if (existing.hod_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the current HOD can reject this change' });
+    }
+
+    await departmentModel.requestHODChange(id, null);
+    res.json({ message: 'HOD change rejected' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -170,5 +218,5 @@ const getDeptCourses = async (req, res) => {
   }
 };
 
-module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses };
+module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange };
 

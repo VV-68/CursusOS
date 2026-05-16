@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userAPI, departmentAPI } from '../../services/api';
 import { Link } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 function Users() {
   const [users, setUsers] = useState([]);
@@ -9,6 +10,10 @@ function Users() {
   const [loading, setLoading] = useState(true);
   const [filterDept, setFilterDept] = useState('');
   const [filterRole, setFilterRole] = useState('');
+
+  const token = localStorage.getItem('token');
+  let callerRole = '';
+  try { callerRole = jwtDecode(token).role; } catch (e) {}
 
   useEffect(() => {
     fetchDepartments();
@@ -57,6 +62,27 @@ function Users() {
     if (!window.confirm(`Deactivate user "${name}"? This cannot be easily undone.`)) return;
     try {
       await userAPI.delete(id);
+      fetchUsers();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleRemoveHOD = async (user) => {
+    if (!window.confirm(`Are you sure you want to remove ${user.full_name} from the HOD position? They will become standard Faculty.`)) return;
+    try {
+      await userAPI.updateRole(user.id, 'faculty');
+      fetchUsers();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleToggleRole = async (user) => {
+    const newRole = user.role === 'faculty' ? 'advisor' : 'faculty';
+    if (!window.confirm(`Change ${user.full_name}'s role to ${newRole}?`)) return;
+    try {
+      await userAPI.updateRole(user.id, newRole);
       fetchUsers();
     } catch (err) {
       alert(err.message);
@@ -114,6 +140,7 @@ function Users() {
             <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
               <th style={{ padding: '0.75rem' }}>Username</th>
               <th style={{ padding: '0.75rem' }}>Full Name</th>
+              <th style={{ padding: '0.75rem' }}>Faculty Code</th>
               <th style={{ padding: '0.75rem' }}>Role</th>
               <th style={{ padding: '0.75rem' }}>Email</th>
               <th style={{ padding: '0.75rem' }}>Phone</th>
@@ -122,12 +149,13 @@ function Users() {
           </thead>
           <tbody>
             {users.length === 0 ? (
-              <tr><td colSpan="6" style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>No users found</td></tr>
+              <tr><td colSpan="7" style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>No users found</td></tr>
             ) : (
               users.map((u) => (
                 <tr key={u.id} style={{ borderBottom: '1px solid #eee' }}>
                   <td style={{ padding: '0.75rem' }}>{u.username}</td>
                   <td style={{ padding: '0.75rem' }}>{u.full_name}</td>
+                  <td style={{ padding: '0.75rem' }}>{u.faculty_code ? <code>{u.faculty_code}</code> : '—'}</td>
                   <td style={{ padding: '0.75rem' }}>{roleBadge(u.role)}</td>
                   <td style={{ padding: '0.75rem' }}>{u.email || '—'}</td>
                   <td style={{ padding: '0.75rem' }}>{u.phone || '—'}</td>
@@ -138,6 +166,22 @@ function Users() {
                     >
                       Reset Password
                     </button>
+                    {callerRole === 'admin' && u.role === 'hod' && (
+                      <button
+                        onClick={() => handleRemoveHOD(u)}
+                        style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#fd7e14', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                      >
+                        Remove HOD
+                      </button>
+                    )}
+                    {callerRole === 'hod' && (u.role === 'faculty' || u.role === 'advisor') && (
+                      <button
+                        onClick={() => handleToggleRole(u)}
+                        style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                      >
+                        Make {u.role === 'faculty' ? 'Advisor' : 'Faculty'}
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(u.id, u.full_name)}
                       style={{ padding: '0.3rem 0.6rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}

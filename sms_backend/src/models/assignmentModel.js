@@ -59,7 +59,7 @@ const getPublishedForStudents = async (course_assignment_id, student_id) => {
 const getById = async (id) => {
   const { rows } = await pool.query(
     `SELECT a.*, u.full_name AS created_by_name,
-            ca.faculty_id, ca.class_id, ca.course_id
+            ca.faculty1_id, ca.faculty2_id, ca.class_id, ca.course_id
      FROM assignments a
      JOIN users u ON u.id = a.created_by
      JOIN course_assignments ca ON ca.id = a.course_assignment_id

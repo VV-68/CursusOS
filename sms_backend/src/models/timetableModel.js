@@ -5,12 +5,14 @@ const getTimetable = async (class_id, semester_id = null) => {
     SELECT ts.*,
            COALESCE(c.name, dc.course_name) AS course_name,
            COALESCE(c.code, dc.course_code) AS course_code,
-           u.full_name AS faculty_name
+           u1.full_name AS faculty1_name,
+           u2.full_name AS faculty2_name
     FROM timetable_slots ts
     LEFT JOIN course_assignments ca ON ca.id = ts.course_assignment_id
     LEFT JOIN courses c ON c.id = ca.course_id
     LEFT JOIN department_courses dc ON dc.id = ts.department_course_id
-    LEFT JOIN users u ON u.id = ca.faculty_id
+    LEFT JOIN users u1 ON u1.id = ca.faculty1_id
+    LEFT JOIN users u2 ON u2.id = ca.faculty2_id
     WHERE ts.class_id = $1
   `;
   const params = [class_id];

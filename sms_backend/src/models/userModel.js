@@ -1,45 +1,97 @@
 const pool = require('../db/connection');
 
 const createUser = async ({ username, full_name, role, dept_id, email, phone, password_hash }) => {
-  const { rows } = await pool.query(
-    `INSERT INTO users
-       (username, password_hash, role, full_name, email, phone, dept_id, must_change_password, is_active)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, TRUE)
-     RETURNING id, username, role, full_name, email, phone, dept_id, must_change_password, is_active, created_at`,
-    [username, password_hash, role, full_name, email || null, phone || null, dept_id]
-  );
-  return rows[0];
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `INSERT INTO users
+         (username, password_hash, role, full_name, email, phone, dept_id, must_change_password, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, TRUE)
+       RETURNING id, username, role, full_name, email, phone, dept_id, must_change_password, is_active, created_at`,
+      [username, password_hash, role, full_name, email || null, phone || null, dept_id]
+    );
+    const newUser = rows[0];
+
+    let faculty_code = null;
+    if (['faculty', 'advisor', 'hod'].includes(role) && dept_id) {
+      const deptRes = await client.query('SELECT code FROM departments WHERE id = $1', [dept_id]);
+      if (deptRes.rows.length > 0) {
+        const deptCode = deptRes.rows[0].code.toUpperCase();
+        
+        const seqRes = await client.query(
+          `SELECT unique_code FROM faculty_codes 
+           WHERE unique_code LIKE $1 
+           ORDER BY LENGTH(unique_code) DESC, unique_code DESC LIMIT 1`,
+          [`${deptCode}%`]
+        );
+        
+        let nextSeq = 101;
+        if (seqRes.rows.length > 0) {
+          const lastCode = seqRes.rows[0].unique_code;
+          const match = lastCode.match(/\d+$/);
+          if (match) {
+            nextSeq = parseInt(match[0], 10) + 1;
+          }
+        }
+        
+        faculty_code = `${deptCode}${nextSeq}`;
+        await client.query(
+          `INSERT INTO faculty_codes (user_id, unique_code) VALUES ($1, $2)`,
+          [newUser.id, faculty_code]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    return { ...newUser, faculty_code };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 const getAllUsers = async (deptId = null, roleFilter = null) => {
-  let query = 'SELECT id, username, full_name, role, dept_id, email, phone, is_active, created_at FROM users WHERE is_active = true';
+  let query = `
+    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.email, u.phone, u.is_active, u.created_at, fc.unique_code as faculty_code
+    FROM users u
+    LEFT JOIN faculty_codes fc ON u.id = fc.user_id
+    WHERE u.is_active = true
+  `;
   const params = [];
   if (deptId) {
     params.push(deptId);
-    query += ` AND dept_id = $${params.length}`;
+    query += ` AND u.dept_id = $${params.length}`;
   }
   if (roleFilter && roleFilter.length > 0) {
     params.push(roleFilter);
-    query += ` AND role = ANY($${params.length})`;
+    query += ` AND u.role = ANY($${params.length})`;
   }
-  query += ' ORDER BY full_name ASC';
+  query += ' ORDER BY u.full_name ASC';
   const { rows } = await pool.query(query, params);
   return rows;
 };
 
 const getUserById = async (id) => {
   const { rows } = await pool.query(
-    `SELECT id, username, role, full_name, email, phone, dept_id, must_change_password, is_active
-     FROM users WHERE id = $1`,
+    `SELECT u.id, u.username, u.role, u.full_name, u.email, u.phone, u.dept_id, u.must_change_password, u.is_active, fc.unique_code as faculty_code
+     FROM users u
+     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
+     WHERE u.id = $1`,
     [id]
   );
   return rows[0];
 };
 
-const getUserByUsername = async (username) => {
+const getUserByUsernameOrEmail = async (identifier) => {
   const { rows } = await pool.query(
-    'SELECT id, username, password_hash, role, dept_id, is_active, must_change_password, full_name FROM users WHERE username = $1',
-    [username]
+    `SELECT u.id, u.username, u.password_hash, u.role, u.dept_id, u.is_active, u.must_change_password, u.full_name, fc.unique_code as faculty_code
+     FROM users u
+     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
+     WHERE u.username = $1 OR u.email = $1`,
+    [identifier]
   );
   return rows[0];
 };
@@ -75,13 +127,22 @@ const deactivateUser = async (id) => {
   return rows[0];
 };
 
+const updateUserRole = async (id, role) => {
+  const { rows } = await pool.query(
+    `UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2 RETURNING id, username, role, dept_id`,
+    [role, id]
+  );
+  return rows[0];
+};
+
 module.exports = {
   createUser,
   getAllUsers,
   getUserById,
-  getUserByUsername,
+  getUserByUsernameOrEmail,
   getUserPasswordHash,
   resetUserPassword,
   changePassword,
-  deactivateUser
+  deactivateUser,
+  updateUserRole
 };

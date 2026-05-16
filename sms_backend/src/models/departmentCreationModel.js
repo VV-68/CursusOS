@@ -314,11 +314,12 @@ const getManageCourses = async (deptId, filters = {}) => {
   if (class_id && semester_id && courses.length) {
     const codes = courses.map(c => c.course_code);
     const { rows: assignments } = await pool.query(
-      `SELECT ca.id AS assignment_id, ca.faculty_id, c.code AS course_code,
-              u.full_name AS faculty_name
+      `SELECT ca.id AS assignment_id, ca.faculty1_id, ca.faculty2_id, c.code AS course_code,
+              u1.full_name AS faculty1_name, u2.full_name AS faculty2_name
        FROM course_assignments ca
        JOIN courses c ON c.id = ca.course_id
-       JOIN users u ON u.id = ca.faculty_id
+       LEFT JOIN users u1 ON u1.id = ca.faculty1_id
+       LEFT JOIN users u2 ON u2.id = ca.faculty2_id
        WHERE ca.class_id = $1 AND ca.semester_id = $2 AND c.dept_id = $3
          AND c.code = ANY($4::text[])`,
       [class_id, semester_id, deptId, codes]
@@ -355,8 +356,8 @@ const catalogCreditsFromDeptCourse = (rawCredits) => {
 };
 
 const assignFacultyToDeptCourse = async (deptId, data, userId) => {
-  const { department_course_id, faculty_id, class_id, semester_id } = data;
-  console.log('[assignFacultyToDeptCourse] start', { deptId, department_course_id, faculty_id, class_id, semester_id, userId });
+  const { department_course_id, faculty1_id, faculty2_id, class_id, semester_id } = data;
+  console.log('[assignFacultyToDeptCourse] start', { deptId, department_course_id, faculty1_id, faculty2_id, class_id, semester_id, userId });
   const client = await pool.connect();
   try {
     console.log('[assignFacultyToDeptCourse] BEGIN');
@@ -409,17 +410,17 @@ const assignFacultyToDeptCourse = async (deptId, data, userId) => {
     if (existing.length) {
       console.log('[assignFacultyToDeptCourse] before UPDATE course_assignments', { assignmentId: existing[0].id });
       const { rows } = await client.query(
-        `UPDATE course_assignments SET faculty_id = $1 WHERE id = $2 RETURNING *`,
-        [faculty_id, existing[0].id]
+        `UPDATE course_assignments SET faculty1_id = $1, faculty2_id = $2 WHERE id = $3 RETURNING *`,
+        [faculty1_id || null, faculty2_id || null, existing[0].id]
       );
       assignment = rows[0];
       console.log('[assignFacultyToDeptCourse] after UPDATE course_assignments', { assignmentId: assignment.id });
     } else {
       console.log('[assignFacultyToDeptCourse] before INSERT course_assignments');
       const { rows } = await client.query(
-        `INSERT INTO course_assignments (faculty_id, course_id, class_id, semester_id)
-         VALUES ($1, $2, $3, $4) RETURNING *`,
-        [faculty_id, course.id, class_id, semester_id]
+        `INSERT INTO course_assignments (faculty1_id, faculty2_id, course_id, class_id, semester_id)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [faculty1_id || null, faculty2_id || null, course.id, class_id, semester_id]
       );
       assignment = rows[0];
       console.log('[assignFacultyToDeptCourse] after INSERT course_assignments', { assignmentId: assignment.id });

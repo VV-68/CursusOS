@@ -33,7 +33,7 @@ function Courses() {
   const [selectedClass, setSelectedClass] = useState('');
 
   const [assignModal, setAssignModal] = useState(null);
-  const [assignForm, setAssignForm] = useState({ faculty_id: '' });
+  const [assignForm, setAssignForm] = useState({ faculty1_id: '', faculty2_id: '' });
   const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function Courses() {
         ]);
         setSemesters(semData);
         setClasses(classData);
-        setFaculty(userData.filter(u => u.role === 'faculty' || u.role === 'advisor'));
+        setFaculty(userData.filter(u => u.role === 'faculty' || u.role === 'advisor' || u.role === 'hod'));
         const active = semData.find(s => s.is_active);
         if (active) setSelectedSemester(active.id);
         else if (semData.length) setSelectedSemester(semData[0].id);
@@ -89,7 +89,10 @@ function Courses() {
 
   const openAssign = (course) => {
     setAssignModal(course);
-    setAssignForm({ faculty_id: course.assignment?.faculty_id || '' });
+    setAssignForm({ 
+      faculty1_id: course.assignment?.faculty1_id || '',
+      faculty2_id: course.assignment?.faculty2_id || ''
+    });
   };
 
   const handleAssign = async (e) => {
@@ -99,7 +102,8 @@ function Courses() {
     try {
       await departmentCreationAPI.assignFaculty(deptId, {
         department_course_id: assignModal.id,
-        faculty_id: assignForm.faculty_id,
+        faculty1_id: assignForm.faculty1_id,
+        faculty2_id: assignForm.faculty2_id,
         class_id: selectedClass,
         semester_id: selectedSemester
       });
@@ -238,7 +242,10 @@ function Courses() {
                             {c.is_elective ? 'Yes' : 'No'}
                           </span>
                         </td>
-                        <td>{c.assignment?.faculty_name || '—'}</td>
+                        <td>
+                          {c.assignment?.faculty1_name || '—'}
+                          {c.assignment?.faculty2_name && <span>, {c.assignment.faculty2_name}</span>}
+                        </td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                           <button
                             type="button"
@@ -283,14 +290,24 @@ function Courses() {
                 <span style={{ fontSize: '.85rem' }}>{periodLabelText} {assignModal.period_number}</span>
               </p>
               <div className="dept-field">
-                <label>Faculty *</label>
+                <label>Faculty 1</label>
                 <select
-                  value={assignForm.faculty_id}
-                  onChange={e => setAssignForm({ faculty_id: e.target.value })}
-                  required
+                  value={assignForm.faculty1_id}
+                  onChange={e => setAssignForm({ ...assignForm, faculty1_id: e.target.value })}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '1rem' }}
+                >
+                  <option value="">Select faculty 1…</option>
+                  {faculty.map(f => (
+                    <option key={f.id} value={f.id}>{f.full_name} ({f.role})</option>
+                  ))}
+                </select>
+                <label>Faculty 2 (Optional)</label>
+                <select
+                  value={assignForm.faculty2_id}
+                  onChange={e => setAssignForm({ ...assignForm, faculty2_id: e.target.value })}
                   style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
                 >
-                  <option value="">Select faculty…</option>
+                  <option value="">Select faculty 2…</option>
                   {faculty.map(f => (
                     <option key={f.id} value={f.id}>{f.full_name} ({f.role})</option>
                   ))}

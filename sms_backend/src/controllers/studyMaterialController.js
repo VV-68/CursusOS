@@ -65,7 +65,7 @@ exports.remove = async (req, res) => {
   try {
     const { id } = req.params;
     const { rows } = await pool.query(
-      `SELECT m.*, ca.faculty_id FROM study_materials m
+      `SELECT m.*, ca.faculty1_id, ca.faculty2_id FROM study_materials m
        JOIN course_assignments ca ON ca.id = m.course_assignment_id
        WHERE m.id = $1`,
       [id]

@@ -14,7 +14,7 @@ const AuthController = {
     }
 
     try {
-      const user = await userModel.getUserByUsername(username.trim().toLowerCase());
+      const user = await userModel.getUserByUsernameOrEmail(username.trim().toLowerCase());
       if (!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -48,7 +48,8 @@ const AuthController = {
           username: user.username,
           role: user.role,
           full_name: user.full_name,
-          must_change_password: user.must_change_password
+          must_change_password: user.must_change_password,
+          faculty_code: user.faculty_code
         }
       });
     } catch (err) {
@@ -99,8 +100,10 @@ const AuthController = {
   me: async (req, res) => {
     try {
       const { rows } = await pool.query(
-        `SELECT id, username, role, full_name, email, phone, dept_id, must_change_password
-         FROM users WHERE id = $1 AND is_active = TRUE`,
+        `SELECT u.id, u.username, u.role, u.full_name, u.email, u.phone, u.dept_id, u.must_change_password, fc.unique_code as faculty_code
+         FROM users u
+         LEFT JOIN faculty_codes fc ON u.id = fc.user_id
+         WHERE u.id = $1 AND u.is_active = TRUE`,
         [req.user.id]
       );
       if (!rows[0]) return res.status(404).json({ error: 'User not found' });

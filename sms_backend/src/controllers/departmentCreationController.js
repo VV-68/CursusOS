@@ -326,13 +326,13 @@ const assignFaculty = async (req, res) => {
       console.log('[assignFaculty] forbidden: hod dept mismatch', { hodDept: req.user.dept_id, deptId });
       return res.status(403).json({ error: 'Forbidden' });
     }
-    const { department_course_id, faculty_id, class_id, semester_id } = req.body;
-    if (!department_course_id || !faculty_id || !class_id || !semester_id) {
-      return res.status(400).json({ error: 'department_course_id, faculty_id, class_id, and semester_id are required' });
+    const { department_course_id, faculty1_id, faculty2_id, class_id, semester_id } = req.body;
+    if (!department_course_id || (!faculty1_id && !faculty2_id) || !class_id || !semester_id) {
+      return res.status(400).json({ error: 'department_course_id, at least one faculty_id, class_id, and semester_id are required' });
     }
     const result = await deptCreationModel.assignFacultyToDeptCourse(
       deptId,
-      { department_course_id, faculty_id, class_id, semester_id },
+      { department_course_id, faculty1_id, faculty2_id, class_id, semester_id },
       req.user.id
     );
     console.log('[assignFaculty] success', { assignmentId: result.assignment?.id, courseId: result.course?.id });

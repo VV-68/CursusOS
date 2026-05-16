@@ -41,25 +41,40 @@ const createCourse = async (req, res) => {
   }
 };
 
-const createCourseAssignment = async (req, res) => {
+  const createCourseAssignment = async (req, res) => {
   try {
-    const { faculty_id, course_id, class_id, semester_id } = req.body;
+    const { faculty1_id, faculty2_id, course_id, class_id, semester_id } = req.body;
     
     // Validation: faculty.dept_id = course.dept_id = class.dept_id
-    const faculty = (await userModel.getAllUsers()).find(u => u.id === faculty_id);
+    const users = await userModel.getAllUsers();
+    let faculty1 = null;
+    let faculty2 = null;
+    
+    if (faculty1_id) {
+      faculty1 = users.find(u => u.id === faculty1_id);
+      if (!faculty1) return res.status(404).json({ error: 'Faculty 1 not found' });
+      if (faculty1.dept_id !== req.user.dept_id) return res.status(400).json({ error: 'Faculty 1 mismatch department' });
+    }
+    
+    if (faculty2_id) {
+      faculty2 = users.find(u => u.id === faculty2_id);
+      if (!faculty2) return res.status(404).json({ error: 'Faculty 2 not found' });
+      if (faculty2.dept_id !== req.user.dept_id) return res.status(400).json({ error: 'Faculty 2 mismatch department' });
+    }
+
     const course = await courseModel.getCourseById(course_id);
     const classObj = (await classModel.getAllClasses()).find(c => c.id === class_id);
 
-    if (!faculty || !course || !classObj) {
-      return res.status(404).json({ error: 'Faculty, course, or class not found' });
+    if (!course || !classObj) {
+      return res.status(404).json({ error: 'Course or class not found' });
     }
 
-    if (faculty.dept_id !== req.user.dept_id || course.dept_id !== req.user.dept_id || classObj.dept_id !== req.user.dept_id) {
+    if (course.dept_id !== req.user.dept_id || classObj.dept_id !== req.user.dept_id) {
       return res.status(400).json({ error: 'Mismatch in department IDs' });
     }
 
     const newAssignment = await courseModel.createCourseAssignment({
-      faculty_id, course_id, class_id, semester_id
+      faculty1_id, faculty2_id, course_id, class_id, semester_id
     });
     
     await logAudit(req.user.id, 'COURSE_ASSIGNED', 'course_assignments', newAssignment.id, null, newAssignment);
@@ -114,7 +129,7 @@ const getMine = async (req, res) => {
        JOIN classes     cl ON cl.id = ca.class_id
        JOIN departments d  ON d.id  = cl.dept_id
        JOIN semesters   s  ON s.id  = ca.semester_id
-       WHERE ca.faculty_id = $1 AND ca.semester_id = $2
+       WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1) AND ca.semester_id = $2
        ORDER BY d.code, cl.name, c.code`,
       [req.user.id, semId]
     );

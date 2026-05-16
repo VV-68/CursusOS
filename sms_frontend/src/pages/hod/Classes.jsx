@@ -259,8 +259,20 @@ function Classes() {
                     {c.section}
                   </span>
                 </td>
-                <td style={{ padding: '0.75rem' }}>{c.advisor1_name || <span style={{ color: '#94a3b8' }}>Not assigned</span>}</td>
-                <td style={{ padding: '0.75rem' }}>{c.advisor2_name || <span style={{ color: '#94a3b8' }}>Not assigned</span>}</td>
+                <td style={{ padding: '0.75rem' }}>
+                  {c.advisor1_name ? (
+                    <>
+                      {c.advisor1_name} {c.advisor1_code && <code style={{ color: '#64748b', fontSize: '.8rem' }}>({c.advisor1_code})</code>}
+                    </>
+                  ) : <span style={{ color: '#94a3b8' }}>Default Advisor <code style={{ color: '#64748b', fontSize: '.8rem' }}>({c.dept_code}0000)</code></span>}
+                </td>
+                <td style={{ padding: '0.75rem' }}>
+                  {c.advisor2_name ? (
+                    <>
+                      {c.advisor2_name} {c.advisor2_code && <code style={{ color: '#64748b', fontSize: '.8rem' }}>({c.advisor2_code})</code>}
+                    </>
+                  ) : <span style={{ color: '#94a3b8' }}>—</span>}
+                </td>
                 <td style={{ padding: '0.75rem' }}>
                   <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
                     <Link to={`/hod/classes/${c.id}/assign-advisors`}>

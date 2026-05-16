@@ -101,11 +101,13 @@ exports.getMyCourses = async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT c.name, c.code, c.credits,
-              u.full_name AS faculty_name,
+              u1.full_name AS faculty1_name,
+              u2.full_name AS faculty2_name,
               ca.id AS course_assignment_id
        FROM course_assignments ca
        JOIN courses c   ON c.id  = ca.course_id
-       JOIN users u     ON u.id  = ca.faculty_id
+       LEFT JOIN users u1     ON u1.id  = ca.faculty1_id
+       LEFT JOIN users u2     ON u2.id  = ca.faculty2_id
        JOIN student_profiles sp ON sp.class_id = ca.class_id AND sp.user_id = $1
        JOIN semesters s ON s.id  = ca.semester_id AND s.is_active = TRUE
        ORDER BY c.code`,

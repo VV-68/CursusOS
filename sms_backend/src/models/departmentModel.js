@@ -8,7 +8,8 @@ const getAllDepartments = async () => {
       d.code,
       d.created_at,
       u.full_name AS hod_name,
-      u.id        AS hod_id
+      u.id        AS hod_id,
+      d.pending_hod_id
     FROM departments d
     LEFT JOIN users u ON u.id = d.hod_id
     ORDER BY d.name ASC
@@ -18,9 +19,11 @@ const getAllDepartments = async () => {
 
 const getDepartmentById = async (id) => {
   const { rows } = await pool.query(
-    `SELECT d.id, d.name, d.code, d.hod_id, d.created_at, u.full_name AS hod_name
+    `SELECT d.id, d.name, d.code, d.hod_id, d.pending_hod_id, d.created_at, u.full_name AS hod_name,
+            pu.full_name AS pending_hod_name
      FROM departments d
      LEFT JOIN users u ON u.id = d.hod_id
+     LEFT JOIN users pu ON pu.id = d.pending_hod_id
      WHERE d.id = $1`,
     [id]
   );
@@ -54,8 +57,8 @@ const assignHOD = async (departmentId, newHodId) => {
     // Set new user's role to hod
     await client.query("UPDATE users SET role = 'hod', dept_id = $2 WHERE id = $1", [newHodId, departmentId]);
 
-    // Update department record
-    await client.query('UPDATE departments SET hod_id = $1 WHERE id = $2', [newHodId, departmentId]);
+    // Update department record and clear pending
+    await client.query('UPDATE departments SET hod_id = $1, pending_hod_id = NULL WHERE id = $2', [newHodId, departmentId]);
 
     await client.query('COMMIT');
     return oldHodId;
@@ -72,10 +75,25 @@ const getClassesInDepartment = async (departmentId) => {
   return rows;
 };
 
+const requestHODChange = async (departmentId, newHodId) => {
+  const { rows } = await pool.query(
+    'UPDATE departments SET pending_hod_id = $1 WHERE id = $2 RETURNING *',
+    [newHodId, departmentId]
+  );
+  return rows[0];
+};
+
+const getPendingHOD = async (departmentId) => {
+  const { rows } = await pool.query('SELECT pending_hod_id FROM departments WHERE id = $1', [departmentId]);
+  return rows[0]?.pending_hod_id;
+};
+
 module.exports = {
   getAllDepartments,
   getDepartmentById,
   createDepartment,
   assignHOD,
-  getClassesInDepartment
+  getClassesInDepartment,
+  requestHODChange,
+  getPendingHOD
 };

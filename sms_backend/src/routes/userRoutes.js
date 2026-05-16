@@ -16,4 +16,7 @@ router.patch('/:id/reset-password', authMiddleware, roleGuard('admin'), userCont
 // DELETE /api/users/:id → soft delete (admin only)
 router.delete('/:id', authMiddleware, roleGuard('admin'), userController.deleteUser);
 
+// PATCH /api/users/:id/role → hod or admin changes role
+router.patch('/:id/role', authMiddleware, roleGuard('admin', 'hod'), userController.updateRole);
+
 module.exports = router;

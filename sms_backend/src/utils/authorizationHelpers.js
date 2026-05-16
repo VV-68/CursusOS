@@ -10,7 +10,7 @@ const getFacultyAssignment = async (facultyId, courseAssignmentId) => {
      FROM course_assignments ca
      JOIN courses c  ON c.id  = ca.course_id
      JOIN classes cl ON cl.id = ca.class_id
-     WHERE ca.id = $1 AND ca.faculty_id = $2`,
+     WHERE ca.id = $1 AND (ca.faculty1_id = $2 OR ca.faculty2_id = $2)`,
     [courseAssignmentId, facultyId]
   );
   return rows[0] || null;
@@ -60,7 +60,7 @@ const getFacultyAssignments = async (facultyId) => {
      JOIN classes   cl ON cl.id = ca.class_id
      JOIN departments d ON d.id = cl.dept_id
      JOIN semesters s  ON s.id  = ca.semester_id
-     WHERE ca.faculty_id = $1 AND s.is_active = TRUE
+     WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1) AND s.is_active = TRUE
      ORDER BY d.code, cl.name, c.name`,
     [facultyId]
   );

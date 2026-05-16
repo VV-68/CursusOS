@@ -58,8 +58,8 @@ function CreateUser() {
       // HOD: don't send dept_id (backend uses req.user.dept_id)
       if (isHOD) delete data.dept_id;
 
-      await userAPI.create(data);
-      setSuccessMsg(`User "${formData.username}" created. Default password: Welcome@123`);
+      const res = await userAPI.create(data);
+      setSuccessMsg(res.message || `User "${formData.username}" created. Default password: Welcome@123`);
       setFormData({ username: '', full_name: '', role: isHOD ? 'faculty' : 'hod', dept_id: '', email: '', phone: '' });
       setSuggestion('');
     } catch (err) {
