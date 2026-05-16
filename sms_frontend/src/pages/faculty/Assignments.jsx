@@ -39,8 +39,9 @@ function Assignments() {
   const [error, setError] = useState('');
   const [selectedCA, setSelectedCA] = useState(initial_ca || '');
   const [form, setForm] = useState({
-    title: '', description: '', due_date: '', max_marks: 100, allow_late_submission: false
+    title: '', description: '', due_date: '', max_marks: 100, allow_late_submission: false,
   });
+  const [questionFile, setQuestionFile] = useState(null);
 
   useEffect(() => { 
     if (selectedCA) {
@@ -64,17 +65,33 @@ function Assignments() {
     setError('');
     if (!form.title || !form.due_date) return setError('Title and due date are required');
     try {
-      const created = await assignmentAPI.create({
-        ...form, course_assignment_id: selectedCA,
+      const payload = {
+        ...form,
+        course_assignment_id: selectedCA,
         max_marks: Number(form.max_marks) || 100,
-      });
-      if (publish) {
-        await assignmentAPI.publish(created.id, true);
-      }
+        is_published: publish,
+      };
+      await assignmentAPI.create(payload, questionFile);
       setShowModal(false);
+      setQuestionFile(null);
       setForm({ title: '', description: '', due_date: '', max_marks: 100, allow_late_submission: false });
       fetchData();
     } catch (err) { setError(err.message); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this assignment and all submissions? This cannot be undone.')) return;
+    try {
+      await assignmentAPI.delete(id);
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const openQuestion = async (id) => {
+    try {
+      const { signed_url } = await assignmentAPI.getQuestionUrl(id);
+      if (signed_url) window.open(signed_url, '_blank');
+    } catch (err) { alert(err.message); }
   };
 
   const handleTogglePublish = async (assignment) => {
@@ -85,8 +102,6 @@ function Assignments() {
   };
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-
-  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading...</div>;
 
   return (
     <div style={s.page}>
@@ -100,10 +115,12 @@ function Assignments() {
 
       <CourseSemesterSelector onSelect={setSelectedCA} />
       
-      {!selectedCA && <div style={s.empty}>Please select a semester and course to view assignments.</div>}
+      {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading assignments...</div>}
+      
+      {!loading && !selectedCA && <div style={s.empty}>Please select a semester and course to view assignments.</div>}
       {error && <div style={s.error}>{error}</div>}
 
-      {selectedCA && assignments.length === 0 && !loading ? (
+      {!loading && selectedCA && assignments.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No assignments yet</p>
           <p>Create your first assignment to get started.</p>
@@ -117,6 +134,7 @@ function Assignments() {
                 <th style={s.th}>Due Date</th>
                 <th style={s.th}>Max Marks</th>
                 <th style={s.th}>Status</th>
+                <th style={s.th}>Question</th>
                 <th style={s.th}>Submissions</th>
                 <th style={s.th}>Actions</th>
               </tr>
@@ -132,13 +150,21 @@ function Assignments() {
                       {a.is_published ? 'Published' : 'Draft'}
                     </span>
                   </td>
-                  <td style={s.td}>{a.submission_count || 0}</td>
+                  <td style={s.td}>
+                    {a.question_file_name ? (
+                      <button style={s.actionBtn} onClick={() => openQuestion(a.id)}>📄 PDF</button>
+                    ) : '—'}
+                  </td>
+                  <td style={s.td}>{a.submission_count || 0} / {a.evaluated_count || 0} eval</td>
                   <td style={s.td}>
                     <button style={s.actionBtn} onClick={() => navigate(`/faculty/submissions/${a.id}`)}>
                       Submissions
                     </button>
                     <button style={s.toggleBtn(a.is_published)} onClick={() => handleTogglePublish(a)}>
                       {a.is_published ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <button style={{ ...s.actionBtn, background: 'rgba(239,68,68,0.15)', color: '#f87171' }} onClick={() => handleDelete(a.id)}>
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -168,6 +194,10 @@ function Assignments() {
             <div style={s.field}>
               <label style={s.label}>Max Marks</label>
               <input style={s.input} type="number" value={form.max_marks} onChange={(e) => setForm({ ...form, max_marks: e.target.value })} min="1" />
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>Question PDF (optional)</label>
+              <input style={s.input} type="file" accept=".pdf" onChange={(e) => setQuestionFile(e.target.files[0] || null)} />
             </div>
             <div style={s.checkRow}>
               <input type="checkbox" id="late-sub" checked={form.allow_late_submission} onChange={(e) => setForm({ ...form, allow_late_submission: e.target.checked })} />

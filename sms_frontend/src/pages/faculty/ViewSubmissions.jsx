@@ -43,17 +43,22 @@ function ViewSubmissions() {
   const { assignment_id } = useParams();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, total_pages: 1, total: 0 });
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [evalTarget, setEvalTarget] = useState(null);
   const [evalForm, setEvalForm] = useState({ marks_awarded: '', feedback: '' });
 
-  useEffect(() => { fetchData(); }, [assignment_id]);
+  useEffect(() => { fetchData(); }, [assignment_id, page]);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const data = await assignmentAPI.listSubmissions(assignment_id);
-      setSubmissions(data);
+      const res = await assignmentAPI.listSubmissions(assignment_id, { page, limit: 25 });
+      const rows = res.data ?? res;
+      setSubmissions(rows);
+      if (res.pagination) setPagination(res.pagination);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -72,7 +77,7 @@ function ViewSubmissions() {
   };
 
   const submitted = submissions.length;
-  const evaluated = submissions.filter((s) => s.marks_awarded !== null).length;
+  const evaluated = submissions.filter((s) => s.is_evaluated || s.marks_awarded !== null).length;
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
@@ -146,7 +151,7 @@ function ViewSubmissions() {
                     )}
                   </td>
                   <td style={s.td}>
-                    {sub.marks_awarded !== null ? (
+                    {sub.is_evaluated || sub.marks_awarded !== null ? (
                       <span style={s.badge('#4ade80')}>{sub.marks_awarded}</span>
                     ) : (
                       <span style={s.badge('#fbbf24')}>Pending</span>
@@ -170,6 +175,16 @@ function ViewSubmissions() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {pagination.total_pages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
+          <button style={s.backBtn} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+          <span style={{ color: '#94a3b8', alignSelf: 'center' }}>
+            Page {page} of {pagination.total_pages} ({pagination.total} total)
+          </span>
+          <button style={s.backBtn} disabled={page >= pagination.total_pages} onClick={() => setPage((p) => p + 1)}>Next</button>
         </div>
       )}
 

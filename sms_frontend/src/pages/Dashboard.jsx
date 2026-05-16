@@ -90,6 +90,14 @@ function Dashboard() {
           </>
         )}
 
+        {['faculty', 'advisor', 'hod'].includes(role) && (
+          <>
+            <Link to="/faculty/courses" className="btn btn-primary">My Courses</Link>
+            <Link to="/faculty/assignments" className="btn btn-primary">Manage Assignments</Link>
+            <Link to="/faculty/materials" className="btn btn-primary">Study Materials</Link>
+          </>
+        )}
+
         {role === 'faculty' && (
           <>
             <Link to="/faculty/attendance/mark" className="btn btn-primary">Mark Attendance</Link>

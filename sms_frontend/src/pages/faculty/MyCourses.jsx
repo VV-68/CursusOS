@@ -90,11 +90,13 @@ function MyCourses() {
           <div key={dept} style={styles.deptGroup}>
             <div style={styles.deptTitle}>{dept}</div>
             <div style={styles.grid}>
-              {courses.map((c) => (
+              {courses.map((c) => {
+                const caId = c.course_assignment_id || c.id;
+                return (
                 <div
-                  key={c.id}
-                  style={{ ...styles.card, ...(hovered === c.id ? styles.cardHover : {}) }}
-                  onMouseEnter={() => setHovered(c.id)}
+                  key={caId}
+                  style={{ ...styles.card, ...(hovered === caId ? styles.cardHover : {}) }}
+                  onMouseEnter={() => setHovered(caId)}
                   onMouseLeave={() => setHovered(null)}
                 >
                   <div style={styles.courseName}>{c.course_name}</div>
@@ -110,19 +112,20 @@ function MyCourses() {
                   <div style={styles.actions}>
                     <button
                       style={{ ...styles.btn, ...styles.btnAssignment }}
-                      onClick={() => navigate(`/faculty/assignments/${c.id}`)}
+                      onClick={() => navigate(`/faculty/assignments/${caId}`)}
                     >
                       📝 Assignments
                     </button>
                     <button
                       style={{ ...styles.btn, ...styles.btnMaterial }}
-                      onClick={() => navigate(`/faculty/materials/${c.id}`)}
+                      onClick={() => navigate(`/faculty/materials/${caId}`)}
                     >
                       📚 Materials
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))

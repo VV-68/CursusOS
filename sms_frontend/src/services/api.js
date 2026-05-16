@@ -239,22 +239,60 @@ export const deleteStudent = async (id) => {
 // ─── Course Assignments (Faculty) ────────────────────────────────────────
 
 export const courseAssignmentAPI = {
-  getMine: () => fetch(`${BASE_URL}/api/courses/assignments/mine`, { headers: getHeaders(true) }).then(handleResponse),
+  getMine: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    const url = `${BASE_URL}/api/courses/assignments/mine${qs ? `?${qs}` : ''}`;
+    return fetch(url, { headers: getHeaders(true) }).then(handleResponse);
+  },
 };
 
 // ─── Assignments ─────────────────────────────────────────────────────────
 
 export const assignmentAPI = {
-  create: (data) => fetch(`${BASE_URL}/api/assignments`, {
-    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  create: (data, questionFile = null) => {
+    const token = getToken();
+    if (questionFile) {
+      const formData = new FormData();
+      Object.entries(data).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) formData.append(k, v);
+      });
+      formData.append('question', questionFile);
+      return fetch(`${BASE_URL}/api/assignments`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      }).then(handleResponse);
+    }
+    return fetch(`${BASE_URL}/api/assignments`, {
+      method: 'POST', headers: getHeaders(true), body: JSON.stringify(data),
+    }).then(handleResponse);
+  },
+
+  delete: (id) => fetch(`${BASE_URL}/api/assignments/${id}`, {
+    method: 'DELETE', headers: getHeaders(true),
+  }).then(handleResponse),
+
+  uploadQuestion: (id, file) => {
+    const formData = new FormData();
+    formData.append('question', file);
+    const token = getToken();
+    return fetch(`${BASE_URL}/api/assignments/${id}/question`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(handleResponse);
+  },
+
+  getQuestionUrl: (id) => fetch(`${BASE_URL}/api/assignments/${id}/question-url`, {
+    headers: getHeaders(true),
   }).then(handleResponse),
 
   publish: (id, is_published) => fetch(`${BASE_URL}/api/assignments/${id}/publish`, {
-    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ is_published })
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ is_published }),
   }).then(handleResponse),
 
   listByCourse: (courseAssignmentId) => fetch(`${BASE_URL}/api/assignments/course/${courseAssignmentId}`, {
-    headers: getHeaders(true)
+    headers: getHeaders(true),
   }).then(handleResponse),
 
   submit: (assignmentId, file) => {
@@ -263,43 +301,81 @@ export const assignmentAPI = {
     const token = getToken();
     return fetch(`${BASE_URL}/api/assignments/${assignmentId}/submit`, {
       method: 'POST',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
     }).then(handleResponse);
   },
 
-  getMySubmission: (assignmentId) => fetch(`${BASE_URL}/api/assignments/${assignmentId}/my-submission`, {
-    headers: getHeaders(true)
+  deleteMySubmission: (assignmentId) => fetch(`${BASE_URL}/api/assignments/${assignmentId}/my-submission`, {
+    method: 'DELETE', headers: getHeaders(true),
   }).then(handleResponse),
 
-  listSubmissions: (assignmentId) => fetch(`${BASE_URL}/api/assignments/${assignmentId}/submissions`, {
-    headers: getHeaders(true)
+  getMySubmission: (assignmentId) => fetch(`${BASE_URL}/api/assignments/${assignmentId}/my-submission`, {
+    headers: getHeaders(true),
   }).then(handleResponse),
+
+  listSubmissions: (assignmentId, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    const url = `${BASE_URL}/api/assignments/${assignmentId}/submissions${qs ? `?${qs}` : ''}`;
+    return fetch(url, { headers: getHeaders(true) }).then(handleResponse);
+  },
 
   evaluate: (submissionId, data) => fetch(`${BASE_URL}/api/assignments/submissions/${submissionId}/evaluate`, {
-    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data)
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data),
   }).then(handleResponse),
 };
 
 // ─── Study Materials ─────────────────────────────────────────────────────
 
 export const studyMaterialAPI = {
-  create: (data) => fetch(`${BASE_URL}/api/study-materials`, {
-    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
-  }).then(handleResponse),
+  create: (data, file = null) => {
+    const token = getToken();
+    const formData = new FormData();
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) formData.append(k, v);
+    });
+    if (file) formData.append('file', file);
+    return fetch(`${BASE_URL}/api/study-materials`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(handleResponse);
+  },
+
+  update: (id, data, file = null) => {
+    const token = getToken();
+    const formData = new FormData();
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) formData.append(k, v);
+    });
+    if (file) formData.append('file', file);
+    return fetch(`${BASE_URL}/api/study-materials/${id}`, {
+      method: 'PATCH',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(handleResponse);
+  },
 
   listByCourse: (courseAssignmentId) => fetch(`${BASE_URL}/api/study-materials/course/${courseAssignmentId}`, {
-    headers: getHeaders(true)
+    headers: getHeaders(true),
+  }).then(handleResponse),
+
+  getDownloadUrl: (id) => fetch(`${BASE_URL}/api/study-materials/${id}/download`, {
+    headers: getHeaders(true),
   }).then(handleResponse),
 
   delete: (id) => fetch(`${BASE_URL}/api/study-materials/${id}`, {
-    method: 'DELETE', headers: getHeaders(true)
+    method: 'DELETE', headers: getHeaders(true),
   }).then(handleResponse),
 };
 
 // ─── Student Profile ─────────────────────────────────────────────────────
 
 export const profileAPI = {
+  getMyCourses: () => fetch(`${BASE_URL}/api/profile/my-courses`, {
+    headers: getHeaders(true),
+  }).then(handleResponse),
+
   getMyProfile: () => fetch(`${BASE_URL}/api/profile/me`, {
     headers: getHeaders(true)
   }).then(handleResponse),

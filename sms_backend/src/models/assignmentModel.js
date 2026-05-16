@@ -1,7 +1,8 @@
 const pool = require('../db/connection');
 
-// Create a new assignment
-const createAssignment = async ({ title, description, course_assignment_id, created_by, due_date, max_marks, allow_late_submission }) => {
+const createAssignment = async ({
+  title, description, course_assignment_id, created_by, due_date, max_marks, allow_late_submission,
+}) => {
   const { rows } = await pool.query(
     `INSERT INTO assignments
        (title, description, course_assignment_id, created_by, due_date, max_marks, allow_late_submission, is_published)
@@ -12,22 +13,40 @@ const createAssignment = async ({ title, description, course_assignment_id, crea
   return rows[0];
 };
 
-// Publish or unpublish an assignment
 const setPublished = async (id, is_published) => {
   const { rows } = await pool.query(
-    `UPDATE assignments SET is_published = $1, updated_at = NOW()
-     WHERE id = $2 RETURNING *`,
+    `UPDATE assignments SET is_published = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
     [is_published, id]
   );
   return rows[0];
 };
 
-// Get all assignments for a course_assignment (faculty view — all including unpublished)
+const setQuestionFile = async (id, { question_file_path, question_file_name, question_mime_type }) => {
+  const { rows } = await pool.query(
+    `UPDATE assignments
+     SET question_file_path = $1, question_file_name = $2, question_mime_type = $3, updated_at = NOW()
+     WHERE id = $4 RETURNING *`,
+    [question_file_path, question_file_name, question_mime_type, id]
+  );
+  return rows[0];
+};
+
+const clearQuestionFile = async (id) => {
+  const { rows } = await pool.query(
+    `UPDATE assignments
+     SET question_file_path = NULL, question_file_name = NULL, question_mime_type = NULL, updated_at = NOW()
+     WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return rows[0];
+};
+
 const getByAssignmentId = async (course_assignment_id) => {
   const { rows } = await pool.query(
     `SELECT a.*,
             u.full_name AS created_by_name,
-            COUNT(s.id) AS submission_count
+            COUNT(s.id)::int AS submission_count,
+            COUNT(s.id) FILTER (WHERE s.is_evaluated = TRUE)::int AS evaluated_count
      FROM assignments a
      JOIN users u ON u.id = a.created_by
      LEFT JOIN assignment_submissions s ON s.assignment_id = a.id
@@ -39,23 +58,6 @@ const getByAssignmentId = async (course_assignment_id) => {
   return rows;
 };
 
-// Get published assignments visible to students for a course_assignment
-const getPublishedForStudents = async (course_assignment_id, student_id) => {
-  const { rows } = await pool.query(
-    `SELECT a.id, a.title, a.description, a.due_date, a.max_marks, a.allow_late_submission, a.created_at,
-            u.full_name AS posted_by,
-            s.id AS submission_id, s.submitted_at, s.is_late, s.marks_awarded, s.feedback
-     FROM assignments a
-     JOIN users u ON u.id = a.created_by
-     LEFT JOIN assignment_submissions s ON s.assignment_id = a.id AND s.student_id = $2
-     WHERE a.course_assignment_id = $1 AND a.is_published = TRUE
-     ORDER BY a.due_date DESC`,
-    [course_assignment_id, student_id]
-  );
-  return rows;
-};
-
-// Get a single assignment by ID
 const getById = async (id) => {
   const { rows } = await pool.query(
     `SELECT a.*, u.full_name AS created_by_name,
@@ -69,24 +71,26 @@ const getById = async (id) => {
   return rows[0];
 };
 
-// Update assignment details
-const updateAssignment = async (id, { title, description, due_date, max_marks, allow_late_submission }) => {
-  const { rows } = await pool.query(
-    `UPDATE assignments
-     SET title = COALESCE($1, title),
-         description = COALESCE($2, description),
-         due_date = COALESCE($3, due_date),
-         max_marks = COALESCE($4, max_marks),
-         allow_late_submission = COALESCE($5, allow_late_submission),
-         updated_at = NOW()
-     WHERE id = $6
-     RETURNING *`,
-    [title, description, due_date, max_marks, allow_late_submission, id]
-  );
+const deleteById = async (id) => {
+  const { rows } = await pool.query(`DELETE FROM assignments WHERE id = $1 RETURNING *`, [id]);
   return rows[0];
 };
 
+const getSubmissionFilePaths = async (assignmentId) => {
+  const { rows } = await pool.query(
+    `SELECT file_url FROM assignment_submissions WHERE assignment_id = $1 AND file_url IS NOT NULL`,
+    [assignmentId]
+  );
+  return rows.map((r) => r.file_url);
+};
+
 module.exports = {
-  createAssignment, setPublished, getByAssignmentId,
-  getPublishedForStudents, getById, updateAssignment
+  createAssignment,
+  setPublished,
+  setQuestionFile,
+  clearQuestionFile,
+  getByAssignmentId,
+  getById,
+  deleteById,
+  getSubmissionFilePaths,
 };

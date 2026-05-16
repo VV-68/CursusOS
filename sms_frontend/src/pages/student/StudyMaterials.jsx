@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { studyMaterialAPI } from '../../services/api';
 
-const TYPES = ['all', 'notes', 'slides', 'reference', 'video', 'question_bank'];
-const TYPE_COLORS = { notes: '#818cf8', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7' };
-const TYPE_ICONS = { notes: '📄', slides: '📊', reference: '📖', video: '🎬', question_bank: '❓' };
+const TYPES = ['all', 'notes', 'slides', 'reference', 'video', 'question_bank', 'document', 'link'];
+const TYPE_COLORS = { notes: '#818cf8', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7', document: '#22c55e', link: '#eab308' };
+const TYPE_ICONS = { notes: '📄', slides: '📊', reference: '📖', video: '🎬', question_bank: '❓', document: '📎', link: '🔗' };
 
 const s = {
   page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
@@ -34,6 +34,7 @@ const s = {
     background: 'rgba(34,197,94,0.15)', color: '#4ade80',
   },
   empty: { textAlign: 'center', padding: '3rem', color: '#64748b', background: 'rgba(30,41,59,0.5)', borderRadius: '12px' },
+  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
 };
 
 function StudentStudyMaterials() {
@@ -42,15 +43,36 @@ function StudentStudyMaterials() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [error, setError] = useState('');
+  const [opening, setOpening] = useState(null);
 
   useEffect(() => { fetchData(); }, [course_assignment_id]);
 
   const fetchData = async () => {
+    setLoading(true);
+    setError('');
     try {
       const data = await studyMaterialAPI.listByCourse(course_assignment_id);
       setMaterials(data);
-    } catch (err) { console.error(err); }
+    } catch (err) { setError(err.message); }
     finally { setLoading(false); }
+  };
+
+  const openMaterial = async (m) => {
+    setOpening(m.id);
+    setError('');
+    try {
+      const ext = m.external_link || m.drive_link;
+      if (ext) {
+        window.open(ext, '_blank');
+        return;
+      }
+      if (m.file_path) {
+        const { signed_url } = await studyMaterialAPI.getDownloadUrl(m.id);
+        if (signed_url) window.open(signed_url, '_blank');
+      }
+    } catch (err) { setError(err.message); }
+    finally { setOpening(null); }
   };
 
   const filtered = filter === 'all' ? materials : materials.filter((m) => m.material_type === filter);
@@ -60,9 +82,11 @@ function StudentStudyMaterials() {
   return (
     <div style={s.page}>
       <div style={s.header}>
-        <button style={s.backBtn} onClick={() => navigate(-1)}>← Back</button>
+        <button style={s.backBtn} onClick={() => navigate('/student/assignments')}>← Back</button>
         <h1 style={s.title}>Study Materials</h1>
       </div>
+
+      {error && <div style={s.error}>{error}</div>}
 
       <div style={s.tabs}>
         {TYPES.map((t) => (
@@ -82,10 +106,14 @@ function StudentStudyMaterials() {
               <div style={s.cardTitle}>{m.title}</div>
               {m.description && <div style={s.cardDesc}>{m.description}</div>}
               <div style={s.meta}>
-                Posted by {m.posted_by_name} • {new Date(m.created_at).toLocaleDateString('en-IN')}
+                {m.uploaded_by_name || m.posted_by_name} • {new Date(m.created_at).toLocaleDateString('en-IN')}
               </div>
-              <button style={s.openBtn} onClick={() => window.open(m.drive_link, '_blank')}>
-                🔗 Open
+              <button
+                style={{ ...s.openBtn, opacity: opening === m.id ? 0.6 : 1 }}
+                disabled={opening === m.id}
+                onClick={() => openMaterial(m)}
+              >
+                {opening === m.id ? 'Opening...' : (m.file_path ? '📥 Secure Download' : '🔗 Open Link')}
               </button>
             </div>
           ))}

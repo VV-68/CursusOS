@@ -4,7 +4,7 @@ import { studyMaterialAPI } from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
 import CourseSemesterSelector from '../../components/CourseSemesterSelector';
 
-const TYPES = ['notes', 'slides', 'reference', 'video', 'question_bank'];
+const TYPES = ['notes', 'slides', 'reference', 'video', 'question_bank', 'document', 'link'];
 const TYPE_COLORS = { notes: '#818cf8', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7' };
 const TYPE_ICONS = { notes: '📄', slides: '📊', reference: '📖', video: '🎬', question_bank: '❓' };
 
@@ -49,7 +49,8 @@ function FacultyStudyMaterials() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ title: '', description: '', drive_link: '', material_type: 'notes' });
+  const [form, setForm] = useState({ title: '', description: '', external_link: '', material_type: 'notes' });
+  const [uploadFile, setUploadFile] = useState(null);
   const [selectedCA, setSelectedCA] = useState(initial_ca || '');
 
   const token = localStorage.getItem('token');
@@ -76,14 +77,37 @@ function FacultyStudyMaterials() {
 
   const handleCreate = async () => {
     setError('');
-    if (!form.title || !form.drive_link) return setError('Title and link are required');
-    try { new URL(form.drive_link); } catch { return setError('Please enter a valid URL'); }
+    if (!form.title) return setError('Title is required');
+    if (!uploadFile && !form.external_link?.trim()) {
+      return setError('Upload a file or provide an external link');
+    }
+    if (form.external_link?.trim()) {
+      try { new URL(form.external_link); } catch { return setError('Please enter a valid URL'); }
+    }
     try {
-      await studyMaterialAPI.create({ ...form, course_assignment_id: selectedCA });
+      await studyMaterialAPI.create(
+        { ...form, course_assignment_id: selectedCA },
+        uploadFile
+      );
       setShowModal(false);
-      setForm({ title: '', description: '', drive_link: '', material_type: 'notes' });
+      setUploadFile(null);
+      setForm({ title: '', description: '', external_link: '', material_type: 'notes' });
       fetchData();
     } catch (err) { setError(err.message); }
+  };
+
+  const openMaterial = async (m) => {
+    const link = m.external_link || m.drive_link;
+    if (link) {
+      window.open(link, '_blank');
+      return;
+    }
+    if (m.file_path) {
+      try {
+        const { signed_url } = await studyMaterialAPI.getDownloadUrl(m.id);
+        if (signed_url) window.open(signed_url, '_blank');
+      } catch (err) { alert(err.message); }
+    }
   };
 
   const handleDelete = async (id) => {
@@ -91,8 +115,6 @@ function FacultyStudyMaterials() {
     try { await studyMaterialAPI.delete(id); fetchData(); }
     catch (err) { alert(err.message); }
   };
-
-  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading...</div>;
 
   return (
     <div style={s.page}>
@@ -106,11 +128,13 @@ function FacultyStudyMaterials() {
 
       <CourseSemesterSelector onSelect={setSelectedCA} />
 
-      {!selectedCA && <div style={s.empty}>Please select a semester and course to view materials.</div>}
+      {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading materials...</div>}
+
+      {!loading && !selectedCA && <div style={s.empty}>Please select a semester and course to view materials.</div>}
       
       {error && <div style={s.error}>{error}</div>}
 
-      {selectedCA && materials.length === 0 && !loading ? (
+      {!loading && selectedCA && materials.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No materials posted</p>
           <p>Share study materials with your students.</p>
@@ -126,7 +150,9 @@ function FacultyStudyMaterials() {
                 Posted by {m.posted_by_name} • {new Date(m.created_at).toLocaleDateString('en-IN')}
               </div>
               <div style={s.cardActions}>
-                <button style={s.openBtn} onClick={() => window.open(m.drive_link, '_blank')}>🔗 Open Link</button>
+                <button style={s.openBtn} onClick={() => openMaterial(m)}>
+                  {m.file_path ? '📥 Download' : '🔗 Open Link'}
+                </button>
                 {m.posted_by === userId && (
                   <button style={s.deleteBtn} onClick={() => handleDelete(m.id)}>Delete</button>
                 )}
@@ -150,9 +176,13 @@ function FacultyStudyMaterials() {
               <textarea style={s.textarea} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Brief description..." />
             </div>
             <div style={s.field}>
-              <label style={s.label}>Google Drive / External Link *</label>
-              <input style={s.input} value={form.drive_link} onChange={(e) => setForm({ ...form, drive_link: e.target.value })} placeholder="https://drive.google.com/..." />
-              <div style={s.hint}>Paste a Google Drive share link, YouTube link, or any public URL</div>
+              <label style={s.label}>Upload file (PDF, PPT, DOC, etc.)</label>
+              <input style={s.input} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip" onChange={(e) => setUploadFile(e.target.files[0] || null)} />
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>External link (optional)</label>
+              <input style={s.input} value={form.external_link} onChange={(e) => setForm({ ...form, external_link: e.target.value })} placeholder="https://..." />
+              <div style={s.hint}>Provide a file upload, an external link, or both</div>
             </div>
             <div style={s.field}>
               <label style={s.label}>Type</label>
