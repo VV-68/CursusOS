@@ -1,7 +1,7 @@
 const courseModel = require('../models/courseModel');
 const userModel = require('../models/userModel');
 const classModel = require('../models/classModel');
-const { logAudit } = require('./userController');
+const logAudit = require('../utils/auditLogger');
 const { getFacultyAssignments } = require('../utils/authorizationHelpers');
 const pool = require('../db/connection');
 

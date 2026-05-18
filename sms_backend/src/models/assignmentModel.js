@@ -84,12 +84,58 @@ const getSubmissionFilePaths = async (assignmentId) => {
   return rows.map((r) => r.file_url);
 };
 
+const getByFaculty = async (facultyId) => {
+  const { rows } = await pool.query(
+    `SELECT a.*,
+            u.full_name AS created_by_name,
+            c.name AS course_name, c.code AS course_code,
+            cl.name AS class_name,
+            COUNT(s.id)::int AS submission_count,
+            COUNT(s.id) FILTER (WHERE s.is_evaluated = TRUE)::int AS evaluated_count
+     FROM assignments a
+     JOIN users u ON u.id = a.created_by
+     JOIN course_assignments ca ON ca.id = a.course_assignment_id
+     JOIN courses c ON c.id = ca.course_id
+     JOIN classes cl ON cl.id = ca.class_id
+     LEFT JOIN assignment_submissions s ON s.assignment_id = a.id
+     WHERE ca.faculty1_id = $1 OR ca.faculty2_id = $1
+     GROUP BY a.id, u.full_name, c.name, c.code, cl.name
+     ORDER BY a.due_date DESC`,
+    [facultyId]
+  );
+  return rows;
+};
+
+const getByStudent = async (studentId) => {
+  const { rows } = await pool.query(
+    `SELECT a.id, a.title, a.description, a.due_date, a.max_marks, a.allow_late_submission, a.created_at,
+            a.question_file_name, a.question_file_path,
+            u.full_name AS posted_by,
+            c.name AS course_name, c.code AS course_code,
+            ca.id AS course_assignment_id,
+            s.id AS submission_id, s.submitted_at, s.is_late, s.is_evaluated,
+            s.marks_awarded, s.feedback, s.file_name AS submission_file_name
+     FROM assignments a
+     JOIN users u ON u.id = a.created_by
+     JOIN course_assignments ca ON ca.id = a.course_assignment_id
+     JOIN courses c ON c.id = ca.course_id
+     JOIN student_profiles sp ON sp.class_id = ca.class_id
+     LEFT JOIN assignment_submissions s ON s.assignment_id = a.id AND s.student_id = $1
+     WHERE sp.user_id = $1 AND a.is_published = TRUE
+     ORDER BY a.due_date DESC`,
+    [studentId]
+  );
+  return rows;
+};
+
 module.exports = {
   createAssignment,
   setPublished,
   setQuestionFile,
   clearQuestionFile,
   getByAssignmentId,
+  getByFaculty,
+  getByStudent,
   getById,
   deleteById,
   getSubmissionFilePaths,

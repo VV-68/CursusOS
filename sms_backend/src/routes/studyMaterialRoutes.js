@@ -8,6 +8,7 @@ const faculty = roleGuard('faculty', 'advisor', 'hod');
 
 router.post('/', authMiddleware, faculty, ctrl.uploadMiddleware, ctrl.create);
 router.patch('/:id', authMiddleware, faculty, ctrl.uploadMiddleware, ctrl.update);
+router.get('/mine', authMiddleware, ctrl.listMine);
 router.get('/course/:course_assignment_id', authMiddleware, ctrl.list);
 router.get('/:id/download', authMiddleware, ctrl.getDownloadUrl);
 router.delete('/:id', authMiddleware, faculty, ctrl.remove);

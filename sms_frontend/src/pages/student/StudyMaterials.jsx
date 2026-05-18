@@ -47,13 +47,18 @@ function StudentStudyMaterials() {
   const [opening, setOpening] = useState(null);
 
   useEffect(() => { fetchData(); }, [course_assignment_id]);
-
+  
   const fetchData = async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await studyMaterialAPI.listByCourse(course_assignment_id);
-      setMaterials(data);
+      if (course_assignment_id) {
+        const data = await studyMaterialAPI.listByCourse(course_assignment_id);
+        setMaterials(data);
+      } else {
+        const data = await studyMaterialAPI.listMine();
+        setMaterials(data);
+      }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -102,6 +107,11 @@ function StudentStudyMaterials() {
         <div style={s.grid}>
           {filtered.map((m) => (
             <div key={m.id} style={s.card}>
+              {!course_assignment_id && (
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#818cf8', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  📚 {m.course_name} ({m.course_code})
+                </div>
+              )}
               <span style={s.typeBadge(m.material_type)}>{TYPE_ICONS[m.material_type] || '📄'} {m.material_type}</span>
               <div style={s.cardTitle}>{m.title}</div>
               {m.description && <div style={s.cardDesc}>{m.description}</div>}

@@ -5,7 +5,7 @@ const StudentModel = {
     let query = `
       SELECT u.id, u.username, u.full_name, u.email, u.phone, u.is_active,
              p.roll_no, p.class_id, p.dob, p.gender, p.blood_group, p.address,
-             p.guardian_name, p.guardian_phone
+             p.guardian_name, p.guardian_phone, p.isverified
       FROM users u
       JOIN student_profiles p ON p.user_id = u.id
       WHERE u.role = 'student' AND u.is_active = true
@@ -23,9 +23,9 @@ const StudentModel = {
 
   getStudentById: async (id) => {
     const { rows } = await pool.query(
-      `SELECT u.id, u.username, u.full_name, u.email, u.phone,
+      `SELECT u.id, u.username, u.full_name, u.email, u.phone, u.must_change_password,
               p.roll_no, p.class_id, p.dob, p.gender, p.blood_group, p.address,
-              p.guardian_name, p.guardian_phone, p.guardian_email
+              p.guardian_name, p.guardian_phone, p.guardian_email, p.isverified
        FROM users u
        JOIN student_profiles p ON p.user_id = u.id
        WHERE u.id = $1 AND u.role = 'student'`,
@@ -67,6 +67,14 @@ const StudentModel = {
       `INSERT INTO student_profiles (user_id, class_id, roll_no)
        VALUES ($1, $2, $3) RETURNING *`,
       [user_id, class_id, roll_no]
+    );
+    return rows[0];
+  },
+
+  verifyStudent: async (user_id) => {
+    const { rows } = await pool.query(
+      `UPDATE student_profiles SET isverified = 1, updated_at = NOW() WHERE user_id = $1 RETURNING *`,
+      [user_id]
     );
     return rows[0];
   }

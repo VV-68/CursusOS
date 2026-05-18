@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
 import { semesterAPI, courseAssignmentAPI } from '../services/api';
 
-const CourseSemesterSelector = ({ onSelect }) => {
+const CourseSemesterSelector = ({ onSelect, initialValue }) => {
   const [allCourses, setAllCourses] = useState([]);
   const [courses, setCourses] = useState([]);
   const [selectedSemNum, setSelectedSemNum] = useState('');
-  const [selectedCA, setSelectedCA] = useState('');
+  const [selectedCA, setSelectedCA] = useState(initialValue || '');
 
   useEffect(() => {
     // Load all courses for the active/current academic term
     courseAssignmentAPI.getMine()
       .then(data => {
         setAllCourses(data);
+        if (initialValue) {
+          const course = data.find(c => (c.course_assignment_id || c.id) === initialValue);
+          if (course) {
+            const isOdd = course.semester_name?.toLowerCase().includes('odd');
+            const semNum = (course.year - 1) * 2 + (isOdd ? 1 : 2);
+            setSelectedSemNum(semNum.toString());
+          }
+        }
       })
       .catch(err => console.error("Error loading courses:", err));
   }, []);
@@ -29,7 +37,9 @@ const CourseSemesterSelector = ({ onSelect }) => {
       return semNum === parseInt(selectedSemNum);
     });
     setCourses(filtered);
-    setSelectedCA('');
+    if (selectedCA && !filtered.find(c => (c.course_assignment_id || c.id) === selectedCA)) {
+      setSelectedCA('');
+    }
   }, [selectedSemNum, allCourses]);
 
   useEffect(() => {
@@ -37,39 +47,40 @@ const CourseSemesterSelector = ({ onSelect }) => {
   }, [selectedCA, onSelect]);
 
   const selectStyle = {
-    padding: '0.75rem 1rem',
-    background: 'rgba(30, 41, 59, 0.9)',
-    border: '1px solid rgba(100, 116, 139, 0.5)',
+    padding: '0.8rem 1rem',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: '10px',
-    color: '#f8fafc',
+    color: '#1e293b',
     fontSize: '0.95rem',
+    fontWeight: '500',
     outline: 'none',
     minWidth: '240px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
   };
 
   const containerStyle = {
     display: 'flex',
     gap: '1.5rem',
-    marginBottom: '2rem',
+    marginBottom: '2.5rem',
     alignItems: 'center',
     flexWrap: 'wrap',
-    background: 'rgba(15, 23, 42, 0.4)',
-    padding: '1.25rem',
-    borderRadius: '12px',
-    border: '1px solid rgba(51, 65, 85, 0.5)'
+    background: '#f1f5f9',
+    padding: '1.5rem',
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0'
   };
 
   const labelStyle = {
     display: 'block',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#94a3b8',
-    marginBottom: '0.4rem',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: '0.5rem',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.05em'
   };
 
   return (

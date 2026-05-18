@@ -74,4 +74,37 @@ const deleteById = async (id) => {
   return rows[0];
 };
 
-module.exports = { create, updateById, getByCourseAssignment, getById, deleteById };
+const getByFaculty = async (facultyId) => {
+  const { rows } = await pool.query(
+    `SELECT m.*, u.full_name AS posted_by_name,
+            c.name AS course_name, c.code AS course_code,
+            cl.name AS class_name
+     FROM study_materials m
+     JOIN users u ON u.id = m.posted_by
+     JOIN course_assignments ca ON ca.id = m.course_assignment_id
+     JOIN courses c ON c.id = ca.course_id
+     JOIN classes cl ON cl.id = ca.class_id
+     WHERE ca.faculty1_id = $1 OR ca.faculty2_id = $1
+     ORDER BY m.created_at DESC`,
+    [facultyId]
+  );
+  return rows;
+};
+
+const getByStudent = async (studentId) => {
+  const { rows } = await pool.query(
+    `SELECT m.*, u.full_name AS posted_by_name,
+            c.name AS course_name, c.code AS course_code
+     FROM study_materials m
+     JOIN users u ON u.id = m.posted_by
+     JOIN course_assignments ca ON ca.id = m.course_assignment_id
+     JOIN courses c ON c.id = ca.course_id
+     JOIN student_profiles sp ON sp.class_id = ca.class_id
+     WHERE sp.user_id = $1 AND m.is_published = TRUE
+     ORDER BY m.created_at DESC`,
+    [studentId]
+  );
+  return rows;
+};
+
+module.exports = { create, updateById, getByCourseAssignment, getByFaculty, getByStudent, getById, deleteById };

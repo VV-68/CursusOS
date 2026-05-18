@@ -23,9 +23,13 @@ function ProtectedRoute({ children, roles }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Force password change — allow ONLY /change-password through
-  if (decoded.must_change_password && location.pathname !== '/change-password') {
-    return <Navigate to="/change-password" replace />;
+  // Force password change — allow ONLY /change-password through (or /student/complete-profile for students)
+  if (decoded.must_change_password) {
+    if (decoded.role === 'student' && location.pathname !== '/student/complete-profile') {
+      return <Navigate to="/student/complete-profile" replace />;
+    } else if (decoded.role !== 'student' && location.pathname !== '/change-password') {
+      return <Navigate to="/change-password" replace />;
+    }
   }
 
   // Role guard

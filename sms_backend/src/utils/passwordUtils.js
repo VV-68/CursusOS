@@ -15,4 +15,10 @@ const comparePassword = async (plainText, hash) => {
   return bcrypt.compare(plainText, hash);
 };
 
-module.exports = { hashPassword, hashDefault, comparePassword, DEFAULT_PASSWORD };
+const generateDefaultStudentPassword = (name) => {
+  const cleanName = name.replace(/\s+/g, '');
+  return `Welcome${cleanName}@123`;
+};
+
+module.exports = { hashPassword, hashDefault, comparePassword, DEFAULT_PASSWORD, generateDefaultStudentPassword };
+

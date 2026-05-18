@@ -163,7 +163,7 @@ exports.getQuestionUrl = async (req, res) => {
       if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this course' });
     } else {
       const ca = await assertFacultyOwnsCourse(req.user.id, assignment.course_assignment_id);
-      if (!ca && !['admin', 'hod'].includes(req.user.role)) {
+      if (!ca && req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Not authorized' });
       }
     }
@@ -232,7 +232,7 @@ exports.list = async (req, res) => {
 
     console.log('[assignments] list: Checking faculty/admin authorization...');
     const ca = await assertFacultyOwnsCourse(req.user.id, course_assignment_id);
-    if (!ca && !['admin', 'hod'].includes(req.user.role)) {
+    if (!ca && req.user.role !== 'admin') {
       console.warn(`[assignments] list: User ${req.user.id} unauthorized for course ${course_assignment_id}`);
       return res.status(403).json({ error: 'Not authorized for this course' });
     }
@@ -246,6 +246,41 @@ exports.list = async (req, res) => {
     console.error('[assignments] list error (CRASH):', err);
     console.error(err.stack);
     res.status(500).json({ error: 'Internal server error', details: err.message });
+  }
+};
+
+exports.listMine = async (req, res) => {
+  try {
+    if (req.user.role === 'student') {
+      const rows = await assignmentModel.getByStudent(req.user.id);
+      const mappedRows = (rows || []).map(r => ({
+        ...r,
+        submission_id: undefined,
+        submitted_at: undefined,
+        is_late: undefined,
+        is_evaluated: undefined,
+        marks_awarded: undefined,
+        feedback: undefined,
+        submission_file_name: undefined,
+        submission: r.submission_id ? {
+          id: r.submission_id,
+          submitted_at: r.submitted_at,
+          is_late: r.is_late,
+          is_evaluated: r.is_evaluated,
+          marks_awarded: r.marks_awarded,
+          feedback: r.feedback,
+          file_name: r.submission_file_name
+        } : null
+      }));
+      return res.json(mappedRows);
+    }
+
+    // Faculty/Advisor/HOD
+    const assignments = await assignmentModel.getByFaculty(req.user.id);
+    res.json(assignments || []);
+  } catch (err) {
+    console.error('[assignments] listMine error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 

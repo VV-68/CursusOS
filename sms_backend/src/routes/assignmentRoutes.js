@@ -14,6 +14,7 @@ router.delete('/:id', authMiddleware, faculty, ctrl.remove);
 router.post('/:id/question', authMiddleware, faculty, ctrl.questionUploadMiddleware, ctrl.uploadQuestion);
 router.get('/:id/question-url', authMiddleware, ctrl.getQuestionUrl);
 
+router.get('/mine', authMiddleware, ctrl.listMine);
 router.get('/course/:course_assignment_id', authMiddleware, ctrl.list);
 
 router.post('/:assignment_id/submit', authMiddleware, student, ctrl.uploadMiddleware, ctrl.submit);

@@ -1,6 +1,6 @@
 const attendanceModel = require('../models/attendanceModel');
 const courseModel = require('../models/courseModel');
-const { logAudit } = require('./userController');
+const logAudit = require('../utils/auditLogger');
 
 const getAttendanceSheet = async (req, res) => {
   try {

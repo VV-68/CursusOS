@@ -61,42 +61,45 @@ function MyAssignments() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState({});
 
-  useEffect(() => { fetchCourseAssignments(); }, []);
-
-  const fetchCourseAssignments = async () => {
+  useEffect(() => { fetchAll(); }, []);
+  
+  const fetchAll = async () => {
     try {
       const allCA = await profileAPI.getMyCourses();
       setCourseAssignments(allCA);
+      
+      const allAssignments = await assignmentAPI.listMine();
+      // Group assignments by course_assignment_id
+      const grouped = (allAssignments || []).reduce((acc, a) => {
+        const caId = a.course_assignment_id;
+        if (!acc[caId]) acc[caId] = [];
+        acc[caId].push(a);
+        return acc;
+      }, {});
+      setAssignmentsByCourse(grouped);
+      
       if (allCA.length > 0) {
-        const firstId = allCA[0].course_assignment_id;
-        setExpandedCourse(firstId);
-        await loadAssignments(firstId);
+        setExpandedCourse(allCA[0].course_assignment_id);
       }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
 
-  const loadAssignments = async (courseAssignmentId) => {
+  const refreshCourseForAssignment = async () => {
     try {
-      const data = await assignmentAPI.listByCourse(courseAssignmentId);
-      setAssignmentsByCourse((prev) => ({ ...prev, [courseAssignmentId]: data }));
+      const allAssignments = await assignmentAPI.listMine();
+      const grouped = (allAssignments || []).reduce((acc, a) => {
+        const caId = a.course_assignment_id;
+        if (!acc[caId]) acc[caId] = [];
+        acc[caId].push(a);
+        return acc;
+      }, {});
+      setAssignmentsByCourse(grouped);
     } catch (err) { console.error(err); }
   };
 
-  const toggleCourse = async (id) => {
-    if (expandedCourse === id) {
-      setExpandedCourse(null);
-    } else {
-      setExpandedCourse(id);
-      if (!assignmentsByCourse[id]) await loadAssignments(id);
-    }
-  };
-
-  const refreshCourseForAssignment = async (assignmentId) => {
-    const courseId = Object.keys(assignmentsByCourse).find((k) =>
-      assignmentsByCourse[k]?.some((a) => a.id === assignmentId)
-    );
-    if (courseId) await loadAssignments(courseId);
+  const toggleCourse = (id) => {
+    setExpandedCourse(expandedCourse === id ? null : id);
   };
 
   const handleSubmit = async (assignmentId) => {
@@ -142,10 +145,11 @@ function MyAssignments() {
   const getStatus = (a) => {
     const now = new Date();
     const due = new Date(a.due_date);
-    if (a.is_evaluated || (a.marks_awarded !== null && a.marks_awarded !== undefined)) {
+    const sub = a.submission;
+    if (sub?.is_evaluated || (sub?.marks_awarded !== null && sub?.marks_awarded !== undefined)) {
       return { label: 'Evaluated', color: '#4ade80' };
     }
-    if (a.submission_id) return { label: 'Submitted', color: '#60a5fa' };
+    if (sub) return { label: 'Submitted', color: '#60a5fa' };
     if (now > due) return { label: 'Overdue', color: '#f87171' };
     return { label: 'Pending', color: '#fbbf24' };
   };
@@ -197,7 +201,8 @@ function MyAssignments() {
                   assignmentsByCourse[caId].map((a) => {
                     const status = getStatus(a);
                     const isExpanded = expandedAssignment === a.id;
-                    const canModify = a.submission_id && !a.is_evaluated;
+                    const sub = a.submission;
+                    const canModify = sub && !sub.is_evaluated;
                     return (
                       <div
                         key={a.id} style={s.card}
@@ -221,25 +226,25 @@ function MyAssignments() {
                               </button>
                             )}
 
-                            {a.submission_id ? (
+                            {sub ? (
                               <div style={s.submittedBox} onClick={(e) => e.stopPropagation()}>
                                 <div style={{ fontSize: '0.88rem', color: '#4ade80', fontWeight: '600', marginBottom: '0.35rem' }}>
-                                  ✅ Submitted: {a.file_name}
+                                  ✅ Submitted: {sub.file_name}
                                 </div>
                                 <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                                  {formatDate(a.submitted_at)}
-                                  {a.is_late && <span style={s.badge('#f87171')}> Late</span>}
+                                  {formatDate(sub.submitted_at)}
+                                  {sub.is_late && <span style={s.badge('#f87171')}> Late</span>}
                                 </div>
                                 <button style={s.linkBtn} onClick={() => openMyFile(a.id)}>Download my submission</button>
 
-                                {(a.is_evaluated || a.marks_awarded != null) && (
+                                {(sub.is_evaluated || sub.marks_awarded != null) && (
                                   <div style={s.evBox}>
                                     <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#818cf8' }}>
-                                      Marks: {a.marks_awarded} / {a.max_marks}
+                                      Marks Obtained: {sub.marks_awarded} / {a.max_marks}
                                     </div>
-                                    {a.feedback && (
+                                    {sub.feedback && (
                                       <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.35rem' }}>
-                                        💬 {a.feedback}
+                                        💬 {sub.feedback}
                                       </div>
                                     )}
                                   </div>

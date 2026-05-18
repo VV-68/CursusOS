@@ -4,30 +4,30 @@ import { assignmentAPI } from '../../services/api';
 import CourseSemesterSelector from '../../components/CourseSemesterSelector';
 
 const s = {
-  page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-  backBtn: { background: 'none', border: '1px solid #475569', color: '#94a3b8', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' },
-  newBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' },
-  table: { width: '100%', borderCollapse: 'collapse', background: 'rgba(30,41,59,0.8)', borderRadius: '12px', overflow: 'hidden' },
-  th: { padding: '0.85rem 1rem', textAlign: 'left', background: 'rgba(51,65,85,0.6)', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  td: { padding: '0.75rem 1rem', borderBottom: '1px solid rgba(51,65,85,0.5)', color: '#e2e8f0', fontSize: '0.9rem' },
-  badge: (color) => ({ display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: `${color}22`, color }),
-  toggleBtn: (active) => ({ padding: '0.3rem 0.7rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: active ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', color: active ? '#4ade80' : '#f87171' }),
-  actionBtn: { padding: '0.3rem 0.7rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500', background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', marginRight: '0.4rem' },
+  page: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' },
+  title: { fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.025em' },
+  backBtn: { background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' },
+  newBtn: { background: '#6366f1', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.2)' },
+  table: { width: '100%', borderCollapse: 'separate', borderSpacing: 0, background: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+  th: { padding: '1rem', textAlign: 'left', background: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' },
+  td: { padding: '1rem', borderBottom: '1px solid #f1f5f9', color: '#334155', fontSize: '0.9rem' },
+  badge: (color) => ({ display: 'inline-block', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', background: `${color}15`, color }),
+  toggleBtn: (active) => ({ padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: active ? '#dcfce7' : '#fee2e2', color: active ? '#15803d' : '#b91c1c' }),
+  actionBtn: { padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: '#fff', color: '#6366f1', marginRight: '0.5rem', transition: 'all 0.2s' },
   // Modal
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
-  modal: { background: '#1e293b', borderRadius: '16px', padding: '2rem', width: '90%', maxWidth: '500px', border: '1px solid rgba(100,116,139,0.3)', maxHeight: '90vh', overflowY: 'auto' },
-  modalTitle: { fontSize: '1.25rem', fontWeight: '700', color: '#f1f5f9', marginBottom: '1.5rem' },
-  field: { marginBottom: '1rem' },
-  label: { display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.3rem', fontWeight: '500' },
-  input: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', minHeight: '80px', resize: 'vertical', boxSizing: 'border-box' },
-  checkRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' },
-  modalActions: { display: 'flex', gap: '0.75rem', marginTop: '1.5rem' },
-  modalBtn: (bg) => ({ flex: 1, padding: '0.65rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', background: bg, color: '#fff' }),
-  empty: { textAlign: 'center', padding: '3rem', color: '#64748b', background: 'rgba(30,41,59,0.5)', borderRadius: '12px' },
-  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' },
+  modal: { background: '#ffffff', borderRadius: '16px', padding: '2.5rem', width: '90%', maxWidth: '550px', border: '1px solid #e2e8f0', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', maxHeight: '90vh', overflowY: 'auto' },
+  modalTitle: { fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.5rem', letterSpacing: '-0.025em' },
+  field: { marginBottom: '1.25rem' },
+  label: { display: 'block', color: '#475569', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: '600' },
+  input: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem', boxSizing: 'border-box', transition: 'all 0.2s' },
+  textarea: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' },
+  checkRow: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' },
+  modalActions: { display: 'flex', gap: '1rem', marginTop: '2rem' },
+  modalBtn: (bg) => ({ flex: 1, padding: '0.8rem', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', background: bg, color: '#fff', transition: 'all 0.2s' }),
+  empty: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b', background: '#fff', borderRadius: '16px', border: '2px dashed #e2e8f0' },
+  error: { padding: '1rem', background: '#fef2f2', color: '#dc2626', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.9rem', border: '1px solid #fee2e2' },
 };
 
 function Assignments() {
@@ -44,19 +44,20 @@ function Assignments() {
   const [questionFile, setQuestionFile] = useState(null);
 
   useEffect(() => { 
-    if (selectedCA) {
-      setLoading(true);
-      fetchData(); 
-    } else {
-      setAssignments([]);
-      setLoading(false);
-    }
+    fetchData(); 
   }, [selectedCA]);
-
+  
   const fetchData = async () => {
+    setLoading(true);
+    setError('');
     try {
-      const data = await assignmentAPI.listByCourse(selectedCA);
-      setAssignments(data);
+      if (selectedCA) {
+        const data = await assignmentAPI.listByCourse(selectedCA);
+        setAssignments(data);
+      } else {
+        const data = await assignmentAPI.listMine();
+        setAssignments(data);
+      }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -113,23 +114,22 @@ function Assignments() {
         {selectedCA && <button style={s.newBtn} onClick={() => setShowModal(true)}>+ New Assignment</button>}
       </div>
 
-      <CourseSemesterSelector onSelect={setSelectedCA} />
+      <CourseSemesterSelector onSelect={setSelectedCA} initialValue={initial_ca} />
       
       {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading assignments...</div>}
-      
-      {!loading && !selectedCA && <div style={s.empty}>Please select a semester and course to view assignments.</div>}
       {error && <div style={s.error}>{error}</div>}
-
-      {!loading && selectedCA && assignments.length === 0 ? (
+      
+      {!loading && assignments.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No assignments yet</p>
-          <p>Create your first assignment to get started.</p>
+          <p>{selectedCA ? 'Create your first assignment to get started.' : 'You haven\'t posted any assignments across your courses.'}</p>
         </div>
-      ) : selectedCA && assignments.length > 0 ? (
+      ) : assignments.length > 0 ? (
         <div style={{ overflowX: 'auto', borderRadius: '12px' }}>
           <table style={s.table}>
             <thead>
               <tr>
+                {!selectedCA && <th style={s.th}>Course</th>}
                 <th style={s.th}>Title</th>
                 <th style={s.th}>Due Date</th>
                 <th style={s.th}>Max Marks</th>
@@ -142,6 +142,12 @@ function Assignments() {
             <tbody>
               {assignments.map((a) => (
                 <tr key={a.id}>
+                  {!selectedCA && (
+                    <td style={{ ...s.td, fontWeight: '600', color: '#6366f1' }}>
+                      {a.course_name} <br/>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{a.course_code}</span>
+                    </td>
+                  )}
                   <td style={s.td}>{a.title}</td>
                   <td style={s.td}>{formatDate(a.due_date)}</td>
                   <td style={s.td}>{a.max_marks}</td>

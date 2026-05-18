@@ -64,28 +64,37 @@ function Navbar() {
 
             {/* Faculty-specific links */}
             {['faculty', 'advisor', 'hod'].includes(role) && (
-              <Link to="/faculty/courses" style={linkStyle}>My Courses</Link>
+              <Link to="/faculty/internals" style={linkStyle}>Faculty Internals</Link>
             )}
+
 
             {/* Student-specific links */}
             {role === 'student' && (
               <>
                 <Link to="/student/assignments" style={linkStyle}>Assignments</Link>
+                <Link to="/student/internals" style={linkStyle}>My Internals</Link>
                 <Link to="/student/profile" style={linkStyle}>Profile</Link>
               </>
             )}
 
+
             {/* Advisor-specific links */}
             {['advisor', 'hod'].includes(role) && (
-              <Link to="/advisor/students" style={linkStyle}>Students</Link>
+              <>
+                <Link to="/advisor/students" style={linkStyle}>Students</Link>
+                <Link to="/advisor/internals" style={linkStyle}>Class Internals</Link>
+              </>
             )}
+
 
             {role === 'hod' && (
               <>
                 <Link to="/hod/courses" style={linkStyle}>Dept Courses</Link>
+                <Link to="/hod/internals" style={linkStyle}>Dept Internals</Link>
                 <Link to="/admin/users/create" style={linkStyle}>Add Faculty</Link>
               </>
             )}
+
 
             <Link to="/change-password" style={linkStyle}>Settings</Link>
 

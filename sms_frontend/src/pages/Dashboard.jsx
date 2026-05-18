@@ -92,7 +92,6 @@ function Dashboard() {
 
         {['faculty', 'advisor', 'hod'].includes(role) && (
           <>
-            <Link to="/faculty/courses" className="btn btn-primary">My Courses</Link>
             <Link to="/faculty/assignments" className="btn btn-primary">Manage Assignments</Link>
             <Link to="/faculty/materials" className="btn btn-primary">Study Materials</Link>
           </>
@@ -107,6 +106,8 @@ function Dashboard() {
 
         {role === 'student' && (
           <>
+            <Link to="/student/assignments" className="btn btn-primary">My Assignments</Link>
+            <Link to="/student/materials" className="btn btn-primary">Study Materials</Link>
             <Link to="/student/attendance" className="btn btn-primary">My Attendance</Link>
             <Link to="/student/marks" className="btn btn-primary">My Grades</Link>
           </>

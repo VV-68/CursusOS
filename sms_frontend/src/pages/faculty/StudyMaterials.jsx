@@ -9,37 +9,37 @@ const TYPE_COLORS = { notes: '#818cf8', slides: '#f97316', reference: '#06b6d4',
 const TYPE_ICONS = { notes: '📄', slides: '📊', reference: '📖', video: '🎬', question_bank: '❓' };
 
 const s = {
-  page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #22c55e, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-  backBtn: { background: 'none', border: '1px solid #475569', color: '#94a3b8', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' },
-  addBtn: { background: 'linear-gradient(135deg, #22c55e, #06b6d4)', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' },
+  page: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' },
+  title: { fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.025em' },
+  backBtn: { background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' },
+  addBtn: { background: 'linear-gradient(135deg, #22c55e, #10b981)', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 6px -1px rgba(34, 197, 94, 0.2)' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' },
   card: {
-    background: 'rgba(30,41,59,0.8)', borderRadius: '12px', padding: '1.5rem',
-    border: '1px solid rgba(100,116,139,0.3)', transition: 'all 0.3s ease',
+    background: '#ffffff', borderRadius: '16px', padding: '1.75rem',
+    border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', transition: 'all 0.3s ease',
   },
-  cardTitle: { fontSize: '1.05rem', fontWeight: '600', color: '#f1f5f9', marginBottom: '0.5rem' },
-  cardDesc: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.4' },
-  typeBadge: (type) => ({ display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: `${TYPE_COLORS[type] || '#64748b'}22`, color: TYPE_COLORS[type] || '#64748b', marginBottom: '0.75rem' }),
-  meta: { fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem' },
-  cardActions: { display: 'flex', gap: '0.5rem' },
-  openBtn: { flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', background: 'rgba(34,197,94,0.15)', color: '#4ade80' },
-  deleteBtn: { padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer', fontWeight: '500', fontSize: '0.85rem', background: 'rgba(239,68,68,0.1)', color: '#f87171' },
+  cardTitle: { fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem' },
+  cardDesc: { color: '#64748b', fontSize: '0.9rem', marginBottom: '1.25rem', lineHeight: '1.5' },
+  typeBadge: (type) => ({ display: 'inline-block', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', background: `${TYPE_COLORS[type] || '#64748b'}15`, color: TYPE_COLORS[type] || '#64748b', marginBottom: '1rem', textTransform: 'uppercase' }),
+  meta: { fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  cardActions: { display: 'flex', gap: '0.75rem' },
+  openBtn: { flex: 1, padding: '0.6rem 1rem', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', background: '#dcfce7', color: '#15803d', transition: 'all 0.2s' },
+  deleteBtn: { padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #fee2e2', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', background: '#fff', color: '#ef4444', transition: 'all 0.2s' },
   // Modal
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
-  modal: { background: '#1e293b', borderRadius: '16px', padding: '2rem', width: '90%', maxWidth: '500px', border: '1px solid rgba(100,116,139,0.3)' },
-  modalTitle: { fontSize: '1.25rem', fontWeight: '700', color: '#f1f5f9', marginBottom: '1.5rem' },
-  field: { marginBottom: '1rem' },
-  label: { display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.3rem', fontWeight: '500' },
-  input: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', minHeight: '80px', resize: 'vertical', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem' },
-  hint: { fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem' },
-  modalActions: { display: 'flex', gap: '0.75rem', marginTop: '1.5rem' },
-  modalBtn: (bg) => ({ flex: 1, padding: '0.65rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', background: bg, color: '#fff' }),
-  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
-  empty: { textAlign: 'center', padding: '3rem', color: '#64748b', background: 'rgba(30,41,59,0.5)', borderRadius: '12px' },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' },
+  modal: { background: '#ffffff', borderRadius: '16px', padding: '2.5rem', width: '90%', maxWidth: '550px', border: '1px solid #e2e8f0', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' },
+  modalTitle: { fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.5rem', letterSpacing: '-0.025em' },
+  field: { marginBottom: '1.25rem' },
+  label: { display: 'block', color: '#475569', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: '600' },
+  input: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem', boxSizing: 'border-box' },
+  textarea: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem' },
+  hint: { fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.4rem' },
+  modalActions: { display: 'flex', gap: '1rem', marginTop: '2rem' },
+  modalBtn: (bg) => ({ flex: 1, padding: '0.8rem', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', background: bg, color: '#fff' }),
+  error: { padding: '1rem', background: '#fef2f2', color: '#dc2626', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.9rem', border: '1px solid #fee2e2' },
+  empty: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b', background: '#fff', borderRadius: '16px', border: '2px dashed #e2e8f0' },
 };
 
 function FacultyStudyMaterials() {
@@ -58,19 +58,20 @@ function FacultyStudyMaterials() {
   try { userId = jwtDecode(token).id; } catch {}
 
   useEffect(() => { 
-    if (selectedCA) {
-      setLoading(true);
-      fetchData(); 
-    } else {
-      setMaterials([]);
-      setLoading(false);
-    }
+    fetchData(); 
   }, [selectedCA]);
-
+  
   const fetchData = async () => {
+    setLoading(true);
+    setError('');
     try {
-      const data = await studyMaterialAPI.listByCourse(selectedCA);
-      setMaterials(data);
+      if (selectedCA) {
+        const data = await studyMaterialAPI.listByCourse(selectedCA);
+        setMaterials(data);
+      } else {
+        const data = await studyMaterialAPI.listMine();
+        setMaterials(data);
+      }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -126,23 +127,25 @@ function FacultyStudyMaterials() {
         {selectedCA && <button style={s.addBtn} onClick={() => setShowModal(true)}>+ Add Material</button>}
       </div>
 
-      <CourseSemesterSelector onSelect={setSelectedCA} />
+      <CourseSemesterSelector onSelect={setSelectedCA} initialValue={initial_ca} />
 
       {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading materials...</div>}
-
-      {!loading && !selectedCA && <div style={s.empty}>Please select a semester and course to view materials.</div>}
-      
       {error && <div style={s.error}>{error}</div>}
 
-      {!loading && selectedCA && materials.length === 0 ? (
+      {!loading && materials.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No materials posted</p>
-          <p>Share study materials with your students.</p>
+          <p>{selectedCA ? 'Share study materials with your students.' : 'You haven\'t posted any study materials across your courses.'}</p>
         </div>
-      ) : selectedCA && materials.length > 0 ? (
+      ) : materials.length > 0 ? (
         <div style={s.grid}>
           {materials.map((m) => (
             <div key={m.id} style={s.card}>
+              {!selectedCA && (
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6366f1', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  📚 {m.course_name} ({m.course_code})
+                </div>
+              )}
               <span style={s.typeBadge(m.material_type)}>{TYPE_ICONS[m.material_type] || '📄'} {m.material_type}</span>
               <div style={s.cardTitle}>{m.title}</div>
               {m.description && <div style={s.cardDesc}>{m.description}</div>}

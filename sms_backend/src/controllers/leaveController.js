@@ -1,5 +1,5 @@
 const leaveModel = require('../models/leaveModel');
-const { logAudit } = require('./userController');
+const logAudit = require('../utils/auditLogger');
 
 const applyLeave = async (req, res) => {
   try {

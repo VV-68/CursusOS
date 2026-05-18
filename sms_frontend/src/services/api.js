@@ -295,6 +295,10 @@ export const assignmentAPI = {
     headers: getHeaders(true),
   }).then(handleResponse),
 
+  listMine: () => fetch(`${BASE_URL}/api/assignments/mine`, {
+    headers: getHeaders(true),
+  }).then(handleResponse),
+
   submit: (assignmentId, file) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -360,6 +364,10 @@ export const studyMaterialAPI = {
     headers: getHeaders(true),
   }).then(handleResponse),
 
+  listMine: () => fetch(`${BASE_URL}/api/study-materials/mine`, {
+    headers: getHeaders(true),
+  }).then(handleResponse),
+
   getDownloadUrl: (id) => fetch(`${BASE_URL}/api/study-materials/${id}/download`, {
     headers: getHeaders(true),
   }).then(handleResponse),
@@ -391,7 +399,26 @@ export const profileAPI = {
   getClassStudents: (classId) => fetch(`${BASE_URL}/api/profile/class/${classId}`, {
     headers: getHeaders(true)
   }).then(handleResponse),
+
+  createStudentManually: (data) => fetch(`${BASE_URL}/api/students/profile`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  bulkUploadStudents: (formData) => fetch(`${BASE_URL}/api/students/bulk-upload`, {
+    method: 'POST', 
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+    body: formData
+  }).then(handleResponse),
+
+  verifyStudent: (studentId) => fetch(`${BASE_URL}/api/students/${studentId}/verify`, {
+    method: 'POST', headers: getHeaders(true)
+  }).then(handleResponse),
+
+  completeProfile: (data) => fetch(`${BASE_URL}/api/students/complete-profile`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
 };
+
 
 // ─── Consolidated Marks ──────────────────────────────────────────────────
 
@@ -446,4 +473,29 @@ export const departmentCreationAPI = {
   assignFaculty: (id, data) => fetch(`${BASE_URL}/api/department-creation/${id}/assign-faculty`, {
     method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
   }).then(handleResponse),
+
 };
+
+// ─── Internal Marks ──────────────────────────────────────────────────────
+export const internalMarksAPI = {
+  getInternalMarksSheet: (course_assignment_id) => fetch(`${BASE_URL}/api/internal-marks/course/${course_assignment_id}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+  
+  updateInternalMarks: (course_assignment_id, marksData) => fetch(`${BASE_URL}/api/internal-marks/course/${course_assignment_id}`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify({ marksData })
+  }).then(handleResponse),
+  
+  getStudentInternals: () => fetch(`${BASE_URL}/api/internal-marks/my`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+  
+  getClassInternals: (class_id) => fetch(`${BASE_URL}/api/internal-marks/class/${class_id}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+  
+  getDepartmentInternals: (dept_id) => fetch(`${BASE_URL}/api/internal-marks/department/${dept_id}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+};
+

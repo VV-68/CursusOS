@@ -40,6 +40,11 @@ import StudentStudyMaterials from './pages/student/StudyMaterials';
 import ProfilePage from './pages/student/ProfilePage';
 import MyStudents from './pages/advisor/MyStudents';
 import StudentProfile from './pages/advisor/StudentProfile';
+import InternalMarks from './pages/faculty/InternalMarks';
+import ClassInternals from './pages/advisor/ClassInternals';
+import MyInternals from './pages/student/MyInternals';
+import DepartmentInternals from './pages/hod/DepartmentInternals';
+import CompleteProfile from './pages/student/CompleteProfile';
 
 import './App.css';
 
@@ -75,6 +80,12 @@ function App() {
           <Route path="/change-password" element={
             <ProtectedRoute roles={['admin','hod','advisor','faculty','student']}>
               <ChangePassword />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/complete-profile" element={
+            <ProtectedRoute roles={['student']}>
+              <CompleteProfile />
             </ProtectedRoute>
           } />
 
@@ -152,11 +163,25 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/hod/internals" element={
+            <ProtectedRoute roles={['hod', 'admin']}>
+              <DepartmentInternals />
+            </ProtectedRoute>
+          } />
+
+
           <Route path="/advisor/timetable" element={
             <ProtectedRoute roles={['advisor']}>
               <Timetable />
             </ProtectedRoute>
           } />
+
+          <Route path="/advisor/internals" element={
+            <ProtectedRoute roles={['advisor']}>
+              <ClassInternals />
+            </ProtectedRoute>
+          } />
+
 
           <Route path="/timetable" element={
             <ProtectedRoute roles={['student','faculty','advisor','hod','admin']}>
@@ -188,11 +213,25 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/faculty/internals" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
+              <InternalMarks />
+            </ProtectedRoute>
+          } />
+
+
           <Route path="/student/marks" element={
             <ProtectedRoute roles={['student']}>
               <Marks />
             </ProtectedRoute>
           } />
+
+          <Route path="/student/internals" element={
+            <ProtectedRoute roles={['student']}>
+              <MyInternals />
+            </ProtectedRoute>
+          } />
+
 
           <Route path="/leave" element={
             <ProtectedRoute roles={['student', 'faculty', 'advisor', 'hod']}>
@@ -255,7 +294,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/student/materials/:course_assignment_id" element={
+          <Route path="/student/materials/:course_assignment_id?" element={
             <ProtectedRoute roles={['student']}>
               <StudentStudyMaterials />
             </ProtectedRoute>

@@ -125,7 +125,7 @@ exports.list = async (req, res) => {
     }
 
     const ca = await getFacultyAssignment(req.user.id, course_assignment_id);
-    if (!ca && !['admin', 'hod'].includes(req.user.role)) {
+    if (!ca && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized for this course' });
     }
 
@@ -133,6 +133,20 @@ exports.list = async (req, res) => {
     res.json(materials);
   } catch (err) {
     console.error('[study-materials] list error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.listMine = async (req, res) => {
+  try {
+    if (req.user.role === 'student') {
+      const materials = await studyMaterialModel.getByStudent(req.user.id);
+      return res.json(materials);
+    }
+    const rows = await studyMaterialModel.getByFaculty(req.user.id);
+    res.json(rows);
+  } catch (err) {
+    console.error('[study-materials] listMine error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -150,7 +164,7 @@ exports.getDownloadUrl = async (req, res) => {
       if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this course' });
     } else {
       const ca = await getFacultyAssignment(req.user.id, material.course_assignment_id);
-      if (!ca && material.posted_by !== req.user.id && !['admin', 'hod'].includes(req.user.role)) {
+      if (!ca && material.posted_by !== req.user.id && req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Not authorized' });
       }
     }
