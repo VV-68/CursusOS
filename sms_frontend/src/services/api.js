@@ -166,10 +166,14 @@ export const timetableAPI = {
 // ─── Attendance ──────────────────────────────────────────────
 
 export const attendanceAPI = {
+  validate: (qs) => fetch(`${BASE_URL}/api/attendance/validate?${qs}`, { headers: getHeaders(true) }).then(handleResponse),
   getSheet: (qs) => fetch(`${BASE_URL}/api/attendance/sheet?${qs}`, { headers: getHeaders(true) }).then(handleResponse),
   mark: (data) => fetch(`${BASE_URL}/api/attendance/mark`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   getSummary: (studentId) => fetch(`${BASE_URL}/api/attendance/summary/${studentId}`, { headers: getHeaders(true) }).then(handleResponse),
   getLow: (qs) => fetch(`${BASE_URL}/api/attendance/low?${qs}`, { headers: getHeaders(true) }).then(handleResponse),
+  requestOverride: (data) => fetch(`${BASE_URL}/api/attendance/override-request`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  listOverrides: () => fetch(`${BASE_URL}/api/attendance/overrides`, { headers: getHeaders(true) }).then(handleResponse),
+  reviewOverride: (id, status) => fetch(`${BASE_URL}/api/attendance/overrides/${id}`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ status }) }).then(handleResponse),
 };
 
 // ─── Marks ───────────────────────────────────────────────────

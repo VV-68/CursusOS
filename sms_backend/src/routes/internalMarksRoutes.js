@@ -8,7 +8,7 @@ router.use(verifyToken);
 
 // Faculty routes
 router.get('/course/:course_assignment_id', roleGuard(['faculty', 'advisor', 'hod', 'admin']), internalMarksController.getMarksSheet);
-router.post('/course/:course_assignment_id', roleGuard(['faculty', 'admin']), internalMarksController.updateMarks);
+router.post('/course/:course_assignment_id', roleGuard(['faculty', 'advisor', 'hod', 'admin']), internalMarksController.updateMarks);
 
 // Student route
 router.get('/my', roleGuard(['student']), internalMarksController.getStudentInternals);

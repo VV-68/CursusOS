@@ -40,13 +40,13 @@ function AttendanceSummary() {
           </thead>
           <tbody>
             {summary.map(s => (
-              <tr key={s.course_id} style={{ borderBottom: '1px solid #ccc' }}>
+              <tr key={s.course_assignment_id} style={{ borderBottom: '1px solid #ccc' }}>
                 <td>{s.course_name}</td>
                 <td>{s.course_code}</td>
-                <td>{s.total_classes}</td>
-                <td>{s.attended_classes}</td>
-                <td style={{ color: parseFloat(s.attendance_percentage) < 75 ? 'red' : 'green', fontWeight: 'bold' }}>
-                  {s.attendance_percentage}%
+                <td>{s.classes_done}</td>
+                <td>{s.classes_present}</td>
+                <td style={{ color: parseFloat(s.percentage) < 75 ? 'red' : 'green', fontWeight: 'bold' }}>
+                  {s.percentage}%
                 </td>
               </tr>
             ))}

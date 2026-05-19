@@ -64,7 +64,11 @@ function Navbar() {
 
             {/* Faculty-specific links */}
             {['faculty', 'advisor', 'hod'].includes(role) && (
-              <Link to="/faculty/internals" style={linkStyle}>Faculty Internals</Link>
+              <>
+                <Link to="/faculty/attendance/mark" style={linkStyle}>Mark Attendance</Link>
+                <Link to="/faculty/internals" style={linkStyle}>Faculty Internals</Link>
+                <Link to="/faculty/marks/update" style={linkStyle}>Mark Grades</Link>
+              </>
             )}
 
 
@@ -83,6 +87,7 @@ function Navbar() {
               <>
                 <Link to="/advisor/students" style={linkStyle}>Students</Link>
                 <Link to="/advisor/internals" style={linkStyle}>Class Internals</Link>
+                <Link to="/advisor/attendance/overrides" style={linkStyle}>Override Requests</Link>
               </>
             )}
 

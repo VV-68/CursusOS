@@ -45,6 +45,7 @@ import ClassInternals from './pages/advisor/ClassInternals';
 import MyInternals from './pages/student/MyInternals';
 import DepartmentInternals from './pages/hod/DepartmentInternals';
 import CompleteProfile from './pages/student/CompleteProfile';
+import AttendanceOverrides from './pages/advisor/AttendanceOverrides';
 
 import './App.css';
 
@@ -190,7 +191,7 @@ function App() {
           } />
 
           <Route path="/faculty/attendance/mark" element={
-            <ProtectedRoute roles={['faculty']}>
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <MarkAttendance />
             </ProtectedRoute>
           } />
@@ -207,8 +208,14 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/advisor/attendance/overrides" element={
+            <ProtectedRoute roles={['advisor', 'hod', 'admin']}>
+              <AttendanceOverrides />
+            </ProtectedRoute>
+          } />
+
           <Route path="/faculty/marks/update" element={
-            <ProtectedRoute roles={['faculty']}>
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <MarkGrades />
             </ProtectedRoute>
           } />
