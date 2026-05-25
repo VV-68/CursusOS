@@ -71,7 +71,7 @@ export default function ClassTimetableView() {
             </p>
           )}
         </div>
-        <Link to="/hod/classes" style={{ textDecoration: 'none', color: '#4f46e5' }}>← Back to Classes</Link>
+        <Link to="/hod/classes" style={{ textDecoration: 'none', color: '#007bff' }}>← Back to Classes</Link>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -90,7 +90,7 @@ export default function ClassTimetableView() {
           onClick={handlePdf}
           disabled={!timetable.length}
           style={{
-            padding: '0.5rem 1.25rem', background: '#4f46e5', color: '#fff',
+            padding: '0.5rem 1.25rem', background: '#007bff', color: '#fff',
             border: 'none', borderRadius: '8px', cursor: 'pointer'
           }}
         >

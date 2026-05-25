@@ -604,7 +604,7 @@ export default function EditDepartment() {
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
                 {form.periods.map((p, i) => (
-                  <span key={i} style={{ padding: '.4rem .85rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600, background: 'linear-gradient(135deg, #eef2ff, #e0e7ff)', color: '#4338ca' }}>
+                  <span key={i} style={{ padding: '.4rem .85rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600, background: 'linear-gradient(135deg, #e6f2ff, #cce5ff)', color: '#0056b3' }}>
                     {label} {p.period_number}
                   </span>
                 ))}

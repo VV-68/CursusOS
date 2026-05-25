@@ -79,7 +79,7 @@ function MyStudents() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=oversight')}>← Back</button>
       
       <div className="dept-wizard__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 style={{ color: '#4f46e5', margin: 0 }}>🧑‍🎓 My Students</h1>
+        <h1 style={{ color: '#007bff', margin: 0 }}>🧑‍🎓 My Students</h1>
         <div style={{ display: 'flex', gap: '0.8rem' }}>
           <button className="dept-btn dept-btn--outline" onClick={() => setShowBulkUpload(true)}>Bulk Upload</button>
           <button className="dept-btn dept-btn--primary" onClick={() => setShowAddModal(true)}>+ Add Student</button>
@@ -94,8 +94,8 @@ function MyStudents() {
               style={{
                 padding: '0.4rem 1rem', borderRadius: '20px', border: 'none', cursor: 'pointer',
                 fontSize: '0.85rem', fontWeight: '600', textTransform: 'capitalize',
-                background: activeClass === c.id ? '#eef2ff' : 'transparent',
-                color: activeClass === c.id ? '#4f46e5' : '#64748b',
+                background: activeClass === c.id ? '#e6f2ff' : 'transparent',
+                color: activeClass === c.id ? '#007bff' : '#64748b',
                 transition: 'all 0.2s ease',
               }}
               onClick={() => handleTabClick(c.id)}

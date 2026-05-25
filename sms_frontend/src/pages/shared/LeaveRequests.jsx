@@ -51,7 +51,7 @@ function LeaveRequests() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px', marginTop: '1rem' }}>
           <div>
             <label style={{ display: 'block' }}>Leave Type</label>
-            <select name="type" value={formData.type} onChange={handleChange} required style={{ width: '100%' }}>
+            <select name="type" value={formData.type} onChange={handleChange} required className="form-control">
               <option value="sick">Sick</option>
               <option value="casual">Casual</option>
               <option value="od">OD (On Duty)</option>
@@ -59,11 +59,11 @@ function LeaveRequests() {
           </div>
           <div>
             <label style={{ display: 'block' }}>From Date</label>
-            <input type="date" name="from_date" value={formData.from_date} onChange={handleChange} required style={{ width: '100%' }} />
+            <input type="date" name="from_date" value={formData.from_date} onChange={handleChange} required className="form-control" />
           </div>
           <div>
             <label style={{ display: 'block' }}>To Date</label>
-            <input type="date" name="to_date" value={formData.to_date} onChange={handleChange} required style={{ width: '100%' }} />
+            <input type="date" name="to_date" value={formData.to_date} onChange={handleChange} required className="form-control" />
           </div>
           <div>
             <label style={{ display: 'block' }}>Reason</label>

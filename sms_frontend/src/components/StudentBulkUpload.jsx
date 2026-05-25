@@ -44,7 +44,7 @@ function StudentBulkUpload({ classId, onClose, onSuccess }) {
     <div className="json-upload-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="json-upload-modal" style={{ maxWidth: '500px' }}>
         <div className="json-upload-modal__header">
-          <h2 style={{ color: '#4f46e5', margin: 0 }}>Bulk Upload Students</h2>
+          <h2 style={{ color: '#007bff', margin: 0 }}>Bulk Upload Students</h2>
           <button type="button" className="json-upload-modal__close" onClick={onClose}>×</button>
         </div>
         <div className="json-upload-modal__body">
@@ -55,7 +55,7 @@ function StudentBulkUpload({ classId, onClose, onSuccess }) {
           {!result ? (
             <>
               <div style={{ border: '2px dashed #cbd5e1', padding: '2rem', textAlign: 'center', borderRadius: '8px', cursor: 'pointer', marginBottom: '1.5rem', background: '#f8fafc', transition: 'all 0.2s' }} onClick={() => document.getElementById('bulk-file').click()}>
-                <span style={{ color: '#4f46e5', fontWeight: '500' }}>{file ? file.name : 'Click to select CSV/XLSX file'}</span>
+                <span style={{ color: '#007bff', fontWeight: '500' }}>{file ? file.name : 'Click to select CSV/XLSX file'}</span>
                 <input type="file" id="bulk-file" accept=".csv,.xlsx" style={{ display: 'none' }} onChange={handleFileChange} />
               </div>
               

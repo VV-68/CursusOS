@@ -88,7 +88,7 @@ function Departments() {
           <Link to="/admin/departments/create">
             <button style={{
               padding: '0.5rem 1rem',
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #007bff, #007bff)',
               color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer',
               fontWeight: 600, fontSize: '.85rem',
               boxShadow: '0 2px 8px rgba(99,102,241,.25)'
@@ -172,7 +172,7 @@ function Departments() {
                         <button style={btnStyle('#17a2b8')}>Assign HOD</button>
                       </Link>
                       <Link to={`/admin/departments/${d.id}/edit`}>
-                        <button style={btnStyle('#6366f1')}>✏️ Edit</button>
+                        <button style={btnStyle('#007bff')}>✏️ Edit</button>
                       </Link>
                       <button
                         style={btnStyle(deleting === d.id ? '#999' : '#dc3545')}

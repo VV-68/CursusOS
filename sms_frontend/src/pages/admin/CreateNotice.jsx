@@ -49,7 +49,7 @@ function CreateNotice() {
 
         <div>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Title</label>
-          <input type="text" name="title" value={formData.title} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem' }} />
+          <input type="text" name="title" value={formData.title} onChange={handleChange} required className="form-control" />
         </div>
 
         <div>
@@ -59,7 +59,7 @@ function CreateNotice() {
 
         <div>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Scope</label>
-          <select name="scope" value={formData.scope} onChange={handleChange} style={{ width: '100%', padding: '0.5rem' }}>
+          <select name="scope" value={formData.scope} onChange={handleChange} className="form-control">
             <option value="global">Global (All Users)</option>
             <option value="department">Department</option>
             <option value="class">Class</option>
@@ -69,7 +69,7 @@ function CreateNotice() {
         {formData.scope === 'class' && (
           <div>
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Target Class</label>
-            <select name="target_id" value={formData.target_id} onChange={handleChange} style={{ width: '100%', padding: '0.5rem' }}>
+            <select name="target_id" value={formData.target_id} onChange={handleChange} className="form-control">
               <option value="">Select Class...</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
             </select>

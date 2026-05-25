@@ -30,7 +30,7 @@ function AddStudentModal({ classId, onClose, onSuccess }) {
     <div className="json-upload-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="json-upload-modal" style={{ maxWidth: '400px' }}>
         <div className="json-upload-modal__header">
-          <h2 style={{ color: '#4f46e5', margin: 0 }}>Add Student Manually</h2>
+          <h2 style={{ color: '#007bff', margin: 0 }}>Add Student Manually</h2>
           <button type="button" className="json-upload-modal__close" onClick={onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit} className="json-upload-modal__body">

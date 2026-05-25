@@ -242,10 +242,7 @@ function MarkAttendance() {
 
       {/* Override Request Modal */}
       {showOverrideModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
+        <div className="modal-overlay">
           <div style={{
             background: '#fff', borderRadius: '12px', padding: '2rem',
             width: '90%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'

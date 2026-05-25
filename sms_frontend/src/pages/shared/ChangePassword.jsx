@@ -116,7 +116,7 @@ function ChangePassword() {
               placeholder="Enter current password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              style={inputStyle}
+              className="form-control"
               disabled={loading}
               required
             />
@@ -134,7 +134,7 @@ function ChangePassword() {
               placeholder="Enter new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              style={inputStyle}
+              className="form-control"
               disabled={loading}
               required
             />
@@ -152,7 +152,7 @@ function ChangePassword() {
             placeholder="Re-enter new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            style={inputStyle}
+            className="form-control"
             disabled={loading}
             required
           />

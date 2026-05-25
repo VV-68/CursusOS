@@ -125,7 +125,7 @@ function Classes() {
           onClick={() => setShowForm(!showForm)}
           style={{
             padding: '0.5rem 1rem',
-            background: showForm ? '#64748b' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: showForm ? '#64748b' : 'linear-gradient(135deg, #007bff, #007bff)',
             color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer',
             fontWeight: 600, fontSize: '.85rem',
             boxShadow: showForm ? 'none' : '0 2px 8px rgba(99,102,241,.25)'
@@ -152,7 +152,7 @@ function Classes() {
                 value={formData.name}
                 onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. CSE-A 2024"
-                style={inputStyle}
+                className="form-control"
                 disabled={formLoading}
                 required
               />
@@ -162,7 +162,7 @@ function Classes() {
               <select
                 value={formData.year}
                 onChange={e => setFormData(f => ({ ...f, year: e.target.value }))}
-                style={inputStyle}
+                className="form-control"
                 disabled={formLoading}
                 required
               >
@@ -190,7 +190,7 @@ function Classes() {
               <select
                 value={formData.dept_id}
                 onChange={e => setFormData(f => ({ ...f, dept_id: e.target.value }))}
-                style={inputStyle}
+                className="form-control"
                 disabled={formLoading || (userRole === 'hod' && !!deptId)}
                 required
               >
@@ -206,7 +206,7 @@ function Classes() {
                 <select
                   value={formData.semester_id}
                   onChange={e => setFormData(f => ({ ...f, semester_id: e.target.value }))}
-                  style={inputStyle}
+                  className="form-control"
                   disabled={formLoading}
                 >
                   <option value="">Select semester...</option>
@@ -221,7 +221,7 @@ function Classes() {
               disabled={formLoading}
               style={{
                 padding: '0.5rem 1.5rem', height: '38px',
-                background: formLoading ? '#94a3b8' : '#22c55e', color: '#fff',
+                background: formLoading ? '#94a3b8' : '#007bff', color: '#fff',
                 border: 'none', borderRadius: '4px', cursor: formLoading ? 'not-allowed' : 'pointer',
                 fontWeight: 600
               }}
@@ -258,7 +258,7 @@ function Classes() {
                 <td style={{ padding: '0.75rem', fontWeight: 500 }}>{c.name}</td>
                 <td style={{ padding: '0.75rem' }}>{c.year}</td>
                 <td style={{ padding: '0.75rem' }}>
-                  <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '.15rem .5rem', borderRadius: '4px', fontWeight: 600, fontSize: '.82rem' }}>
+                  <span style={{ background: '#cce5ff', color: '#0056b3', padding: '.15rem .5rem', borderRadius: '4px', fontWeight: 600, fontSize: '.82rem' }}>
                     {c.section}
                   </span>
                 </td>
@@ -282,7 +282,7 @@ function Classes() {
                       <button style={btnStyle('#0ea5e9')}>👥 Advisors</button>
                     </Link>
                     <Link to={`/hod/classes/${c.id}/timetable`}>
-                      <button style={btnStyle('#6366f1')}>📅 Timetable</button>
+                      <button style={btnStyle('#007bff')}>📅 Timetable</button>
                     </Link>
                     <button
                       style={btnStyle(deleting === c.id ? '#94a3b8' : '#ef4444')}

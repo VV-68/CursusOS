@@ -218,13 +218,13 @@ function Courses() {
           ) : (
             coursesByPeriod.map(group => (
               <div key={group.period_number} style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1rem', color: '#4338ca', marginBottom: '0.75rem' }}>
+                <h3 style={{ fontSize: '1rem', color: '#0056b3', marginBottom: '0.75rem' }}>
                   {periodLabelText} {group.period_number}
                   <span style={{ fontWeight: 400, color: '#64748b', marginLeft: '0.5rem' }}>
                     ({group.courses.length} courses)
                   </span>
                 </h3>
-                <table className="json-preview-table" style={{ width: '100%' }}>
+                <table className="json-preview-table" className="form-control">
                   <thead>
                     <tr>
                       <th>Code</th>

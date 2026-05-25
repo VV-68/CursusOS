@@ -1,6 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -52,22 +53,15 @@ import './App.css';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
 
   return (
-    <div className="app">
-      <Navbar />
-      <main className="main-content">
+    <div className={isLanding ? "" : "app"}>
+      {!isLanding && <Navbar />}
+      <main className={isLanding ? "" : "main-content"}>
         <Routes>
-          <Route
-            path="/"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route

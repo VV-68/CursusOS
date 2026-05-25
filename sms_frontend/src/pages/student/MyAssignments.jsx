@@ -116,7 +116,7 @@ function MyAssignments() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
       
       <div className="dept-wizard__header">
-        <h1 style={{ color: '#4f46e5', margin: 0 }}>📝 My Assignments</h1>
+        <h1 style={{ color: '#007bff', margin: 0 }}>📝 My Assignments</h1>
       </div>
       
       {error && <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
@@ -134,7 +134,7 @@ function MyAssignments() {
             <div 
               style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '1rem 1.25rem', background: expandedCourse === caId ? '#eef2ff' : '#f8fafc',
+                padding: '1rem 1.25rem', background: expandedCourse === caId ? '#e6f2ff' : '#f8fafc',
                 borderRadius: expandedCourse === caId ? '12px 12px 0 0' : '12px', 
                 border: '1px solid #e2e8f0', borderBottom: expandedCourse === caId ? 'none' : '1px solid #e2e8f0',
                 cursor: 'pointer', transition: 'all 0.2s ease'
@@ -149,7 +149,7 @@ function MyAssignments() {
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <span
-                  style={{ color: '#4f46e5', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none', padding: '0.4rem 0.8rem', background: '#fff', borderRadius: '6px', border: '1px solid #c7d2fe', transition: 'all 0.2s ease' }}
+                  style={{ color: '#007bff', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none', padding: '0.4rem 0.8rem', background: '#fff', borderRadius: '6px', border: '1px solid #b8daff', transition: 'all 0.2s ease' }}
                   onClick={(e) => { e.stopPropagation(); navigate(`/student/materials/${caId}`); }}
                 >
                   📚 Materials
@@ -212,8 +212,8 @@ function MyAssignments() {
                                 </button>
 
                                 {(sub.is_evaluated || sub.marks_awarded != null) && (
-                                  <div style={{ padding: '1rem', background: '#eef2ff', borderRadius: '8px', border: '1px solid #c7d2fe', marginTop: '1rem' }}>
-                                    <div style={{ fontSize: '1.05rem', fontWeight: '700', color: '#4f46e5' }}>
+                                  <div style={{ padding: '1rem', background: '#e6f2ff', borderRadius: '8px', border: '1px solid #b8daff', marginTop: '1rem' }}>
+                                    <div style={{ fontSize: '1.05rem', fontWeight: '700', color: '#007bff' }}>
                                       Marks Obtained: {sub.marks_awarded} / {a.max_marks}
                                     </div>
                                     {sub.feedback && (
@@ -259,7 +259,7 @@ function MyAssignments() {
                                 />
                                 {uploading === a.id ? (
                                   <div style={{ width: '100%', maxWidth: '300px', margin: '0 auto', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#4f46e5', transition: 'width 0.3s ease' }} />
+                                    <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#007bff', transition: 'width 0.3s ease' }} />
                                   </div>
                                 ) : (
                                   <button

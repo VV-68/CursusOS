@@ -4,7 +4,7 @@ import { studyMaterialAPI } from '../../services/api';
 import '../admin/CreateDepartment.css'; // Add the CSS import
 
 const TYPES = ['all', 'notes', 'slides', 'reference', 'video', 'question_bank', 'document', 'link'];
-const TYPE_COLORS = { notes: '#6366f1', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7', document: '#22c55e', link: '#eab308' };
+const TYPE_COLORS = { notes: '#007bff', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7', document: '#22c55e', link: '#eab308' };
 const TYPE_ICONS = { notes: '📄', slides: '📊', reference: '📖', video: '🎬', question_bank: '❓', document: '📎', link: '🔗' };
 
 function StudentStudyMaterials() {
@@ -59,7 +59,7 @@ function StudentStudyMaterials() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
       
       <div className="dept-wizard__header">
-        <h1 style={{ color: '#4f46e5', margin: 0 }}>📚 Study Materials</h1>
+        <h1 style={{ color: '#007bff', margin: 0 }}>📚 Study Materials</h1>
       </div>
 
       {error && <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
@@ -71,8 +71,8 @@ function StudentStudyMaterials() {
             style={{ 
               padding: '0.4rem 1rem', borderRadius: '20px', border: 'none', cursor: 'pointer',
               fontSize: '0.85rem', fontWeight: '600', textTransform: 'capitalize',
-              background: filter === t ? '#eef2ff' : 'transparent',
-              color: filter === t ? '#4f46e5' : '#64748b',
+              background: filter === t ? '#e6f2ff' : 'transparent',
+              color: filter === t ? '#007bff' : '#64748b',
               transition: 'all 0.2s ease',
             }} 
             onClick={() => setFilter(t)}
@@ -91,7 +91,7 @@ function StudentStudyMaterials() {
           {filtered.map((m) => (
             <div key={m.id} className="dept-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {!course_assignment_id && (
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6366f1', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#007bff', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
                   📚 {m.course_name} ({m.course_code})
                 </div>
               )}

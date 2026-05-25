@@ -13,7 +13,7 @@ const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' },
   title: { fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.025em' },
   backBtn: { background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' },
-  addBtn: { background: 'linear-gradient(135deg, #22c55e, #10b981)', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 6px -1px rgba(34, 197, 94, 0.2)' },
+  addBtn: { background: 'linear-gradient(135deg, #007bff, #0056b3)', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 6px -1px rgba(0, 123, 255, 0.2)' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' },
   card: {
     background: '#ffffff', borderRadius: '16px', padding: '1.75rem',
@@ -161,13 +161,13 @@ function FacultyStudyMaterials() {
       )}
 
       {showModal && (
-        <div style={s.overlay} onClick={() => setShowModal(false)}>
-          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 style={s.modalTitle}>Add Study Material</h2>
             {error && <div style={s.error}>{error}</div>}
             <div style={s.field}>
               <label style={s.label}>Title *</label>
-              <input style={s.input} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Material title" />
+              <input className="form-control" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Material title" />
             </div>
             <div style={s.field}>
               <label style={s.label}>Description</label>
@@ -175,11 +175,11 @@ function FacultyStudyMaterials() {
             </div>
             <div style={s.field}>
               <label style={s.label}>Upload file (PDF, PPT, DOC, etc.)</label>
-              <input style={s.input} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip" onChange={(e) => setUploadFile(e.target.files[0] || null)} />
+              <input className="form-control" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip" onChange={(e) => setUploadFile(e.target.files[0] || null)} />
             </div>
             <div style={s.field}>
               <label style={s.label}>External link (optional)</label>
-              <input style={s.input} value={form.external_link} onChange={(e) => setForm({ ...form, external_link: e.target.value })} placeholder="https://..." />
+              <input className="form-control" value={form.external_link} onChange={(e) => setForm({ ...form, external_link: e.target.value })} placeholder="https://..." />
               <div style={s.hint}>Provide a file upload, an external link, or both</div>
             </div>
             <div style={s.field}>
@@ -190,7 +190,7 @@ function FacultyStudyMaterials() {
             </div>
             <div style={s.modalActions}>
               <button style={s.modalBtn('#475569')} onClick={() => setShowModal(false)}>Cancel</button>
-              <button style={s.modalBtn('linear-gradient(135deg, #22c55e, #06b6d4)')} onClick={handleCreate}>Add Material</button>
+              <button style={s.modalBtn('linear-gradient(135deg, #007bff, #0056b3)')} onClick={handleCreate}>Add Material</button>
             </div>
           </div>
         </div>

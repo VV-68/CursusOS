@@ -91,12 +91,12 @@ function CreateUser() {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500' }}>Full Name *</label>
-          <input name="full_name" value={formData.full_name} onChange={handleChange} placeholder="e.g. Dr. Ramesh Kumar" style={inputStyle} required disabled={loading} />
+          <input name="full_name" value={formData.full_name} onChange={handleChange} placeholder="e.g. Dr. Ramesh Kumar" className="form-control" required disabled={loading} />
         </div>
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500' }}>Username *</label>
-          <input name="username" value={formData.username} onChange={handleChange} placeholder="Login ID" style={inputStyle} required disabled={loading} />
+          <input name="username" value={formData.username} onChange={handleChange} placeholder="Login ID" className="form-control" required disabled={loading} />
           {suggestion && formData.username !== suggestion && (
             <small style={{ color: '#007bff', cursor: 'pointer' }} onClick={() => setFormData(prev => ({ ...prev, username: suggestion }))}>
               Suggested: <strong>{suggestion}</strong> — click to use
@@ -107,7 +107,7 @@ function CreateUser() {
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500' }}>Role *</label>
-          <select name="role" value={formData.role} onChange={handleChange} style={inputStyle} disabled={loading}>
+          <select name="role" value={formData.role} onChange={handleChange} className="form-control" disabled={loading}>
             {roleOptions.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
           </select>
         </div>
@@ -115,7 +115,7 @@ function CreateUser() {
         {!isHOD && (
           <div>
             <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500' }}>Department</label>
-            <select name="dept_id" value={formData.dept_id} onChange={handleChange} style={inputStyle} disabled={loading}>
+            <select name="dept_id" value={formData.dept_id} onChange={handleChange} className="form-control" disabled={loading}>
               <option value="">— No Department —</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.code})</option>)}
             </select>
@@ -124,16 +124,16 @@ function CreateUser() {
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500' }}>Email</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Optional" style={inputStyle} disabled={loading} />
+          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Optional" className="form-control" disabled={loading} />
         </div>
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500' }}>Phone</label>
-          <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Optional" style={inputStyle} disabled={loading} />
+          <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Optional" className="form-control" disabled={loading} />
         </div>
 
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="submit" disabled={loading} style={{ flex: 1, padding: '0.6rem', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+          <button type="submit" disabled={loading} style={{ flex: 1, padding: '0.6rem', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
             {loading ? 'Creating...' : 'Create User'}
           </button>
 

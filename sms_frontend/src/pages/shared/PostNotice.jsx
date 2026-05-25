@@ -149,7 +149,7 @@ function PostNotice() {
                   padding: '0.5rem 0.75rem',
                   borderRadius: '8px',
                   border: '1px solid #e2e8f0',
-                  background: form.audience[r.key] ? '#eef2ff' : '#fff'
+                  background: form.audience[r.key] ? '#e6f2ff' : '#fff'
                 }}
               >
                 <input

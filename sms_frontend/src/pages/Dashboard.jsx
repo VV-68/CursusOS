@@ -12,11 +12,11 @@ const ROLE_LABELS = {
 };
 
 const ROLE_COLORS = {
-  admin: { bg: '#f3e8ff', accent: '#7c3aed', text: '#5b21b6' },
-  hod: { bg: '#dbeafe', accent: '#2563eb', text: '#1e40af' },
-  advisor: { bg: '#d1fae5', accent: '#059669', text: '#065f46' },
-  faculty: { bg: '#dcfce7', accent: '#16a34a', text: '#166534' },
-  student: { bg: '#ffedd5', accent: '#ea580c', text: '#9a3412' },
+  admin: { bg: 'var(--primary-light)', accent: 'var(--primary)', text: 'var(--primary)' },
+  hod: { bg: 'var(--primary-light)', accent: 'var(--primary)', text: 'var(--primary)' },
+  advisor: { bg: '#cce5ff', accent: '#007bff', text: '#0056b3' },
+  faculty: { bg: '#ede9fe', accent: '#007bff', text: '#5b21b6' },
+  student: { bg: '#f3f4f8', accent: '#23364d', text: '#23364d' },
 };
 
 // ── Reusable card-link ──────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ function InlineNotices() {
           {notices.length > 3 && (
             <button onClick={() => setExpanded(e => !e)} style={{
               marginTop: '0.5rem', background: 'none', border: 'none',
-              color: '#2563eb', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
+              color: 'var(--primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
             }}>
               {expanded ? '▲ Show less' : `▼ View ${notices.length - 3} more notices`}
             </button>
@@ -199,13 +199,14 @@ function Dashboard() {
       )}
 
       {/* Tab bar */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => t.to ? navigate(t.to) : setActiveTab(t.id)} style={{
             padding: '0.6rem 1.25rem', border: 'none', background: 'none', cursor: 'pointer',
-            fontWeight: activeTab === t.id ? 700 : 400, fontSize: '0.9rem', whiteSpace: 'nowrap',
-            borderBottom: activeTab === t.id ? '2px solid #2563eb' : '2px solid transparent',
-            color: activeTab === t.id ? '#2563eb' : '#64748b', marginBottom: '-2px'
+            fontWeight: activeTab === t.id ? 700 : 500, fontSize: '0.9rem', whiteSpace: 'nowrap',
+            borderBottom: activeTab === t.id ? '2px solid var(--primary)' : '2px solid transparent',
+            color: activeTab === t.id ? 'var(--primary)' : 'var(--text-muted)', marginBottom: '-2px',
+            transition: 'all 0.2s'
           }}>
             {t.label}
           </button>

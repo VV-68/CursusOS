@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { getMe } from '../services/api';
+import Logo from './Logo';
 
 const ROLE_COLORS = {
   admin: '#6f42c1',
@@ -44,9 +45,11 @@ function Navbar() {
   const linkStyle = { color: '#ecf0f1', textDecoration: 'none', fontSize: '0.9rem' };
 
   return (
-    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.8rem 2rem', background: '#2c3e50', color: '#fff', alignItems: 'center' }}>
+    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.8rem 2rem', background: 'var(--nav-bg)', color: '#fff', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
       <div className="navbar-brand">
-        <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.2rem' }}>SMS Hub</Link>
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <Logo size={36} showText={true} textColor="#ffffff" />
+        </Link>
       </div>
       <div className="navbar-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
         {hasToken ? (

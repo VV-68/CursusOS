@@ -71,21 +71,21 @@ function CompleteProfile() {
           
           <div style={s.formGroup}>
             <label style={s.label}>New Password *</label>
-            <input style={s.input} type="password" name="new_password" required value={form.new_password} onChange={handleChange} placeholder="Min 8 chars, 1 uppercase, 1 number" />
+            <input className="form-control" type="password" name="new_password" required value={form.new_password} onChange={handleChange} placeholder="Min 8 chars, 1 uppercase, 1 number" />
           </div>
           <div style={s.formGroup}>
             <label style={s.label}>Confirm Password *</label>
-            <input style={s.input} type="password" name="confirm_password" required value={form.confirm_password} onChange={handleChange} />
+            <input className="form-control" type="password" name="confirm_password" required value={form.confirm_password} onChange={handleChange} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div style={s.formGroup}>
               <label style={s.label}>Phone Number</label>
-              <input style={s.input} name="phone" value={form.phone} onChange={handleChange} />
+              <input className="form-control" name="phone" value={form.phone} onChange={handleChange} />
             </div>
             <div style={s.formGroup}>
               <label style={s.label}>Date of Birth</label>
-              <input style={s.input} type="date" name="dob" value={form.dob} onChange={handleChange} />
+              <input className="form-control" type="date" name="dob" value={form.dob} onChange={handleChange} />
             </div>
             <div style={s.formGroup}>
               <label style={s.label}>Gender</label>
@@ -98,7 +98,7 @@ function CompleteProfile() {
             </div>
             <div style={s.formGroup}>
               <label style={s.label}>Blood Group</label>
-              <input style={s.input} name="blood_group" value={form.blood_group} onChange={handleChange} placeholder="e.g. O+" />
+              <input className="form-control" name="blood_group" value={form.blood_group} onChange={handleChange} placeholder="e.g. O+" />
             </div>
           </div>
 
@@ -110,11 +110,11 @@ function CompleteProfile() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
              <div style={s.formGroup}>
                <label style={s.label}>Guardian Name</label>
-               <input style={s.input} name="guardian_name" value={form.guardian_name} onChange={handleChange} />
+               <input className="form-control" name="guardian_name" value={form.guardian_name} onChange={handleChange} />
              </div>
              <div style={s.formGroup}>
                <label style={s.label}>Guardian Phone</label>
-               <input style={s.input} name="guardian_phone" value={form.guardian_phone} onChange={handleChange} />
+               <input className="form-control" name="guardian_phone" value={form.guardian_phone} onChange={handleChange} />
              </div>
           </div>
 

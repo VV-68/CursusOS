@@ -145,9 +145,9 @@ const CourseSemesterSelector = ({ onSelect, initialValue }) => {
                   e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
                 }}
               >
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#6366f1' }}></div>
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#007bff' }}></div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ background: '#e0e7ff', color: '#4f46e5', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800' }}>
+                  <span style={{ background: '#cce5ff', color: '#007bff', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800' }}>
                     {ca.course_code}
                   </span>
                   <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '700', background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>

@@ -8,13 +8,13 @@ const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' },
   title: { fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.025em' },
   backBtn: { background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' },
-  newBtn: { background: '#6366f1', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.2)' },
+  newBtn: { background: 'linear-gradient(135deg, #007bff, #0056b3)', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 6px -1px rgba(0, 123, 255, 0.2)' },
   table: { width: '100%', borderCollapse: 'separate', borderSpacing: 0, background: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
   th: { padding: '1rem', textAlign: 'left', background: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' },
   td: { padding: '1rem', borderBottom: '1px solid #f1f5f9', color: '#334155', fontSize: '0.9rem' },
   badge: (color) => ({ display: 'inline-block', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', background: `${color}15`, color }),
   toggleBtn: (active) => ({ padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: active ? '#dcfce7' : '#fee2e2', color: active ? '#15803d' : '#b91c1c' }),
-  actionBtn: { padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: '#fff', color: '#6366f1', marginRight: '0.5rem', transition: 'all 0.2s' },
+  actionBtn: { padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: '#fff', color: '#007bff', marginRight: '0.5rem', transition: 'all 0.2s' },
   // Modal
   overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' },
   modal: { background: '#ffffff', borderRadius: '16px', padding: '2.5rem', width: '90%', maxWidth: '550px', border: '1px solid #e2e8f0', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', maxHeight: '90vh', overflowY: 'auto' },
@@ -174,13 +174,13 @@ function Assignments() {
       )}
 
       {showModal && (
-        <div style={s.overlay} onClick={() => setShowModal(false)}>
-          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 style={s.modalTitle}>Create Assignment</h2>
             {error && <div style={s.error}>{error}</div>}
             <div style={s.field}>
               <label style={s.label}>Title *</label>
-              <input style={s.input} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Assignment title" />
+              <input className="form-control" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Assignment title" />
             </div>
             <div style={s.field}>
               <label style={s.label}>Description</label>
@@ -188,15 +188,15 @@ function Assignments() {
             </div>
             <div style={s.field}>
               <label style={s.label}>Due Date *</label>
-              <input style={s.input} type="datetime-local" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
+              <input className="form-control" type="datetime-local" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
             </div>
             <div style={s.field}>
               <label style={s.label}>Max Marks</label>
-              <input style={s.input} type="number" value={form.max_marks} onChange={(e) => setForm({ ...form, max_marks: e.target.value })} min="1" />
+              <input className="form-control" type="number" value={form.max_marks} onChange={(e) => setForm({ ...form, max_marks: e.target.value })} min="1" />
             </div>
             <div style={s.field}>
               <label style={s.label}>Question PDF (optional)</label>
-              <input style={s.input} type="file" accept=".pdf" onChange={(e) => setQuestionFile(e.target.files[0] || null)} />
+              <input className="form-control" type="file" accept=".pdf" onChange={(e) => setQuestionFile(e.target.files[0] || null)} />
             </div>
             <div style={s.checkRow}>
               <input type="checkbox" id="late-sub" checked={form.allow_late_submission} onChange={(e) => setForm({ ...form, allow_late_submission: e.target.checked })} />
@@ -205,7 +205,7 @@ function Assignments() {
             <div style={s.modalActions}>
               <button style={s.modalBtn('#475569')} onClick={() => setShowModal(false)}>Cancel</button>
               <button style={s.modalBtn('#475569')} onClick={() => handleCreate(false)}>Save Draft</button>
-              <button style={s.modalBtn('linear-gradient(135deg, #667eea, #764ba2)')} onClick={() => handleCreate(true)}>Publish Now</button>
+              <button style={s.modalBtn('linear-gradient(135deg, #007bff, #0056b3)')} onClick={() => handleCreate(true)}>Publish Now</button>
             </div>
           </div>
         </div>

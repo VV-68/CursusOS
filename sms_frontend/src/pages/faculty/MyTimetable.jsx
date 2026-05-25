@@ -153,10 +153,10 @@ function MyTimetable() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '0.75rem 1rem' }}>
                   {schedule[day].map((slot, i) => (
                     <div key={i} style={{
-                      background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8,
+                      background: '#e6f2ff', border: '1px solid #b8daff', borderRadius: 8,
                       padding: '0.5rem 0.85rem', minWidth: 140
                     }}>
-                      <div style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 700, marginBottom: '0.1rem' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#007bff', fontWeight: 700, marginBottom: '0.1rem' }}>
                         Period {slot.period_no}
                       </div>
                       <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#1e293b' }}>

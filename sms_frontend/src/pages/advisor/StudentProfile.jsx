@@ -36,7 +36,7 @@ function StudentProfile() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate(-1)}>← Back</button>
       
       <div className="dept-wizard__header">
-        <h1 style={{ color: '#4f46e5', margin: 0 }}>
+        <h1 style={{ color: '#007bff', margin: 0 }}>
           {profile?.full_name || 'Student Profile'}
         </h1>
       </div>
@@ -51,7 +51,7 @@ function StudentProfile() {
           </div>
 
           <div className="dept-card">
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Basic Info</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Basic Info</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', marginBottom: '2rem' }}>
               {renderField('Full Name', profile.full_name)}
               {renderField('Roll No', profile.roll_no)}
@@ -63,12 +63,12 @@ function StudentProfile() {
               {renderField('Phone', profile.phone)}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Address</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Address</div>
             <div style={{ color: '#1e293b', fontSize: '0.95rem', fontWeight: '500', marginBottom: '2rem' }}>
               {profile.address || '—'}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Guardian Details</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Guardian Details</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', marginBottom: '2rem' }}>
               {renderField('Guardian Name', profile.guardian_name)}
               {renderField('Guardian Phone', profile.guardian_phone)}
@@ -77,18 +77,18 @@ function StudentProfile() {
               {renderField('Mother Phone', profile.mother_phone)}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Emergency Contact</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Emergency Contact</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', marginBottom: '2rem' }}>
               {renderField('Contact Name', profile.emergency_contact_name)}
               {renderField('Contact Phone', profile.emergency_contact_phone)}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Academic Background</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Academic Background</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', marginBottom: '2rem' }}>
               {renderField('Previous School', profile.previous_school)}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Other Details</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Other Details</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
               {renderField('Nationality', profile.nationality)}
               {renderField('Religion', profile.religion)}

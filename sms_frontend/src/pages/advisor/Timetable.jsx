@@ -47,8 +47,8 @@ function TimetableReadOnly({ timetableRows, downloadPdf }) {
         </table>
       </div>
       <button onClick={downloadPdf} style={{
-        padding: '0.5rem 1.25rem', background: '#fff', color: '#4f46e5',
-        border: '2px solid #4f46e5', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem'
+        padding: '0.5rem 1.25rem', background: '#fff', color: '#007bff',
+        border: '2px solid #007bff', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem'
       }}>
         ⬇ Download PDF
       </button>
@@ -178,8 +178,8 @@ function Timetable() {
           <button key={t} onClick={() => setTab(t)} style={{
             padding: '0.5rem 1.25rem', border: 'none', background: 'none', cursor: 'pointer',
             fontWeight: tab === t ? 700 : 400, fontSize: '0.95rem',
-            borderBottom: tab === t ? '2px solid #4f46e5' : '2px solid transparent',
-            color: tab === t ? '#4f46e5' : '#6b7280', marginBottom: '-2px'
+            borderBottom: tab === t ? '2px solid #007bff' : '2px solid transparent',
+            color: tab === t ? '#007bff' : '#6b7280', marginBottom: '-2px'
           }}>
             {t === 'view' ? '👁 View / Download' : '✏️ Edit Timetable'}
           </button>
@@ -209,7 +209,7 @@ function Timetable() {
       </div>
 
       {hasData && classInfo && (
-        <div style={{ background: '#eef2ff', padding: '0.65rem 1rem', borderRadius: 8, marginBottom: '1rem', fontSize: '.9rem', color: '#4338ca' }}>
+        <div style={{ background: '#e6f2ff', padding: '0.65rem 1rem', borderRadius: 8, marginBottom: '1rem', fontSize: '.9rem', color: '#0056b3' }}>
           Class Year {classInfo.year} — <strong>{periodLabel} {selectedPeriod}</strong>
         </div>
       )}
@@ -256,12 +256,12 @@ function Timetable() {
 
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <button onClick={handleSave} style={{
-              padding: '0.6rem 1.5rem', background: '#4f46e5', color: '#fff',
+              padding: '0.6rem 1.5rem', background: '#007bff', color: '#fff',
               border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600
             }}>Save Timetable</button>
             <button onClick={handleDownloadPdf} style={{
-              padding: '0.6rem 1.5rem', background: '#fff', color: '#4f46e5',
-              border: '2px solid #4f46e5', borderRadius: 8, cursor: 'pointer', fontWeight: 600
+              padding: '0.6rem 1.5rem', background: '#fff', color: '#007bff',
+              border: '2px solid #007bff', borderRadius: 8, cursor: 'pointer', fontWeight: 600
             }}>Download PDF</button>
           </div>
         </>

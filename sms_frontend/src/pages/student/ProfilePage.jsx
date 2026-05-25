@@ -113,7 +113,7 @@ function ProfilePage() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
       
       <div className="dept-wizard__header">
-        <h1 style={{ color: '#4f46e5', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h1 style={{ color: '#007bff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           👤 My Profile
         </h1>
         <p style={{ margin: '0.5rem 0 0', color: '#64748b', fontSize: '0.95rem' }}>
@@ -140,13 +140,13 @@ function ProfilePage() {
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '10px', width: 'fit-content' }}>
         <button 
-          style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', background: tab === 'personal' ? '#fff' : 'transparent', color: tab === 'personal' ? '#4f46e5' : '#64748b', boxShadow: tab === 'personal' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s ease' }} 
+          style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', background: tab === 'personal' ? '#fff' : 'transparent', color: tab === 'personal' ? '#007bff' : '#64748b', boxShadow: tab === 'personal' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s ease' }} 
           onClick={() => setTab('personal')}
         >
           Personal Details
         </button>
         <button 
-          style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', background: tab === 'bank' ? '#fff' : 'transparent', color: tab === 'bank' ? '#4f46e5' : '#64748b', boxShadow: tab === 'bank' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s ease' }} 
+          style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', background: tab === 'bank' ? '#fff' : 'transparent', color: tab === 'bank' ? '#007bff' : '#64748b', boxShadow: tab === 'bank' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s ease' }} 
           onClick={() => setTab('bank')}
         >
           Bank Details
@@ -167,7 +167,7 @@ function ProfilePage() {
       <div className="dept-card">
         {tab === 'personal' && (
           <>
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Basic Information</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Basic Information</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', marginBottom: '2rem' }}>
               {renderField('Full Name', 'full_name', { readOnly: true })}
               {renderField('Email', 'email', { readOnly: true })}
@@ -177,12 +177,12 @@ function ProfilePage() {
               {renderField('Blood Group', 'blood_group', { options: BLOOD_GROUPS })}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Address</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Address</div>
             <div style={{ marginBottom: '2rem' }}>
               {renderField('Address', 'address', { rows: true })}
             </div>
 
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Guardian Details</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Guardian Details</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
               {renderField('Guardian Name', 'guardian_name')}
               {renderField('Guardian Phone', 'guardian_phone')}
@@ -192,7 +192,7 @@ function ProfilePage() {
 
         {tab === 'bank' && (
           <>
-            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Bank Account</div>
+            <div className="dept-card__title" style={{ color: '#007bff', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Bank Account</div>
             <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
               {renderField('Account Number', 'bank_account_no', { masked: true })}
               {renderField('IFSC Code', 'bank_ifsc', { masked: true })}

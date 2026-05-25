@@ -191,7 +191,7 @@ function ViewSubmissions() {
       {/* Evaluate Slide Panel */}
       {evalTarget && (
         <>
-          <div style={s.overlay} onClick={() => setEvalTarget(null)} />
+          <div className="modal-overlay" onClick={() => setEvalTarget(null)} />
           <div style={s.evalPanel}>
             <h3 style={s.panelTitle}>Evaluate: {evalTarget.student_name}</h3>
             <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -200,7 +200,7 @@ function ViewSubmissions() {
             <div style={s.field}>
               <label style={s.label}>Marks Awarded *</label>
               <input
-                style={s.input} type="number" min="0"
+                className="form-control" type="number" min="0"
                 value={evalForm.marks_awarded}
                 onChange={(e) => setEvalForm({ ...evalForm, marks_awarded: e.target.value })}
                 placeholder="Enter marks"
