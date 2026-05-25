@@ -12,8 +12,8 @@ const ROLE_LABELS = {
 };
 
 const ROLE_COLORS = {
-  admin:   { bg: '#f3e8ff', accent: '#7c3aed', text: '#5b21b6' },
-  hod:     { bg: '#dbeafe', accent: '#2563eb', text: '#1e40af' },
+  admin: { bg: '#f3e8ff', accent: '#7c3aed', text: '#5b21b6' },
+  hod: { bg: '#dbeafe', accent: '#2563eb', text: '#1e40af' },
   advisor: { bg: '#d1fae5', accent: '#059669', text: '#065f46' },
   faculty: { bg: '#dcfce7', accent: '#16a34a', text: '#166534' },
   student: { bg: '#ffedd5', accent: '#ea580c', text: '#9a3412' },
@@ -49,7 +49,7 @@ function InlineNotices({ canPost }) {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    noticeAPI.getAll().then(setNotices).catch(() => {});
+    noticeAPI.getAll().then(setNotices).catch(() => { });
   }, []);
 
   const displayed = expanded ? notices : notices.slice(0, 3);
@@ -118,14 +118,14 @@ function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   let role = '';
-  if (token) { try { role = jwtDecode(token).role; } catch {} }
+  if (token) { try { role = jwtDecode(token).role; } catch { } }
 
   const [dept, setDept] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
-    if (token) getMe().then(setUserInfo).catch(() => {});
+    if (token) getMe().then(setUserInfo).catch(() => { });
   }, [token]);
 
   useEffect(() => {
@@ -133,9 +133,9 @@ function Dashboard() {
       try {
         const decoded = jwtDecode(token);
         if (decoded.dept_id) {
-          departmentCreationAPI.getDetails(decoded.dept_id).then(setDept).catch(() => {});
+          departmentCreationAPI.getDetails(decoded.dept_id).then(setDept).catch(() => { });
         }
-      } catch {}
+      } catch { }
     }
   }, [role, token]);
 
