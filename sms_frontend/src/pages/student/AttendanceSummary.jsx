@@ -22,7 +22,7 @@ function AttendanceSummary() {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div id="top" style={{ padding: '2rem' }}>
       <h2>My Attendance Summary</h2>
       
       {summary.length === 0 ? (
@@ -53,6 +53,9 @@ function AttendanceSummary() {
           </tbody>
         </table>
       )}
+      <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+        <a href="#top" style={{ color: '#94a3b8', fontSize: '0.82rem', textDecoration: 'none' }}>↑ Back to top</a>
+      </div>
     </div>
   );
 }

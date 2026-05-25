@@ -23,6 +23,15 @@ const getAllClasses = async (req, res) => {
   }
 };
 
+const getUnrestrictedClasses = async (req, res) => {
+  try {
+    const classes = await classModel.getAllClasses();
+    res.json(classes);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 const createClass = async (req, res) => {
   try {
     const { name, year, section, dept_id, semester_id } = req.body;
@@ -139,6 +148,7 @@ const deleteClass = async (req, res) => {
 
 module.exports = {
   getAllClasses,
+  getUnrestrictedClasses,
   createClass,
   assignAdvisors,
   getStudentsInClass,

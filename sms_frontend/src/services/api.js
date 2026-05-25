@@ -129,6 +129,7 @@ export const semesterAPI = {
 
 export const classAPI = {
   getAll: () => fetch(`${BASE_URL}/api/classes`, { headers: getHeaders(true) }).then(handleResponse),
+  getAllUnrestricted: () => fetch(`${BASE_URL}/api/classes/all`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/classes`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   update: (id, data) => fetch(`${BASE_URL}/api/classes/${id}`, { method: 'PUT', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   delete: (id) => fetch(`${BASE_URL}/api/classes/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),

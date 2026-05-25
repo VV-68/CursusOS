@@ -7,6 +7,9 @@ const roleGuard = require('../middleware/roleGuard');
 // GET /api/classes → admin sees all; hod sees own dept; advisor sees own classes
 router.get('/', authMiddleware, classController.getAllClasses);
 
+// GET /api/classes/all → returns ALL classes without role restrictions
+router.get('/all', authMiddleware, classController.getUnrestrictedClasses);
+
 // POST /api/classes → admin and hod create class
 router.post('/', authMiddleware, roleGuard('admin', 'hod'), classController.createClass);
 

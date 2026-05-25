@@ -119,17 +119,16 @@ function Assignments() {
       {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading assignments...</div>}
       {error && <div style={s.error}>{error}</div>}
       
-      {!loading && assignments.length === 0 ? (
+      {!selectedCA ? null : loading ? null : assignments.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No assignments yet</p>
-          <p>{selectedCA ? 'Create your first assignment to get started.' : 'You haven\'t posted any assignments across your courses.'}</p>
+          <p>Create your first assignment to get started.</p>
         </div>
-      ) : assignments.length > 0 ? (
+      ) : (
         <div style={{ overflowX: 'auto', borderRadius: '12px' }}>
           <table style={s.table}>
             <thead>
               <tr>
-                {!selectedCA && <th style={s.th}>Course</th>}
                 <th style={s.th}>Title</th>
                 <th style={s.th}>Due Date</th>
                 <th style={s.th}>Max Marks</th>
@@ -142,12 +141,6 @@ function Assignments() {
             <tbody>
               {assignments.map((a) => (
                 <tr key={a.id}>
-                  {!selectedCA && (
-                    <td style={{ ...s.td, fontWeight: '600', color: '#6366f1' }}>
-                      {a.course_name} <br/>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{a.course_code}</span>
-                    </td>
-                  )}
                   <td style={s.td}>{a.title}</td>
                   <td style={s.td}>{formatDate(a.due_date)}</td>
                   <td style={s.td}>{a.max_marks}</td>
@@ -178,7 +171,7 @@ function Assignments() {
             </tbody>
           </table>
         </div>
-      ) : null}
+      )}
 
       {showModal && (
         <div style={s.overlay} onClick={() => setShowModal(false)}>

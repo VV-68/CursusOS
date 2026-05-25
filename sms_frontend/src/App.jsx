@@ -46,6 +46,7 @@ import MyInternals from './pages/student/MyInternals';
 import DepartmentInternals from './pages/hod/DepartmentInternals';
 import CompleteProfile from './pages/student/CompleteProfile';
 import AttendanceOverrides from './pages/advisor/AttendanceOverrides';
+import MyTimetable from './pages/faculty/MyTimetable';
 
 import './App.css';
 
@@ -217,6 +218,12 @@ function App() {
           <Route path="/faculty/marks/update" element={
             <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <MarkGrades />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/my-timetable" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
+              <MyTimetable />
             </ProtectedRoute>
           } />
 

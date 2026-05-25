@@ -28,11 +28,20 @@ const AuthController = {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
+      let class_id = null;
+      if (user.role === 'student') {
+        const { rows } = await pool.query('SELECT class_id FROM student_profiles WHERE user_id = $1', [user.id]);
+        if (rows.length > 0) {
+          class_id = rows[0].class_id;
+        }
+      }
+
       const token = jwt.sign(
         {
           id: user.id,
           role: user.role,
           dept_id: user.dept_id,
+          class_id: class_id,
           must_change_password: user.must_change_password
         },
         JWT_SECRET,
@@ -49,7 +58,8 @@ const AuthController = {
           role: user.role,
           full_name: user.full_name,
           must_change_password: user.must_change_password,
-          faculty_code: user.faculty_code
+          faculty_code: user.faculty_code,
+          class_id: class_id
         }
       });
     } catch (err) {

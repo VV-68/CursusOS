@@ -52,55 +52,6 @@ function Navbar() {
         {hasToken ? (
           <>
             <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
-            <Link to="/timetable" style={linkStyle}>Timetable</Link>
-            <Link to="/notices" style={linkStyle}>Notices</Link>
-            {['admin', 'hod'].includes(role) && (
-              <Link to="/notices/post" style={linkStyle}>Post Notice</Link>
-            )}
-
-            {['student', 'faculty', 'advisor', 'hod'].includes(role) && (
-              <Link to="/leave" style={linkStyle}>Leaves</Link>
-            )}
-
-            {/* Faculty-specific links */}
-            {['faculty', 'advisor', 'hod'].includes(role) && (
-              <>
-                <Link to="/faculty/attendance/mark" style={linkStyle}>Mark Attendance</Link>
-                <Link to="/faculty/internals" style={linkStyle}>Faculty Internals</Link>
-                <Link to="/faculty/marks/update" style={linkStyle}>Mark Grades</Link>
-              </>
-            )}
-
-
-            {/* Student-specific links */}
-            {role === 'student' && (
-              <>
-                <Link to="/student/assignments" style={linkStyle}>Assignments</Link>
-                <Link to="/student/internals" style={linkStyle}>My Internals</Link>
-                <Link to="/student/profile" style={linkStyle}>Profile</Link>
-              </>
-            )}
-
-
-            {/* Advisor-specific links */}
-            {['advisor', 'hod'].includes(role) && (
-              <>
-                <Link to="/advisor/students" style={linkStyle}>Students</Link>
-                <Link to="/advisor/internals" style={linkStyle}>Class Internals</Link>
-                <Link to="/advisor/attendance/overrides" style={linkStyle}>Override Requests</Link>
-              </>
-            )}
-
-
-            {role === 'hod' && (
-              <>
-                <Link to="/hod/courses" style={linkStyle}>Dept Courses</Link>
-                <Link to="/hod/internals" style={linkStyle}>Dept Internals</Link>
-                <Link to="/admin/users/create" style={linkStyle}>Add Faculty</Link>
-              </>
-            )}
-
-
             <Link to="/change-password" style={linkStyle}>Settings</Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem', padding: '0.2rem 0.6rem', background: 'rgba(255,255,255,0.1)', borderRadius: '16px' }}>

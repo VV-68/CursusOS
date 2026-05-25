@@ -132,20 +132,15 @@ function FacultyStudyMaterials() {
       {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading materials...</div>}
       {error && <div style={s.error}>{error}</div>}
 
-      {!loading && materials.length === 0 ? (
+      {!selectedCA ? null : loading ? null : materials.length === 0 ? (
         <div style={s.empty}>
           <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No materials posted</p>
-          <p>{selectedCA ? 'Share study materials with your students.' : 'You haven\'t posted any study materials across your courses.'}</p>
+          <p>Share study materials with your students.</p>
         </div>
-      ) : materials.length > 0 ? (
+      ) : (
         <div style={s.grid}>
           {materials.map((m) => (
             <div key={m.id} style={s.card}>
-              {!selectedCA && (
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6366f1', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                  📚 {m.course_name} ({m.course_code})
-                </div>
-              )}
               <span style={s.typeBadge(m.material_type)}>{TYPE_ICONS[m.material_type] || '📄'} {m.material_type}</span>
               <div style={s.cardTitle}>{m.title}</div>
               {m.description && <div style={s.cardDesc}>{m.description}</div>}
@@ -163,7 +158,7 @@ function FacultyStudyMaterials() {
             </div>
           ))}
         </div>
-      ) : null}
+      )}
 
       {showModal && (
         <div style={s.overlay} onClick={() => setShowModal(false)}>

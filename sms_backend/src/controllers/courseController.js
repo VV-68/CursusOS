@@ -1,7 +1,7 @@
 const courseModel = require('../models/courseModel');
 const userModel = require('../models/userModel');
 const classModel = require('../models/classModel');
-const logAudit = require('../utils/auditLogger');
+const { logAudit } = require('./userController');
 const { getFacultyAssignments } = require('../utils/authorizationHelpers');
 const pool = require('../db/connection');
 
@@ -18,7 +18,7 @@ const getCourses = async (req, res) => {
       }
       return res.json(courses);
     }
-    
+
     // admin sees all or HOD sees their own dept
     const targetDeptId = role === 'hod' ? dept_id : null;
     const courses = await courseModel.getAllCourses(targetDeptId);
@@ -41,21 +41,21 @@ const createCourse = async (req, res) => {
   }
 };
 
-  const createCourseAssignment = async (req, res) => {
+const createCourseAssignment = async (req, res) => {
   try {
     const { faculty1_id, faculty2_id, course_id, class_id, semester_id } = req.body;
-    
+
     // Validation: faculty.dept_id = course.dept_id = class.dept_id
     const users = await userModel.getAllUsers();
     let faculty1 = null;
     let faculty2 = null;
-    
+
     if (faculty1_id) {
       faculty1 = users.find(u => u.id === faculty1_id);
       if (!faculty1) return res.status(404).json({ error: 'Faculty 1 not found' });
       if (faculty1.dept_id !== req.user.dept_id) return res.status(400).json({ error: 'Faculty 1 mismatch department' });
     }
-    
+
     if (faculty2_id) {
       faculty2 = users.find(u => u.id === faculty2_id);
       if (!faculty2) return res.status(404).json({ error: 'Faculty 2 not found' });
@@ -76,7 +76,7 @@ const createCourse = async (req, res) => {
     const newAssignment = await courseModel.createCourseAssignment({
       faculty1_id, faculty2_id, course_id, class_id, semester_id
     });
-    
+
     await logAudit(req.user.id, 'COURSE_ASSIGNED', 'course_assignments', newAssignment.id, null, newAssignment);
     res.status(201).json(newAssignment);
   } catch (err) {
@@ -120,6 +120,7 @@ const getMine = async (req, res) => {
 
     const { rows } = await pool.query(
       `SELECT ca.id AS course_assignment_id,
+              ca.class_id, ca.course_id,
               c.name AS course_name, c.code AS course_code,
               cl.name AS class_name, cl.year, cl.section,
               d.name AS dept_name,
