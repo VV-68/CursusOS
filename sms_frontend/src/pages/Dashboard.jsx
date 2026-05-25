@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { useState, useEffect, useRef } from 'react';
 import { departmentCreationAPI, departmentAPI, logout, getMe, noticeAPI } from '../services/api';
@@ -44,7 +44,7 @@ function DashSection({ id, title, icon, children }) {
 }
 
 // ── Inline notice board ──────────────────────────────────────────────────────
-function InlineNotices({ canPost }) {
+function InlineNotices() {
   const [notices, setNotices] = useState([]);
   const [expanded, setExpanded] = useState(false);
 
@@ -61,12 +61,7 @@ function InlineNotices({ canPost }) {
           <span className="dash-section-icon">📢</span> Notice Board
         </h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {canPost && (
-            <Link to="/notices/post" style={{
-              fontSize: '0.8rem', padding: '0.3rem 0.75rem', background: '#2563eb',
-              color: '#fff', borderRadius: 6, textDecoration: 'none', fontWeight: 600
-            }}>+ Post</Link>
-          )}
+
           <Link to="/notices" style={{
             fontSize: '0.8rem', padding: '0.3rem 0.75rem', background: '#f1f5f9',
             color: '#334155', borderRadius: 6, textDecoration: 'none'
@@ -122,7 +117,10 @@ function Dashboard() {
 
   const [dept, setDept] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
-  const [activeTab, setActiveTab] = useState('general');
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get('tab') || 'general';
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     if (token) getMe().then(setUserInfo).catch(() => { });
@@ -217,11 +215,14 @@ function Dashboard() {
       {/* ── GENERAL (all roles) ── */}
       {activeTab === 'general' && (
         <>
-          <InlineNotices canPost={canPost} />
+          <InlineNotices />
 
           <DashSection id="general-links" title="Quick Links" icon="🔗">
             {['faculty', 'advisor', 'hod'].includes(role) && (
               <DashCard to="/faculty/my-timetable" icon="📅" label="My Timetable" description="Your courses per day" />
+            )}
+            {canPost && (
+              <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />
             )}
             {role !== 'admin' && <DashCard to="/timetable" icon="🕐" label="View Timetable" description="Class schedules" variant="secondary" />}
             {['student', 'faculty', 'advisor', 'hod'].includes(role) && (

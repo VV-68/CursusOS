@@ -82,6 +82,7 @@ function CreateUser() {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '500px', margin: '0 auto' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate(callerRole === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=dept')}>← Back</button>
       <h2>{isHOD ? 'Add Faculty / Advisor' : 'Create User'}</h2>
 
       {error && <div style={{ color: '#721c24', background: '#f8d7da', padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem' }}>{error}</div>}
@@ -135,9 +136,7 @@ function CreateUser() {
           <button type="submit" disabled={loading} style={{ flex: 1, padding: '0.6rem', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
             {loading ? 'Creating...' : 'Create User'}
           </button>
-          <button type="button" onClick={() => navigate(-1)} disabled={loading} style={{ padding: '0.6rem 1rem', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Back
-          </button>
+
         </div>
       </form>
     </div>

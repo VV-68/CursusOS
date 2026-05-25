@@ -4,39 +4,7 @@ import { profileAPI, classAPI } from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
 import StudentBulkUpload from '../../components/StudentBulkUpload';
 import AddStudentModal from '../../components/AddStudentModal';
-
-const s = {
-  page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
-  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #20c997, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 },
-  actions: { display: 'flex', gap: '0.8rem' },
-  btnAction: { padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', color: '#fff', background: '#3b82f6', transition: 'all 0.2s' },
-  btnOutline: { padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #3b82f6', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', color: '#3b82f6', background: 'transparent', transition: 'all 0.2s' },
-  tabs: { display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' },
-  tab: (active) => ({
-    padding: '0.5rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
-    fontSize: '0.9rem', fontWeight: '600',
-    background: active ? 'rgba(32,201,151,0.3)' : 'rgba(51,65,85,0.3)',
-    color: active ? '#6ee7b7' : '#94a3b8', transition: 'all 0.2s ease',
-  }),
-  filterRow: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
-  searchBar: {
-    flex: '1', minWidth: '250px', padding: '0.55rem 1rem',
-    background: 'rgba(15,23,42,0.8)', border: '1px solid #334155',
-    borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box',
-  },
-  select: { padding: '0.55rem 1rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem' },
-  table: { width: '100%', borderCollapse: 'collapse', background: 'rgba(30,41,59,0.8)', borderRadius: '12px', overflow: 'hidden' },
-  th: { padding: '0.85rem 1rem', textAlign: 'left', background: 'rgba(51,65,85,0.6)', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  td: { padding: '0.75rem 1rem', borderBottom: '1px solid rgba(51,65,85,0.5)', color: '#e2e8f0', fontSize: '0.9rem' },
-  badge: (type) => ({ display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '12px', fontSize: '0.72rem', fontWeight: '700', 
-    background: type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', 
-    color: type === 'success' ? '#4ade80' : '#fbbf24' }),
-  viewBtn: { padding: '0.35rem 0.8rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', marginRight: '0.5rem' },
-  verifyBtn: { padding: '0.35rem 0.8rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: 'rgba(34,197,94,0.2)', color: '#4ade80' },
-  loading: { textAlign: 'center', padding: '3rem', color: '#94a3b8' },
-  empty: { textAlign: 'center', padding: '3rem', color: '#64748b', background: 'rgba(30,41,59,0.5)', borderRadius: '12px' },
-};
+import '../admin/CreateDepartment.css'; // Add the CSS import
 
 function MyStudents() {
   const navigate = useNavigate();
@@ -104,83 +72,106 @@ function MyStudents() {
     return matchesSearch && matchesFilter;
   });
 
-  if (loading) return <div style={s.loading}>Loading students...</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading students...</div>;
 
   return (
-    <div style={s.page}>
-      <div style={s.headerRow}>
-        <h1 style={s.title}>My Students</h1>
-        <div style={s.actions}>
-          <button style={s.btnOutline} onClick={() => setShowBulkUpload(true)}>Bulk Upload</button>
-          <button style={s.btnAction} onClick={() => setShowAddModal(true)}>+ Add Student</button>
+    <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=oversight')}>← Back</button>
+      
+      <div className="dept-wizard__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h1 style={{ color: '#4f46e5', margin: 0 }}>🧑‍🎓 My Students</h1>
+        <div style={{ display: 'flex', gap: '0.8rem' }}>
+          <button className="dept-btn dept-btn--outline" onClick={() => setShowBulkUpload(true)}>Bulk Upload</button>
+          <button className="dept-btn dept-btn--primary" onClick={() => setShowAddModal(true)}>+ Add Student</button>
         </div>
       </div>
 
       {classes.length > 1 && (
-        <div style={s.tabs}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', background: '#f8fafc', padding: '0.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           {classes.map((c) => (
-            <button key={c.id} style={s.tab(activeClass === c.id)} onClick={() => handleTabClick(c.id)}>
+            <button 
+              key={c.id} 
+              style={{
+                padding: '0.4rem 1rem', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                fontSize: '0.85rem', fontWeight: '600', textTransform: 'capitalize',
+                background: activeClass === c.id ? '#eef2ff' : 'transparent',
+                color: activeClass === c.id ? '#4f46e5' : '#64748b',
+                transition: 'all 0.2s ease',
+              }}
+              onClick={() => handleTabClick(c.id)}
+            >
               {c.name}
             </button>
           ))}
         </div>
       )}
 
-      <div style={s.filterRow}>
-        <input
-          style={s.searchBar}
-          placeholder="🔍 Search by name, email, or roll no..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select style={s.select} value={filterVerified} onChange={e => setFilterVerified(e.target.value)}>
-          <option value="all">All Status</option>
-          <option value="verified">Verified Only</option>
-          <option value="unverified">Unverified Only</option>
-        </select>
+      <div className="dept-card" style={{ marginBottom: '1.5rem' }}>
+        <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', alignItems: 'center' }}>
+          <div className="dept-field" style={{ marginBottom: 0 }}>
+            <input
+              type="text"
+              placeholder="🔍 Search by name, email, or roll no..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+            />
+          </div>
+          <div className="dept-field" style={{ marginBottom: 0 }}>
+            <select style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} value={filterVerified} onChange={e => setFilterVerified(e.target.value)}>
+              <option value="all">All Status</option>
+              <option value="verified">Verified Only</option>
+              <option value="unverified">Unverified Only</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div style={s.empty}>No students found</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+          No students found
+        </div>
       ) : (
-        <div style={{ overflowX: 'auto', borderRadius: '12px' }}>
-          <table style={s.table}>
-            <thead>
-              <tr>
-                <th style={s.th}>Roll No</th>
-                <th style={s.th}>Full Name</th>
-                <th style={s.th}>Email</th>
-                <th style={s.th}>Status</th>
-                <th style={s.th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((st) => (
-                <tr key={st.user_id}>
-                  <td style={s.td}>{st.roll_no || '—'}</td>
-                  <td style={s.td}>{st.full_name}</td>
-                  <td style={s.td}>{st.email}</td>
-                  <td style={s.td}>
-                    {st.isverified === 1 ? (
-                      <span style={s.badge('success')}>Verified</span>
-                    ) : (
-                      <span style={s.badge('warning')}>Unverified</span>
-                    )}
-                  </td>
-                  <td style={s.td}>
-                    <button style={s.viewBtn} onClick={() => navigate(`/advisor/student/${st.user_id}`)}>
-                      View
-                    </button>
-                    {st.isverified !== 1 && (
-                      <button style={s.verifyBtn} onClick={() => handleVerify(st.user_id)}>
-                        Verify
-                      </button>
-                    )}
-                  </td>
+        <div className="dept-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Roll No</th>
+                  <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Full Name</th>
+                  <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Email</th>
+                  <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Status</th>
+                  <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((st) => (
+                  <tr key={st.user_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '1rem', color: '#1e293b' }}>{st.roll_no || '—'}</td>
+                    <td style={{ padding: '1rem', color: '#1e293b', fontWeight: '500' }}>{st.full_name}</td>
+                    <td style={{ padding: '1rem', color: '#475569' }}>{st.email}</td>
+                    <td style={{ padding: '1rem' }}>
+                      {st.isverified === 1 ? (
+                        <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0' }}>Verified</span>
+                      ) : (
+                        <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: '#fffbeb', color: '#f59e0b', border: '1px solid #fde68a' }}>Unverified</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
+                      <button className="dept-btn dept-btn--outline" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem', marginRight: '0.5rem' }} onClick={() => navigate(`/advisor/student/${st.user_id}`)}>
+                        View
+                      </button>
+                      {st.isverified !== 1 && (
+                        <button className="dept-btn dept-btn--success" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleVerify(st.user_id)}>
+                          Verify
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

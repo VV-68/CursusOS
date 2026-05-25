@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { timetableAPI, classAPI, semesterAPI } from '../../services/api';
 import { downloadTimetablePdf } from '../../utils/timetablePdf';
@@ -7,6 +8,7 @@ const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // ── Read-only timetable table ──────────────────────────────────────────────
 function TimetableReadOnly({ timetableRows, downloadPdf }) {
+  const navigate = useNavigate();
   const getSlot = (day, period) =>
     timetableRows.find(t => t.day_of_week === day && t.period_no === period);
 
@@ -55,6 +57,7 @@ function TimetableReadOnly({ timetableRows, downloadPdf }) {
 }
 
 function Timetable() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('view'); // 'view' | 'edit'
   const [classes, setClasses] = useState([]);
   const [semesters, setSemesters] = useState([]);
@@ -166,6 +169,7 @@ function Timetable() {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=oversight')}>← Back</button>
       <h2>Manage Class Timetable</h2>
 
       {/* Tab switcher */}

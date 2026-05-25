@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { attendanceAPI, classAPI } from '../../services/api';
 
 function LowAttendance() {
+  const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [reports, setReports] = useState([]);
@@ -37,6 +39,7 @@ function LowAttendance() {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=oversight')}>← Back</button>
       <h2>Low Attendance Report ({'< 75%'})</h2>
       
       <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} style={{ marginBottom: '2rem' }}>

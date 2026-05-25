@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { internalMarksAPI } from '../../services/api';
 
 function MyInternals() {
+  const navigate = useNavigate();
   const [internals, setInternals] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +50,7 @@ function MyInternals() {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
       <h2>My Internal Marks</h2>
       
       {loading ? (

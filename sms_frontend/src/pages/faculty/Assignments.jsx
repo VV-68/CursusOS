@@ -108,7 +108,7 @@ function Assignments() {
     <div style={s.page}>
       <div style={s.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button style={s.backBtn} onClick={() => navigate('/faculty/courses')}>← Back</button>
+          <button style={s.backBtn} onClick={() => navigate('/dashboard?tab=teaching')}>← Back</button>
           <h1 style={s.title}>Assignments</h1>
         </div>
         {selectedCA && <button style={s.newBtn} onClick={() => setShowModal(true)}>+ New Assignment</button>}

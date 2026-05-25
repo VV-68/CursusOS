@@ -1,17 +1,6 @@
 import { useState } from 'react';
 import { profileAPI } from '../services/api';
-
-const s = {
-  overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modal: { background: '#1e293b', padding: '2rem', borderRadius: '12px', width: '500px', maxWidth: '90%', color: '#e2e8f0' },
-  title: { margin: '0 0 1rem 0', color: '#fff', fontSize: '1.2rem' },
-  fileBox: { border: '2px dashed #334155', padding: '2rem', textAlign: 'center', borderRadius: '8px', cursor: 'pointer', marginBottom: '1rem', background: 'rgba(15,23,42,0.5)' },
-  btnRow: { display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' },
-  btnCancel: { padding: '0.6rem 1rem', background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '6px', cursor: 'pointer' },
-  btnSubmit: { padding: '0.6rem 1.2rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
-  summary: { background: 'rgba(15,23,42,0.8)', padding: '1rem', borderRadius: '8px', marginTop: '1rem', fontSize: '0.9rem' },
-  error: { color: '#ef4444', marginTop: '0.5rem', fontSize: '0.85rem', maxHeight: '100px', overflowY: 'auto' }
-};
+import '../pages/admin/CreateDepartment.css'; // Add the CSS import
 
 function StudentBulkUpload({ classId, onClose, onSuccess }) {
   const [file, setFile] = useState(null);
@@ -52,46 +41,55 @@ function StudentBulkUpload({ classId, onClose, onSuccess }) {
   };
 
   return (
-    <div style={s.overlay}>
-      <div style={s.modal}>
-        <h2 style={s.title}>Bulk Upload Students</h2>
-        <p style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '1rem' }}>
-          Upload a CSV or Excel file with columns: <strong>Name, Email, Roll No</strong>
-        </p>
-        
-        {!result ? (
-          <>
-            <div style={s.fileBox} onClick={() => document.getElementById('bulk-file').click()}>
-              {file ? file.name : 'Click to select CSV/XLSX file'}
-              <input type="file" id="bulk-file" accept=".csv,.xlsx" style={{ display: 'none' }} onChange={handleFileChange} />
-            </div>
-            {errorMsg && <div style={{ color: '#ef4444', fontSize: '0.9rem' }}>{errorMsg}</div>}
-            <div style={s.btnRow}>
-              <button style={s.btnCancel} onClick={onClose} disabled={uploading}>Cancel</button>
-              <button style={s.btnSubmit} onClick={handleUpload} disabled={!file || uploading}>
-                {uploading ? 'Uploading...' : 'Upload'}
-              </button>
-            </div>
-          </>
-        ) : (
-          <div style={s.summary}>
-            <h3 style={{ color: '#fff', margin: '0 0 0.5rem 0' }}>Upload Summary</h3>
-            <p>Total Processed: {result.total}</p>
-            <p style={{ color: '#4ade80' }}>Successfully Created: {result.created}</p>
-            <p style={{ color: '#fbbf24' }}>Skipped: {result.skipped}</p>
-            {result.errors && result.errors.length > 0 && (
-              <div style={s.error}>
-                <strong>Errors:</strong>
-                <ul style={{ paddingLeft: '1.2rem', margin: '0.5rem 0' }}>
-                  {result.errors.map((err, i) => <li key={i}>{err}</li>)}
-                </ul>
+    <div className="json-upload-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="json-upload-modal" style={{ maxWidth: '500px' }}>
+        <div className="json-upload-modal__header">
+          <h2 style={{ color: '#4f46e5', margin: 0 }}>Bulk Upload Students</h2>
+          <button type="button" className="json-upload-modal__close" onClick={onClose}>×</button>
+        </div>
+        <div className="json-upload-modal__body">
+          <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem' }}>
+            Upload a CSV or Excel file with columns: <strong>Name, Email, Roll No</strong>
+          </p>
+          
+          {!result ? (
+            <>
+              <div style={{ border: '2px dashed #cbd5e1', padding: '2rem', textAlign: 'center', borderRadius: '8px', cursor: 'pointer', marginBottom: '1.5rem', background: '#f8fafc', transition: 'all 0.2s' }} onClick={() => document.getElementById('bulk-file').click()}>
+                <span style={{ color: '#4f46e5', fontWeight: '500' }}>{file ? file.name : 'Click to select CSV/XLSX file'}</span>
+                <input type="file" id="bulk-file" accept=".csv,.xlsx" style={{ display: 'none' }} onChange={handleFileChange} />
               </div>
-            )}
-            <div style={s.btnRow}>
-              <button style={s.btnSubmit} onClick={onClose}>Close</button>
+              
+              {errorMsg && <div className="dept-alert dept-alert--error">{errorMsg}</div>}
+              
+              <div className="json-upload-modal__footer" style={{ borderTop: 'none', padding: 0 }}>
+                <button type="button" className="dept-btn dept-btn--secondary" onClick={onClose} disabled={uploading}>Cancel</button>
+                <button type="button" className="dept-btn dept-btn--primary" onClick={handleUpload} disabled={!file || uploading}>
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ color: '#1e293b', margin: '0 0 1rem 0', fontSize: '1.1rem' }}>Upload Summary</h3>
+              <p style={{ color: '#475569', margin: '0 0 0.5rem' }}>Total Processed: <strong style={{ color: '#1e293b' }}>{result.total}</strong></p>
+              <p style={{ color: '#10b981', margin: '0 0 0.5rem' }}>Successfully Created: <strong>{result.created}</strong></p>
+              <p style={{ color: '#f59e0b', margin: '0 0 1rem' }}>Skipped: <strong>{result.skipped}</strong></p>
+              
+              {result.errors && result.errors.length > 0 && (
+                <div className="dept-alert dept-alert--error" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                  <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Errors:</strong>
+                  <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.85rem' }}>
+                    {result.errors.map((err, i) => <li key={i} style={{ marginBottom: '0.25rem' }}>{err}</li>)}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="json-upload-modal__footer" style={{ borderTop: 'none', padding: 0, marginTop: '1.5rem' }}>
+                <button type="button" className="dept-btn dept-btn--primary" onClick={onClose}>Close</button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { courseAssignmentAPI, attendanceAPI } from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 function MarkAttendance() {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -121,7 +123,8 @@ function MarkAttendance() {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=teaching')}>← Back</button>
       <h2>Mark Attendance</h2>
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <select value={selectedAssignment} onChange={e => setSelectedAssignment(e.target.value)}

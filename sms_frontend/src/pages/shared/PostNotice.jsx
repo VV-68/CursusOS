@@ -74,7 +74,7 @@ function PostNotice() {
         audience,
         is_pinned: form.is_pinned
       });
-      navigate('/notices');
+      navigate(role === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=general');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -85,6 +85,7 @@ function PostNotice() {
   if (!['admin', 'hod'].includes(role)) {
     return (
       <div className="dept-wizard" style={{ maxWidth: '560px', margin: '2rem auto', padding: '1.5rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=general')}>← Back</button>
         <div className="dept-alert dept-alert--error">You do not have permission to post notices.</div>
       </div>
     );
@@ -94,7 +95,7 @@ function PostNotice() {
     <div className="dept-wizard" style={{ maxWidth: '640px', margin: '0 auto', padding: '1.5rem' }}>
       <div className="dept-wizard__header">
         <h1>📢 Post Notice</h1>
-        <Link to="/notices" className="dept-btn dept-btn--secondary">← Notice Board</Link>
+        <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=general')}>← Back</button>
       </div>
 
       {error && (
@@ -173,7 +174,7 @@ function PostNotice() {
         </label>
 
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-          <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate('/notices')}>
+          <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=general')}>
             Cancel
           </button>
           <button type="submit" className="dept-btn dept-btn--primary" disabled={submitting}>

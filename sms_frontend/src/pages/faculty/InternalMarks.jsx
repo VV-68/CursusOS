@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { internalMarksAPI, courseAssignmentAPI } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 function InternalMarks() {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState('');
   const [examType, setExamType] = useState('series1');
@@ -100,7 +102,8 @@ function InternalMarks() {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=teaching')}>← Back</button>
       <h2>Manage Internal Marks</h2>
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
         <select value={selectedAssignment} onChange={e => setSelectedAssignment(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>

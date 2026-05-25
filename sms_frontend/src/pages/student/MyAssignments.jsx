@@ -1,53 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileAPI, assignmentAPI } from '../../services/api';
-
-const s = {
-  page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #f97316, #fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '1.5rem' },
-  courseSection: { marginBottom: '2rem' },
-  courseHeader: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '0.75rem 1.25rem', background: 'rgba(51,65,85,0.4)',
-    borderRadius: '10px 10px 0 0', borderBottom: '2px solid rgba(102,126,234,0.3)',
-    cursor: 'pointer',
-  },
-  courseName: { fontSize: '1rem', fontWeight: '600', color: '#e2e8f0' },
-  courseCode: { color: '#94a3b8', fontSize: '0.8rem' },
-  matLink: { color: '#818cf8', fontSize: '0.8rem', textDecoration: 'none', cursor: 'pointer' },
-  assignmentList: { background: 'rgba(30,41,59,0.6)', borderRadius: '0 0 10px 10px', padding: '0.5rem' },
-  card: {
-    background: 'rgba(15,23,42,0.6)', borderRadius: '10px', padding: '1.25rem',
-    margin: '0.5rem', border: '1px solid rgba(51,65,85,0.5)',
-    transition: 'all 0.2s ease',
-  },
-  cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' },
-  cardTitle: { fontSize: '1rem', fontWeight: '600', color: '#f1f5f9' },
-  badge: (color) => ({ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.72rem', fontWeight: '700', background: `${color}22`, color }),
-  cardMeta: { fontSize: '0.82rem', color: '#64748b', marginBottom: '0.75rem' },
-  cardDesc: { fontSize: '0.88rem', color: '#94a3b8', marginBottom: '1rem', lineHeight: '1.4' },
-  submitArea: {
-    padding: '1rem', background: 'rgba(51,65,85,0.3)', borderRadius: '8px',
-    border: '1px dashed rgba(100,116,139,0.4)', marginTop: '0.75rem',
-  },
-  fileInput: { display: 'block', marginBottom: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' },
-  submitBtn: { padding: '0.5rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', marginRight: '0.5rem' },
-  secondaryBtn: { padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #475569', cursor: 'pointer', fontWeight: '500', fontSize: '0.85rem', background: 'transparent', color: '#94a3b8' },
-  submittedBox: {
-    padding: '0.75rem 1rem', background: 'rgba(34,197,94,0.1)', borderRadius: '8px',
-    border: '1px solid rgba(34,197,94,0.2)', marginTop: '0.75rem',
-  },
-  evBox: {
-    padding: '0.75rem 1rem', background: 'rgba(102,126,234,0.1)', borderRadius: '8px',
-    border: '1px solid rgba(102,126,234,0.2)', marginTop: '0.5rem',
-  },
-  linkBtn: { background: 'none', border: 'none', color: '#818cf8', cursor: 'pointer', fontSize: '0.85rem', padding: 0, marginTop: '0.35rem' },
-  loading: { textAlign: 'center', padding: '3rem', color: '#94a3b8' },
-  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
-  empty: { textAlign: 'center', padding: '3rem', color: '#64748b', background: 'rgba(30,41,59,0.5)', borderRadius: '12px' },
-  progressBar: { width: '100%', height: '6px', background: '#1e293b', borderRadius: '3px', overflow: 'hidden', marginTop: '0.5rem' },
-  progressFill: (pct) => ({ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #667eea, #764ba2)', transition: 'width 0.3s ease' }),
-};
+import '../admin/CreateDepartment.css'; // Add the CSS import
 
 function MyAssignments() {
   const navigate = useNavigate();
@@ -69,7 +23,6 @@ function MyAssignments() {
       setCourseAssignments(allCA);
       
       const allAssignments = await assignmentAPI.listMine();
-      // Group assignments by course_assignment_id
       const grouped = (allAssignments || []).reduce((acc, a) => {
         const caId = a.course_assignment_id;
         if (!acc[caId]) acc[caId] = [];
@@ -112,7 +65,7 @@ function MyAssignments() {
       await assignmentAPI.submit(assignmentId, file);
       setUploadProgress(100);
       setSelectedFiles((prev) => ({ ...prev, [assignmentId]: null }));
-      await refreshCourseForAssignment(assignmentId);
+      await refreshCourseForAssignment();
     } catch (err) { setError(err.message); }
     finally {
       setTimeout(() => { setUploading(null); setUploadProgress(0); }, 400);
@@ -120,11 +73,11 @@ function MyAssignments() {
   };
 
   const handleDeleteSubmission = async (assignmentId) => {
-    if (!confirm('Remove your submission? You can upload again before evaluation.')) return;
+    if (!window.confirm('Remove your submission? You can upload again before evaluation.')) return;
     setError('');
     try {
       await assignmentAPI.deleteMySubmission(assignmentId);
-      await refreshCourseForAssignment(assignmentId);
+      await refreshCourseForAssignment();
     } catch (err) { setError(err.message); }
   };
 
@@ -147,42 +100,56 @@ function MyAssignments() {
     const due = new Date(a.due_date);
     const sub = a.submission;
     if (sub?.is_evaluated || (sub?.marks_awarded !== null && sub?.marks_awarded !== undefined)) {
-      return { label: 'Evaluated', color: '#4ade80' };
+      return { label: 'Evaluated', color: '#10b981', bg: '#ecfdf5' };
     }
-    if (sub) return { label: 'Submitted', color: '#60a5fa' };
-    if (now > due) return { label: 'Overdue', color: '#f87171' };
-    return { label: 'Pending', color: '#fbbf24' };
+    if (sub) return { label: 'Submitted', color: '#3b82f6', bg: '#eff6ff' };
+    if (now > due) return { label: 'Overdue', color: '#ef4444', bg: '#fef2f2' };
+    return { label: 'Pending', color: '#f59e0b', bg: '#fffbeb' };
   };
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
-  if (loading) return <div style={s.loading}>Loading your assignments...</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading your assignments...</div>;
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>My Assignments</h1>
-      {error && <div style={s.error}>{error}</div>}
+    <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
+      
+      <div className="dept-wizard__header">
+        <h1 style={{ color: '#4f46e5', margin: 0 }}>📝 My Assignments</h1>
+      </div>
+      
+      {error && <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
       {courseAssignments.length === 0 ? (
-        <div style={s.empty}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No courses found</p>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem', fontWeight: '600', color: '#1e293b' }}>No courses found</p>
           <p>You are not enrolled in any courses this semester.</p>
         </div>
       ) : (
         courseAssignments.map((ca) => {
           const caId = ca.course_assignment_id;
           return (
-          <div key={caId} style={s.courseSection}>
-            <div style={s.courseHeader} onClick={() => toggleCourse(caId)}>
+          <div key={caId} style={{ marginBottom: '2rem' }}>
+            <div 
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '1rem 1.25rem', background: expandedCourse === caId ? '#eef2ff' : '#f8fafc',
+                borderRadius: expandedCourse === caId ? '12px 12px 0 0' : '12px', 
+                border: '1px solid #e2e8f0', borderBottom: expandedCourse === caId ? 'none' : '1px solid #e2e8f0',
+                cursor: 'pointer', transition: 'all 0.2s ease'
+              }}
+              onClick={() => toggleCourse(caId)}
+            >
               <div>
-                <div style={s.courseName}>{ca.name} ({ca.code})</div>
-                <div style={s.courseCode}>
+                <div style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1e293b' }}>{ca.name} ({ca.code})</div>
+                <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem' }}>
                   {ca.faculty1_name}{ca.faculty2_name ? ` & ${ca.faculty2_name}` : ''}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <span
-                  style={s.matLink}
+                  style={{ color: '#4f46e5', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none', padding: '0.4rem 0.8rem', background: '#fff', borderRadius: '6px', border: '1px solid #c7d2fe', transition: 'all 0.2s ease' }}
                   onClick={(e) => { e.stopPropagation(); navigate(`/student/materials/${caId}`); }}
                 >
                   📚 Materials
@@ -192,11 +159,11 @@ function MyAssignments() {
             </div>
 
             {expandedCourse === caId && (
-              <div style={s.assignmentList}>
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '1rem' }}>
                 {!assignmentsByCourse[caId] ? (
-                  <div style={{ padding: '1rem', color: '#64748b', textAlign: 'center' }}>Loading...</div>
+                  <div style={{ padding: '1.5rem', color: '#64748b', textAlign: 'center' }}>Loading...</div>
                 ) : assignmentsByCourse[caId].length === 0 ? (
-                  <div style={{ padding: '1rem', color: '#64748b', textAlign: 'center' }}>No assignments posted</div>
+                  <div style={{ padding: '1.5rem', color: '#64748b', textAlign: 'center', background: '#f8fafc', borderRadius: '8px' }}>No assignments posted for this course</div>
                 ) : (
                   assignmentsByCourse[caId].map((a) => {
                     const status = getStatus(a);
@@ -205,87 +172,98 @@ function MyAssignments() {
                     const canModify = sub && !sub.is_evaluated;
                     return (
                       <div
-                        key={a.id} style={s.card}
+                        key={a.id} className="dept-card"
+                        style={{ margin: '0 0 1rem 0', cursor: 'pointer', padding: '1.25rem', boxShadow: isExpanded ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
                         onClick={() => setExpandedAssignment(isExpanded ? null : a.id)}
                       >
-                        <div style={s.cardHeader}>
-                          <div style={s.cardTitle}>{a.title}</div>
-                          <span style={s.badge(status.color)}>{status.label}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                          <div style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1e293b' }}>{a.title}</div>
+                          <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: status.bg, color: status.color, border: `1px solid ${status.color}40` }}>
+                            {status.label}
+                          </span>
                         </div>
-                        <div style={s.cardMeta}>
-                          Due: {formatDate(a.due_date)} • Max: {a.max_marks} marks
-                          {a.allow_late_submission && <span style={{ color: '#fbbf24' }}> • Late OK</span>}
+                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: isExpanded ? '1rem' : '0' }}>
+                          Due: <span style={{ fontWeight: '500', color: '#475569' }}>{formatDate(a.due_date)}</span> • Max: <span style={{ fontWeight: '500', color: '#475569' }}>{a.max_marks} marks</span>
+                          {a.allow_late_submission && <span style={{ color: '#d97706', fontWeight: '500' }}> • Late OK</span>}
                         </div>
 
                         {isExpanded && (
-                          <>
-                            {a.description && <div style={s.cardDesc}>{a.description}</div>}
+                          <div style={{ marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                            {a.description && <div style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '1rem', lineHeight: '1.5' }}>{a.description}</div>}
+                            
                             {a.question_file_name && (
-                              <button style={s.linkBtn} onClick={(e) => { e.stopPropagation(); openQuestion(a.id); }}>
-                                📄 Download question: {a.question_file_name}
+                              <button className="dept-btn dept-btn--outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', width: 'fit-content' }} onClick={(e) => { e.stopPropagation(); openQuestion(a.id); }}>
+                                📄 Download Question: {a.question_file_name}
                               </button>
                             )}
 
                             {sub ? (
-                              <div style={s.submittedBox} onClick={(e) => e.stopPropagation()}>
-                                <div style={{ fontSize: '0.88rem', color: '#4ade80', fontWeight: '600', marginBottom: '0.35rem' }}>
+                              <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
+                                <div style={{ fontSize: '0.9rem', color: '#059669', fontWeight: '600', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                   ✅ Submitted: {sub.file_name}
                                 </div>
-                                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>
                                   {formatDate(sub.submitted_at)}
-                                  {sub.is_late && <span style={s.badge('#f87171')}> Late</span>}
+                                  {sub.is_late && <span style={{ color: '#ef4444', fontWeight: '600', marginLeft: '0.5rem' }}>Late</span>}
                                 </div>
-                                <button style={s.linkBtn} onClick={() => openMyFile(a.id)}>Download my submission</button>
+                                
+                                <button className="dept-btn dept-btn--secondary" onClick={() => openMyFile(a.id)}>
+                                  Download My Submission
+                                </button>
 
                                 {(sub.is_evaluated || sub.marks_awarded != null) && (
-                                  <div style={s.evBox}>
-                                    <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#818cf8' }}>
+                                  <div style={{ padding: '1rem', background: '#eef2ff', borderRadius: '8px', border: '1px solid #c7d2fe', marginTop: '1rem' }}>
+                                    <div style={{ fontSize: '1.05rem', fontWeight: '700', color: '#4f46e5' }}>
                                       Marks Obtained: {sub.marks_awarded} / {a.max_marks}
                                     </div>
                                     {sub.feedback && (
-                                      <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.35rem' }}>
-                                        💬 {sub.feedback}
+                                      <div style={{ fontSize: '0.9rem', color: '#475569', marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                                        <span>💬</span> <span>{sub.feedback}</span>
                                       </div>
                                     )}
                                   </div>
                                 )}
 
                                 {canModify && (
-                                  <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                    <input
-                                      type="file"
-                                      accept=".pdf,.doc,.docx,.zip,.jpg,.png"
-                                      style={s.fileInput}
-                                      onChange={(e) => setSelectedFiles((prev) => ({ ...prev, [a.id]: e.target.files[0] }))}
-                                    />
-                                    <button
-                                      style={s.submitBtn}
-                                      disabled={!selectedFiles[a.id] || uploading === a.id}
-                                      onClick={() => handleSubmit(a.id)}
-                                    >
-                                      Resubmit
-                                    </button>
-                                    <button style={s.secondaryBtn} onClick={() => handleDeleteSubmission(a.id)}>
-                                      Delete submission
-                                    </button>
+                                  <div style={{ marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                                    <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem', fontWeight: '500' }}>Upload a new file to replace your current submission:</p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                                      <input
+                                        type="file"
+                                        accept=".pdf,.doc,.docx,.zip,.jpg,.png"
+                                        style={{ display: 'block', color: '#475569', fontSize: '0.85rem', border: '1px solid #cbd5e1', padding: '0.4rem', borderRadius: '6px', background: '#fff' }}
+                                        onChange={(e) => setSelectedFiles((prev) => ({ ...prev, [a.id]: e.target.files[0] }))}
+                                      />
+                                      <button
+                                        className="dept-btn dept-btn--primary"
+                                        disabled={!selectedFiles[a.id] || uploading === a.id}
+                                        onClick={() => handleSubmit(a.id)}
+                                      >
+                                        {uploading === a.id ? 'Uploading...' : 'Resubmit'}
+                                      </button>
+                                      <button className="dept-btn dept-btn--secondary" style={{ color: '#ef4444', borderColor: '#fca5a5' }} onClick={() => handleDeleteSubmission(a.id)}>
+                                        Delete Submission
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <div style={s.submitArea} onClick={(e) => e.stopPropagation()}>
+                              <div style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #94a3b8', marginTop: '1rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                <p style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '1rem', fontWeight: '500' }}>Upload your assignment submission:</p>
                                 <input
                                   type="file"
                                   accept=".pdf,.doc,.docx,.zip,.jpg,.png"
-                                  style={s.fileInput}
+                                  style={{ display: 'block', margin: '0 auto 1rem', color: '#475569', fontSize: '0.85rem', border: '1px solid #cbd5e1', padding: '0.4rem', borderRadius: '6px', background: '#fff' }}
                                   onChange={(e) => setSelectedFiles((prev) => ({ ...prev, [a.id]: e.target.files[0] }))}
                                 />
                                 {uploading === a.id ? (
-                                  <div style={s.progressBar}>
-                                    <div style={s.progressFill(uploadProgress)} />
+                                  <div style={{ width: '100%', maxWidth: '300px', margin: '0 auto', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#4f46e5', transition: 'width 0.3s ease' }} />
                                   </div>
                                 ) : (
                                   <button
-                                    style={{ ...s.submitBtn, opacity: selectedFiles[a.id] ? 1 : 0.5 }}
+                                    className="dept-btn dept-btn--success"
                                     disabled={!selectedFiles[a.id]}
                                     onClick={() => handleSubmit(a.id)}
                                   >
@@ -294,7 +272,7 @@ function MyAssignments() {
                                 )}
                               </div>
                             )}
-                          </>
+                          </div>
                         )}
                       </div>
                     );

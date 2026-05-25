@@ -1,41 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { studyMaterialAPI } from '../../services/api';
+import '../admin/CreateDepartment.css'; // Add the CSS import
 
 const TYPES = ['all', 'notes', 'slides', 'reference', 'video', 'question_bank', 'document', 'link'];
-const TYPE_COLORS = { notes: '#818cf8', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7', document: '#22c55e', link: '#eab308' };
+const TYPE_COLORS = { notes: '#6366f1', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7', document: '#22c55e', link: '#eab308' };
 const TYPE_ICONS = { notes: '📄', slides: '📊', reference: '📖', video: '🎬', question_bank: '❓', document: '📎', link: '🔗' };
-
-const s = {
-  page: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
-  header: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' },
-  backBtn: { background: 'none', border: '1px solid #475569', color: '#94a3b8', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #f97316, #fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-  tabs: { display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
-  tab: (active) => ({
-    padding: '0.4rem 1rem', borderRadius: '20px', border: 'none', cursor: 'pointer',
-    fontSize: '0.85rem', fontWeight: '600', textTransform: 'capitalize',
-    background: active ? 'rgba(102,126,234,0.3)' : 'rgba(51,65,85,0.3)',
-    color: active ? '#a5b4fc' : '#94a3b8',
-    transition: 'all 0.2s ease',
-  }),
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' },
-  card: {
-    background: 'rgba(30,41,59,0.8)', borderRadius: '12px', padding: '1.5rem',
-    border: '1px solid rgba(100,116,139,0.3)', transition: 'all 0.3s ease',
-  },
-  cardTitle: { fontSize: '1.05rem', fontWeight: '600', color: '#f1f5f9', marginBottom: '0.5rem' },
-  cardDesc: { color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.75rem', lineHeight: '1.4' },
-  typeBadge: (type) => ({ display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: `${TYPE_COLORS[type] || '#64748b'}22`, color: TYPE_COLORS[type] || '#64748b', marginBottom: '0.75rem' }),
-  meta: { fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem' },
-  openBtn: {
-    width: '100%', padding: '0.55rem 1rem', borderRadius: '8px', border: 'none',
-    cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem',
-    background: 'rgba(34,197,94,0.15)', color: '#4ade80',
-  },
-  empty: { textAlign: 'center', padding: '3rem', color: '#64748b', background: 'rgba(30,41,59,0.5)', borderRadius: '12px' },
-  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
-};
 
 function StudentStudyMaterials() {
   const { course_assignment_id } = useParams();
@@ -82,44 +52,72 @@ function StudentStudyMaterials() {
 
   const filtered = filter === 'all' ? materials : materials.filter((m) => m.material_type === filter);
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading...</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading materials...</div>;
 
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <button style={s.backBtn} onClick={() => navigate('/student/assignments')}>← Back</button>
-        <h1 style={s.title}>Study Materials</h1>
+    <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
+      
+      <div className="dept-wizard__header">
+        <h1 style={{ color: '#4f46e5', margin: 0 }}>📚 Study Materials</h1>
       </div>
 
-      {error && <div style={s.error}>{error}</div>}
+      {error && <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
-      <div style={s.tabs}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', background: '#f8fafc', padding: '0.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
         {TYPES.map((t) => (
-          <button key={t} style={s.tab(filter === t)} onClick={() => setFilter(t)}>
+          <button 
+            key={t} 
+            style={{ 
+              padding: '0.4rem 1rem', borderRadius: '20px', border: 'none', cursor: 'pointer',
+              fontSize: '0.85rem', fontWeight: '600', textTransform: 'capitalize',
+              background: filter === t ? '#eef2ff' : 'transparent',
+              color: filter === t ? '#4f46e5' : '#64748b',
+              transition: 'all 0.2s ease',
+            }} 
+            onClick={() => setFilter(t)}
+          >
             {t === 'all' ? 'All' : `${TYPE_ICONS[t] || ''} ${t.replace('_', ' ')}`}
           </button>
         ))}
       </div>
 
       {filtered.length === 0 ? (
-        <div style={s.empty}>No materials found</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+          No materials found
+        </div>
       ) : (
-        <div style={s.grid}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
           {filtered.map((m) => (
-            <div key={m.id} style={s.card}>
+            <div key={m.id} className="dept-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {!course_assignment_id && (
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#818cf8', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6366f1', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
                   📚 {m.course_name} ({m.course_code})
                 </div>
               )}
-              <span style={s.typeBadge(m.material_type)}>{TYPE_ICONS[m.material_type] || '📄'} {m.material_type}</span>
-              <div style={s.cardTitle}>{m.title}</div>
-              {m.description && <div style={s.cardDesc}>{m.description}</div>}
-              <div style={s.meta}>
+              
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <span style={{ 
+                  display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '12px', 
+                  fontSize: '0.75rem', fontWeight: '600', 
+                  background: `${TYPE_COLORS[m.material_type] || '#64748b'}22`, 
+                  color: TYPE_COLORS[m.material_type] || '#64748b' 
+                }}>
+                  {TYPE_ICONS[m.material_type] || '📄'} {m.material_type.replace('_', ' ')}
+                </span>
+              </div>
+              
+              <div style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1e293b', marginBottom: '0.5rem' }}>{m.title}</div>
+              
+              {m.description && <div style={{ color: '#475569', fontSize: '0.85rem', marginBottom: '0.75rem', lineHeight: '1.4', flexGrow: 1 }}>{m.description}</div>}
+              
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', marginTop: m.description ? '0' : 'auto' }}>
                 {m.uploaded_by_name || m.posted_by_name} • {new Date(m.created_at).toLocaleDateString('en-IN')}
               </div>
+              
               <button
-                style={{ ...s.openBtn, opacity: opening === m.id ? 0.6 : 1 }}
+                className="dept-btn dept-btn--primary"
+                style={{ width: '100%', opacity: opening === m.id ? 0.6 : 1 }}
                 disabled={opening === m.id}
                 onClick={() => openMaterial(m)}
               >

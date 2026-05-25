@@ -1,50 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { profileAPI } from '../../services/api';
+import '../admin/CreateDepartment.css'; // Add the CSS import
 
 const REQUIRED_FIELDS = ['dob', 'gender', 'guardian_name', 'guardian_phone', 'address'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 const GENDERS = ['Male', 'Female', 'Other'];
 
-const s = {
-  page: { padding: '2rem', maxWidth: '800px', margin: '0 auto' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #f97316, #fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '0.5rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
-  banner: (type) => ({
-    padding: '0.75rem 1rem', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.9rem',
-    background: type === 'warning' ? 'rgba(251,191,36,0.1)' : 'rgba(34,197,94,0.1)',
-    color: type === 'warning' ? '#fbbf24' : '#4ade80',
-    border: `1px solid ${type === 'warning' ? 'rgba(251,191,36,0.3)' : 'rgba(34,197,94,0.3)'}`,
-  }),
-  tabs: { display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' },
-  tab: (active) => ({
-    padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
-    fontSize: '0.9rem', fontWeight: '600',
-    background: active ? 'rgba(102,126,234,0.3)' : 'rgba(51,65,85,0.3)',
-    color: active ? '#a5b4fc' : '#94a3b8',
-    transition: 'all 0.2s ease',
-  }),
-  section: {
-    background: 'rgba(30,41,59,0.8)', borderRadius: '12px', padding: '1.5rem',
-    border: '1px solid rgba(100,116,139,0.3)', marginBottom: '1rem',
-  },
-  sectionTitle: { fontSize: '1rem', fontWeight: '600', color: '#e2e8f0', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(51,65,85,0.5)' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' },
-  field: { marginBottom: '0' },
-  label: { display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.25rem', fontWeight: '500' },
-  value: { color: '#f1f5f9', fontSize: '0.95rem', padding: '0.5rem 0' },
-  input: { width: '100%', padding: '0.55rem 0.75rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '0.55rem 0.75rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem' },
-  textarea: { width: '100%', padding: '0.55rem 0.75rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', minHeight: '80px', resize: 'vertical', boxSizing: 'border-box' },
-  actions: { display: 'flex', gap: '0.75rem', marginTop: '1.5rem' },
-  editBtn: { padding: '0.55rem 1.25rem', borderRadius: '8px', border: '1px solid rgba(102,126,234,0.4)', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', background: 'rgba(102,126,234,0.15)', color: '#a5b4fc' },
-  saveBtn: { padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff' },
-  cancelBtn: { padding: '0.55rem 1.25rem', borderRadius: '8px', border: '1px solid #475569', cursor: 'pointer', fontWeight: '500', fontSize: '0.85rem', background: 'transparent', color: '#94a3b8' },
-  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
-  success: { padding: '0.75rem', background: 'rgba(34,197,94,0.1)', color: '#4ade80', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
-  masked: { fontFamily: 'monospace', letterSpacing: '1px' },
-};
-
 function ProfilePage() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -99,18 +63,20 @@ function ProfilePage() {
       if (opts.masked && profile?.[key]) displayVal = maskValue(profile[key]);
       if (key === 'dob' && profile?.[key]) displayVal = new Date(profile[key]).toLocaleDateString('en-IN');
       return (
-        <div style={s.field}>
-          <label style={s.label}>{label}</label>
-          <div style={{ ...s.value, ...(opts.masked ? s.masked : {}) }}>{displayVal}</div>
+        <div className="dept-field">
+          <label style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</label>
+          <div style={{ color: '#1e293b', fontSize: '0.95rem', padding: '0.5rem 0', fontWeight: 500, fontFamily: opts.masked ? 'monospace' : 'inherit' }}>
+            {displayVal}
+          </div>
         </div>
       );
     }
 
     if (options) {
       return (
-        <div style={s.field}>
-          <label style={s.label}>{label}</label>
-          <select style={s.select} value={val} onChange={(e) => setForm({ ...form, [key]: e.target.value })}>
+        <div className="dept-field">
+          <label>{label}</label>
+          <select value={val} onChange={(e) => setForm({ ...form, [key]: e.target.value })} style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <option value="">Select...</option>
             {options.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
@@ -120,67 +86,89 @@ function ProfilePage() {
 
     if (rows) {
       return (
-        <div style={s.field}>
-          <label style={s.label}>{label}</label>
-          <textarea style={s.textarea} value={val} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+        <div className="dept-field">
+          <label>{label}</label>
+          <textarea value={val} onChange={(e) => setForm({ ...form, [key]: e.target.value })} style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical' }} rows={4} />
         </div>
       );
     }
 
     return (
-      <div style={s.field}>
-        <label style={s.label}>{label}</label>
+      <div className="dept-field">
+        <label>{label}</label>
         <input
-          style={s.input}
           type={type}
           value={type === 'date' && val ? val.substring(0, 10) : val}
           onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+          style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
         />
       </div>
     );
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading profile...</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading profile...</div>;
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>My Profile</h1>
-      <p style={s.subtitle}>{profile?.full_name} — {profile?.class_name} (Roll: {profile?.roll_no})</p>
+    <div className="dept-wizard" style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
+      
+      <div className="dept-wizard__header">
+        <h1 style={{ color: '#4f46e5', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          👤 My Profile
+        </h1>
+        <p style={{ margin: '0.5rem 0 0', color: '#64748b', fontSize: '0.95rem' }}>
+          {profile?.full_name} — {profile?.class_name} (Roll: {profile?.roll_no})
+        </p>
+      </div>
 
       {!profile?.profile_completed && missingFields.length > 0 && (
-        <div style={s.banner('warning')}>
-          ⚠️ Profile incomplete — missing: {missingFields.join(', ')}
+        <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>
+          <span className="dept-alert__icon">⚠️</span>
+          <span>Profile incomplete — missing: {missingFields.join(', ')}</span>
         </div>
       )}
 
       {profile?.profile_completed && (
-        <div style={s.banner('success')}>✅ Profile is complete</div>
+        <div className="dept-alert dept-alert--success" style={{ marginBottom: '1.5rem', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' }}>
+          <span className="dept-alert__icon">✅</span>
+          <span>Profile is complete</span>
+        </div>
       )}
 
-      {error && <div style={s.error}>{error}</div>}
-      {success && <div style={s.success}>{success}</div>}
+      {error && <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
+      {success && <div className="dept-alert dept-alert--success" style={{ marginBottom: '1.5rem', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' }}>{success}</div>}
 
-      <div style={s.tabs}>
-        <button style={s.tab(tab === 'personal')} onClick={() => setTab('personal')}>Personal Details</button>
-        <button style={s.tab(tab === 'bank')} onClick={() => setTab('bank')}>Bank Details</button>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '10px', width: 'fit-content' }}>
+        <button 
+          style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', background: tab === 'personal' ? '#fff' : 'transparent', color: tab === 'personal' ? '#4f46e5' : '#64748b', boxShadow: tab === 'personal' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s ease' }} 
+          onClick={() => setTab('personal')}
+        >
+          Personal Details
+        </button>
+        <button 
+          style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', background: tab === 'bank' ? '#fff' : 'transparent', color: tab === 'bank' ? '#4f46e5' : '#64748b', boxShadow: tab === 'bank' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s ease' }} 
+          onClick={() => setTab('bank')}
+        >
+          Bank Details
+        </button>
       </div>
 
-      <div style={s.actions}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
         {!editing ? (
-          <button style={s.editBtn} onClick={() => setEditing(true)}>✏️ Edit Profile</button>
+          <button className="dept-btn dept-btn--primary" onClick={() => setEditing(true)}>✏️ Edit Profile</button>
         ) : (
           <>
-            <button style={s.saveBtn} onClick={handleSave}>💾 Save</button>
-            <button style={s.cancelBtn} onClick={handleCancel}>Cancel</button>
+            <button className="dept-btn dept-btn--success" onClick={handleSave}>💾 Save</button>
+            <button className="dept-btn dept-btn--secondary" onClick={handleCancel}>Cancel</button>
           </>
         )}
       </div>
 
-      {tab === 'personal' && (
-        <>
-          <div style={{ ...s.section, marginTop: '1rem' }}>
-            <div style={s.sectionTitle}>Basic Information</div>
-            <div style={s.grid}>
+      <div className="dept-card">
+        {tab === 'personal' && (
+          <>
+            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Basic Information</div>
+            <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', marginBottom: '2rem' }}>
               {renderField('Full Name', 'full_name', { readOnly: true })}
               {renderField('Email', 'email', { readOnly: true })}
               {renderField('Phone', 'phone', { readOnly: true })}
@@ -188,55 +176,32 @@ function ProfilePage() {
               {renderField('Gender', 'gender', { options: GENDERS })}
               {renderField('Blood Group', 'blood_group', { options: BLOOD_GROUPS })}
             </div>
-          </div>
 
-          <div style={s.section}>
-            <div style={s.sectionTitle}>Address</div>
-            {renderField('Address', 'address', { rows: true })}
-          </div>
+            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Address</div>
+            <div style={{ marginBottom: '2rem' }}>
+              {renderField('Address', 'address', { rows: true })}
+            </div>
 
-          <div style={s.section}>
-            <div style={s.sectionTitle}>Guardian Details</div>
-            <div style={s.grid}>
+            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Guardian Details</div>
+            <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
               {renderField('Guardian Name', 'guardian_name')}
               {renderField('Guardian Phone', 'guardian_phone')}
-              {renderField('Guardian Email', 'guardian_email', { type: 'email' })}
-              {renderField('Mother Name', 'mother_name')}
-              {renderField('Mother Phone', 'mother_phone')}
             </div>
-          </div>
+          </>
+        )}
 
-          <div style={s.section}>
-            <div style={s.sectionTitle}>Emergency Contact</div>
-            <div style={s.grid}>
-              {renderField('Emergency Contact Name', 'emergency_contact_name')}
-              {renderField('Emergency Contact Phone', 'emergency_contact_phone')}
+        {tab === 'bank' && (
+          <>
+            <div className="dept-card__title" style={{ color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>Bank Account</div>
+            <div className="dept-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+              {renderField('Account Number', 'bank_account_no', { masked: true })}
+              {renderField('IFSC Code', 'bank_ifsc', { masked: true })}
+              {renderField('Bank Name', 'bank_name')}
+              {renderField('Branch Name', 'bank_branch')}
             </div>
-          </div>
-
-          <div style={s.section}>
-            <div style={s.sectionTitle}>Other Details</div>
-            <div style={s.grid}>
-              {renderField('Nationality', 'nationality')}
-              {renderField('Religion', 'religion')}
-              {renderField('Caste Category', 'caste_category')}
-              {renderField('Previous School', 'previous_school')}
-            </div>
-          </div>
-        </>
-      )}
-
-      {tab === 'bank' && (
-        <div style={{ ...s.section, marginTop: '1rem' }}>
-          <div style={s.sectionTitle}>Bank & Identity Details</div>
-          <div style={s.grid}>
-            {renderField('Bank Name', 'bank_name')}
-            {renderField('Account Number', 'account_no', { masked: !editing })}
-            {renderField('IFSC Code', 'ifsc_code')}
-            {renderField('Aadhar Number', 'aadhar_no', { masked: !editing })}
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
