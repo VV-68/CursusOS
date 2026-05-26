@@ -43,6 +43,7 @@ import ProfilePage from './pages/student/ProfilePage';
 import MyStudents from './pages/advisor/MyStudents';
 import StudentProfile from './pages/advisor/StudentProfile';
 import InternalMarks from './pages/faculty/InternalMarks';
+import FacultyProfile from './pages/faculty/FacultyProfile';
 import ClassInternals from './pages/advisor/ClassInternals';
 import MyInternals from './pages/student/MyInternals';
 import DepartmentInternals from './pages/hod/DepartmentInternals';
@@ -231,6 +232,12 @@ function App() {
           <Route path="/faculty/internals" element={
             <ProtectedRoute roles={['faculty', 'advisor', 'hod']}>
               <InternalMarks />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/faculty/profile" element={
+            <ProtectedRoute roles={['faculty', 'advisor', 'hod', 'admin']}>
+              <FacultyProfile />
             </ProtectedRoute>
           } />
 

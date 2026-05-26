@@ -101,15 +101,26 @@ exports.getMyCourses = async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT c.name, c.code, c.credits,
-              u1.full_name AS faculty1_name,
-              u2.full_name AS faculty2_name,
-              ca.id AS course_assignment_id
+              u1.full_name AS faculty1_name, u1.email AS faculty1_email, u1.phone AS faculty1_phone, fc1.designation AS faculty1_designation,
+              u2.full_name AS faculty2_name, u2.email AS faculty2_email, u2.phone AS faculty2_phone, fc2.designation AS faculty2_designation,
+              ca.id AS course_assignment_id,
+              dc.period_number,
+              d.active_term,
+              d.department_type
        FROM course_assignments ca
        JOIN courses c   ON c.id  = ca.course_id
+       LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
+       JOIN departments d ON d.id = c.dept_id
        LEFT JOIN users u1     ON u1.id  = ca.faculty1_id
+       LEFT JOIN faculty_codes fc1 ON fc1.user_id = u1.id
        LEFT JOIN users u2     ON u2.id  = ca.faculty2_id
+       LEFT JOIN faculty_codes fc2 ON fc2.user_id = u2.id
        JOIN student_profiles sp ON sp.class_id = ca.class_id AND sp.user_id = $1
        JOIN semesters s ON s.id  = ca.semester_id AND s.is_active = TRUE
+       WHERE d.department_type != 'semester_wise' 
+         OR d.active_term = 'all' 
+         OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+         OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
        ORDER BY c.code`,
       [req.user.id]
     );

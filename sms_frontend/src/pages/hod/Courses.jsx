@@ -73,6 +73,7 @@ function Courses() {
         semester_id: selectedSemester
       });
       setDeptType(data.department?.department_type || 'semester_wise');
+      setActiveTerm(data.department?.active_term || 'all');
       setPeriodLabelText(data.period_label || periodLabel(data.department?.department_type));
       setApplicablePeriods(data.applicable_periods || []);
       setSelectedClassMeta(data.class);
@@ -89,7 +90,21 @@ function Courses() {
     loadCourses();
   }, [loadCourses]);
 
+  const [activeTerm, setActiveTerm] = useState('all');
+
   const openAssign = (course) => {
+    if (deptType === 'semester_wise' && activeTerm !== 'all') {
+      const isEven = course.period_number % 2 === 0;
+      if (activeTerm === 'even' && !isEven) {
+        alert('Not Allowed: You cannot assign courses for an odd semester during an even term.');
+        return;
+      }
+      if (activeTerm === 'odd' && isEven) {
+        alert('Not Allowed: You cannot assign courses for an even semester during an odd term.');
+        return;
+      }
+    }
+
     setAssignModal(course);
     setAssignForm({ 
       faculty1_id: course.assignment?.faculty1_id || '',

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileAPI, assignmentAPI } from '../../services/api';
 import '../admin/CreateDepartment.css'; // Add the CSS import
+import FacultyPopup from '../../components/FacultyPopup';
 
 function MyAssignments() {
   const navigate = useNavigate();
@@ -51,8 +52,35 @@ function MyAssignments() {
     } catch (err) { console.error(err); }
   };
 
-  const toggleCourse = (id) => {
-    setExpandedCourse(expandedCourse === id ? null : id);
+  const toggleCourse = (ca) => {
+    if (ca.department_type === 'semester_wise' && ca.active_term && ca.active_term !== 'all') {
+      const isEven = ca.period_number % 2 === 0;
+      if (ca.active_term === 'even' && !isEven) {
+        alert('Not Allowed: You cannot access an odd semester course during an even term.');
+        return;
+      }
+      if (ca.active_term === 'odd' && isEven) {
+        alert('Not Allowed: You cannot access an even semester course during an odd term.');
+        return;
+      }
+    }
+    setExpandedCourse(expandedCourse === ca.course_assignment_id ? null : ca.course_assignment_id);
+  };
+
+  const handleMaterialsClick = (e, ca) => {
+    e.stopPropagation();
+    if (ca.department_type === 'semester_wise' && ca.active_term && ca.active_term !== 'all') {
+      const isEven = ca.period_number % 2 === 0;
+      if (ca.active_term === 'even' && !isEven) {
+        alert('Not Allowed: You cannot access an odd semester course during an even term.');
+        return;
+      }
+      if (ca.active_term === 'odd' && isEven) {
+        alert('Not Allowed: You cannot access an even semester course during an odd term.');
+        return;
+      }
+    }
+    navigate(`/student/materials/${ca.course_assignment_id}`);
   };
 
   const handleSubmit = async (assignmentId) => {
@@ -139,18 +167,26 @@ function MyAssignments() {
                 border: '1px solid #e2e8f0', borderBottom: expandedCourse === caId ? 'none' : '1px solid #e2e8f0',
                 cursor: 'pointer', transition: 'all 0.2s ease'
               }}
-              onClick={() => toggleCourse(caId)}
+              onClick={() => toggleCourse(ca)}
             >
               <div>
                 <div style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1e293b' }}>{ca.name} ({ca.code})</div>
-                <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  {ca.faculty1_name}{ca.faculty2_name ? ` & ${ca.faculty2_name}` : ''}
+                <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                  {ca.faculty1_name && (
+                    <FacultyPopup name={ca.faculty1_name} designation={ca.faculty1_designation} email={ca.faculty1_email} phone={ca.faculty1_phone} />
+                  )}
+                  {ca.faculty2_name && (
+                    <>
+                      <span>&</span>
+                      <FacultyPopup name={ca.faculty2_name} designation={ca.faculty2_designation} email={ca.faculty2_email} phone={ca.faculty2_phone} />
+                    </>
+                  )}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <span
                   style={{ color: '#007bff', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none', padding: '0.4rem 0.8rem', background: '#fff', borderRadius: '6px', border: '1px solid #b8daff', transition: 'all 0.2s ease' }}
-                  onClick={(e) => { e.stopPropagation(); navigate(`/student/materials/${caId}`); }}
+                  onClick={(e) => handleMaterialsClick(e, ca)}
                 >
                   📚 Materials
                 </span>
@@ -185,6 +221,13 @@ function MyAssignments() {
                         <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: isExpanded ? '1rem' : '0' }}>
                           Due: <span style={{ fontWeight: '500', color: '#475569' }}>{formatDate(a.due_date)}</span> • Max: <span style={{ fontWeight: '500', color: '#475569' }}>{a.max_marks} marks</span>
                           {a.allow_late_submission && <span style={{ color: '#d97706', fontWeight: '500' }}> • Late OK</span>}
+                          <span style={{ margin: '0 0.5rem' }}>•</span>
+                          Posted by: <FacultyPopup 
+                            name={a.posted_by} 
+                            email={a.posted_by_email} 
+                            phone={a.posted_by_phone} 
+                            designation={a.posted_by_designation} 
+                          />
                         </div>
 
                         {isExpanded && (

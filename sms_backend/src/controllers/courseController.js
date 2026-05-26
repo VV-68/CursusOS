@@ -123,14 +123,22 @@ const getMine = async (req, res) => {
               ca.class_id, ca.course_id,
               c.name AS course_name, c.code AS course_code,
               cl.name AS class_name, cl.year, cl.section,
-              d.name AS dept_name,
+              d.name AS dept_name, d.active_term, d.department_type,
+              dc.period_number,
               s.name AS semester_name
        FROM course_assignments ca
        JOIN courses     c  ON c.id  = ca.course_id
+       LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
        JOIN classes     cl ON cl.id = ca.class_id
        JOIN departments d  ON d.id  = cl.dept_id
        JOIN semesters   s  ON s.id  = ca.semester_id
        WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1) AND ca.semester_id = $2
+       AND (
+         d.department_type != 'semester_wise' 
+         OR d.active_term = 'all' 
+         OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+         OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+       )
        ORDER BY d.code, cl.name, c.code`,
       [req.user.id, semId]
     );

@@ -199,4 +199,35 @@ const updateRole = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, createUser, resetPassword, deleteUser, updateRole };
+const updateMyProfile = async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    const updated = await userModel.updateMyProfile(req.user.id, { email, phone });
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const updateDesignation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { designation } = req.body;
+
+    const targetUser = await userModel.getUserById(id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+    if (req.user.role === 'hod' && targetUser.dept_id !== req.user.dept_id) {
+      return res.status(403).json({ error: 'User is not in your department' });
+    }
+
+    const updated = await userModel.updateDesignation(id, designation);
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllUsers, createUser, resetPassword, deleteUser, updateRole, updateMyProfile, updateDesignation };

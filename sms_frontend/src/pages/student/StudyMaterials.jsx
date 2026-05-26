@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { studyMaterialAPI } from '../../services/api';
 import '../admin/CreateDepartment.css'; // Add the CSS import
+import FacultyPopup from '../../components/FacultyPopup';
 
 const TYPES = ['all', 'notes', 'slides', 'reference', 'video', 'question_bank', 'document', 'link'];
 const TYPE_COLORS = { notes: '#007bff', slides: '#f97316', reference: '#06b6d4', video: '#f43f5e', question_bank: '#a855f7', document: '#22c55e', link: '#eab308' };
@@ -112,7 +113,12 @@ function StudentStudyMaterials() {
               {m.description && <div style={{ color: '#475569', fontSize: '0.85rem', marginBottom: '0.75rem', lineHeight: '1.4', flexGrow: 1 }}>{m.description}</div>}
               
               <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', marginTop: m.description ? '0' : 'auto' }}>
-                {m.uploaded_by_name || m.posted_by_name} • {new Date(m.created_at).toLocaleDateString('en-IN')}
+                <FacultyPopup 
+                  name={m.uploaded_by_name || m.posted_by_name} 
+                  email={m.posted_by_email} 
+                  phone={m.posted_by_phone} 
+                  designation={m.posted_by_designation} 
+                /> • {new Date(m.created_at).toLocaleDateString('en-IN')}
               </div>
               
               <button

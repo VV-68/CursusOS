@@ -187,25 +187,28 @@ function Timetable() {
       </div>
 
       {/* Class / Semester / Period selectors (shared) */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
         <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setSelectedPeriod(''); setClassInfo(null); }}
           style={{ padding: '0.5rem', minWidth: '220px', borderRadius: 6, border: '1px solid #d1d5db' }}>
           <option value="">Select class…</option>
           {classes.map(c => <option key={c.id} value={c.id}>{c.name} — {c.section} (Year {c.year})</option>)}
         </select>
 
-        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}
-          style={{ padding: '0.5rem', minWidth: '200px', borderRadius: 6, border: '1px solid #d1d5db' }}>
-          <option value="">Academic semester…</option>
-          {semesters.map(s => <option key={s.id} value={s.id}>{s.name} {s.is_active ? '(Active)' : ''}</option>)}
-        </select>
 
-        <select value={selectedPeriod} onChange={e => setSelectedPeriod(e.target.value)}
-          style={{ padding: '0.5rem', minWidth: '160px', borderRadius: 6, border: '1px solid #d1d5db' }}
-          disabled={!periodOptions.length}>
-          <option value="">{periodLabel}…</option>
-          {periodOptions.map(p => <option key={p.period_number} value={p.period_number}>{p.label}</option>)}
-        </select>
+
+        {periodOptions.length > 1 ? (
+          <select value={selectedPeriod} onChange={e => setSelectedPeriod(e.target.value)}
+            style={{ padding: '0.5rem', minWidth: '160px', borderRadius: 6, border: '1px solid #d1d5db' }}>
+            <option value="">{periodLabel}…</option>
+            {periodOptions.map(p => <option key={p.period_number} value={p.period_number}>{p.label}</option>)}
+          </select>
+        ) : (
+          periodOptions.length === 1 && (
+            <div style={{ padding: '0.5rem 1rem', background: '#f3f4f6', borderRadius: 6, border: '1px solid #d1d5db', color: '#374151', fontSize: '0.95rem' }}>
+              <strong>{periodLabel}:</strong> {periodOptions[0].period_number}
+            </div>
+          )
+        )}
       </div>
 
       {hasData && classInfo && (

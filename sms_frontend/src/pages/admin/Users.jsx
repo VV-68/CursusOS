@@ -91,6 +91,17 @@ function Users() {
     }
   };
 
+  const handleEditDesignation = async (user) => {
+    const newDesignation = window.prompt(`Enter new designation for ${user.full_name}:`, user.designation || 'Faculty');
+    if (newDesignation === null) return;
+    try {
+      await userAPI.updateDesignation(user.id, newDesignation);
+      fetchUsers();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const roleBadge = (role) => {
     const colors = { admin: '#6f42c1', hod: '#0d6efd', advisor: '#20c997', faculty: '#198754', student: '#fd7e14' };
     return (
@@ -143,6 +154,7 @@ function Users() {
             <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
               <th style={{ padding: '0.75rem' }}>Username</th>
               <th style={{ padding: '0.75rem' }}>Full Name</th>
+              <th style={{ padding: '0.75rem' }}>Designation</th>
               <th style={{ padding: '0.75rem' }}>Faculty Code</th>
               <th style={{ padding: '0.75rem' }}>Role</th>
               <th style={{ padding: '0.75rem' }}>Email</th>
@@ -152,12 +164,18 @@ function Users() {
           </thead>
           <tbody>
             {users.length === 0 ? (
-              <tr><td colSpan="7" style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>No users found</td></tr>
+              <tr><td colSpan="8" style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>No users found</td></tr>
             ) : (
               users.map((u) => (
                 <tr key={u.id} style={{ borderBottom: '1px solid #eee' }}>
                   <td style={{ padding: '0.75rem' }}>{u.username}</td>
                   <td style={{ padding: '0.75rem' }}>{u.full_name}</td>
+                  <td style={{ padding: '0.75rem' }}>
+                    {u.designation || '—'}
+                    {callerRole === 'hod' && ['faculty', 'advisor'].includes(u.role) && (
+                      <button onClick={() => handleEditDesignation(u)} style={{ marginLeft: '8px', padding: '0.2rem 0.4rem', fontSize: '0.75rem', cursor: 'pointer' }}>✎</button>
+                    )}
+                  </td>
                   <td style={{ padding: '0.75rem' }}>{u.faculty_code ? <code>{u.faculty_code}</code> : '—'}</td>
                   <td style={{ padding: '0.75rem' }}>{roleBadge(u.role)}</td>
                   <td style={{ padding: '0.75rem' }}>{u.email || '—'}</td>

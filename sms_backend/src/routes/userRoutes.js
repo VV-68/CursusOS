@@ -19,4 +19,10 @@ router.delete('/:id', authMiddleware, roleGuard('admin'), userController.deleteU
 // PATCH /api/users/:id/role → hod or admin changes role
 router.patch('/:id/role', authMiddleware, roleGuard('admin', 'hod'), userController.updateRole);
 
+// PATCH /api/users/me → users can update own profile (email, phone)
+router.patch('/me', authMiddleware, userController.updateMyProfile);
+
+// PATCH /api/users/:id/designation → hod or admin updates designation
+router.patch('/:id/designation', authMiddleware, roleGuard('admin', 'hod'), userController.updateDesignation);
+
 module.exports = router;

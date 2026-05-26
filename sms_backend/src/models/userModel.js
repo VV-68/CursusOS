@@ -55,7 +55,7 @@ const createUser = async ({ username, full_name, role, dept_id, email, phone, pa
 
 const getAllUsers = async (deptId = null, roleFilter = null, institution_id = null) => {
   let query = `
-    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.created_at, fc.unique_code as faculty_code
+    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.created_at, fc.unique_code as faculty_code, fc.designation
     FROM users u
     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
     WHERE u.is_active = true
@@ -82,7 +82,7 @@ const getAllUsers = async (deptId = null, roleFilter = null, institution_id = nu
 
 const getUserById = async (id) => {
   const { rows } = await pool.query(
-    `SELECT u.id, u.username, u.role, u.full_name, u.email, u.phone, u.dept_id, u.must_change_password, u.is_active, fc.unique_code as faculty_code
+    `SELECT u.id, u.username, u.role, u.full_name, u.email, u.phone, u.dept_id, u.must_change_password, u.is_active, fc.unique_code as faculty_code, fc.designation
      FROM users u
      LEFT JOIN faculty_codes fc ON u.id = fc.user_id
      WHERE u.id = $1`,
@@ -93,7 +93,7 @@ const getUserById = async (id) => {
 
 const getUserByUsernameOrEmail = async (identifier) => {
   const { rows } = await pool.query(
-    `SELECT u.id, u.username, u.password_hash, u.role, u.dept_id, u.is_active, u.must_change_password, u.full_name, u.institution_id, fc.unique_code as faculty_code
+    `SELECT u.id, u.username, u.password_hash, u.role, u.dept_id, u.is_active, u.must_change_password, u.full_name, u.institution_id, fc.unique_code as faculty_code, fc.designation
      FROM users u
      LEFT JOIN faculty_codes fc ON u.id = fc.user_id
      WHERE u.username = $1 OR u.email = $1`,
@@ -141,6 +141,25 @@ const updateUserRole = async (id, role) => {
   return rows[0];
 };
 
+const updateMyProfile = async (id, { email, phone }) => {
+  const { rows } = await pool.query(
+    'UPDATE users SET email = $1, phone = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+    [email || null, phone || null, id]
+  );
+  return rows[0];
+};
+
+const updateDesignation = async (id, designation) => {
+  const { rows } = await pool.query(
+    `INSERT INTO faculty_codes (user_id, unique_code, designation)
+     VALUES ($2, 'LEGACY-' || substr($2::text, 1, 6), $1)
+     ON CONFLICT (user_id) DO UPDATE SET designation = EXCLUDED.designation
+     RETURNING *`,
+    [designation || 'Faculty', id]
+  );
+  return rows[0];
+};
+
 module.exports = {
   createUser,
   getAllUsers,
@@ -150,5 +169,7 @@ module.exports = {
   resetUserPassword,
   changePassword,
   deactivateUser,
-  updateUserRole
+  updateUserRole,
+  updateMyProfile,
+  updateDesignation
 };

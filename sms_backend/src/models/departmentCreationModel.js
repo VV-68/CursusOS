@@ -265,7 +265,7 @@ const getManageCourses = async (deptId, filters = {}) => {
   const { class_id, semester_id } = filters;
 
   const { rows: deptRows } = await pool.query(
-    `SELECT id, name, code, department_type, structure_count FROM departments WHERE id = $1`,
+    `SELECT id, name, code, department_type, structure_count, active_term FROM departments WHERE id = $1`,
     [deptId]
   );
   if (!deptRows.length) return null;

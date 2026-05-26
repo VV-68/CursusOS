@@ -220,7 +220,10 @@ function Dashboard() {
 
           <DashSection id="general-links" title="Quick Links" icon="🔗">
             {['faculty', 'advisor', 'hod'].includes(role) && (
-              <DashCard to="/faculty/my-timetable" icon="📅" label="My Timetable" description="Your courses per day" />
+              <>
+                <DashCard to="/faculty/profile" icon="👤" label="Edit Profile" description="Update your contact info" />
+                <DashCard to="/faculty/my-timetable" icon="📅" label="My Timetable" description="Your courses per day" />
+              </>
             )}
             {canPost && (
               <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />

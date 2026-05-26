@@ -84,7 +84,15 @@ const getByFaculty = async (facultyId) => {
      JOIN course_assignments ca ON ca.id = m.course_assignment_id
      JOIN courses c ON c.id = ca.course_id
      JOIN classes cl ON cl.id = ca.class_id
-     WHERE ca.faculty1_id = $1 OR ca.faculty2_id = $1
+     JOIN departments d ON d.id = cl.dept_id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
+     WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1)
+     AND (
+       d.department_type != 'semester_wise' 
+       OR d.active_term = 'all' 
+       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+     )
      ORDER BY m.created_at DESC`,
     [facultyId]
   );
@@ -93,14 +101,23 @@ const getByFaculty = async (facultyId) => {
 
 const getByStudent = async (studentId) => {
   const { rows } = await pool.query(
-    `SELECT m.*, u.full_name AS posted_by_name,
+    `SELECT m.*, u.full_name AS posted_by_name, u.email AS posted_by_email, u.phone AS posted_by_phone, fc.designation AS posted_by_designation,
             c.name AS course_name, c.code AS course_code
      FROM study_materials m
      JOIN users u ON u.id = m.posted_by
+     LEFT JOIN faculty_codes fc ON fc.user_id = u.id
      JOIN course_assignments ca ON ca.id = m.course_assignment_id
      JOIN courses c ON c.id = ca.course_id
      JOIN student_profiles sp ON sp.class_id = ca.class_id
+     JOIN departments d ON d.id = c.dept_id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      WHERE sp.user_id = $1 AND m.is_published = TRUE
+     AND (
+       d.department_type != 'semester_wise' 
+       OR d.active_term = 'all' 
+       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+     )
      ORDER BY m.created_at DESC`,
     [studentId]
   );

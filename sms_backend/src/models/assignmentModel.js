@@ -97,8 +97,16 @@ const getByFaculty = async (facultyId) => {
      JOIN course_assignments ca ON ca.id = a.course_assignment_id
      JOIN courses c ON c.id = ca.course_id
      JOIN classes cl ON cl.id = ca.class_id
+     JOIN departments d ON d.id = cl.dept_id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      LEFT JOIN assignment_submissions s ON s.assignment_id = a.id
-     WHERE ca.faculty1_id = $1 OR ca.faculty2_id = $1
+     WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1)
+     AND (
+       d.department_type != 'semester_wise' 
+       OR d.active_term = 'all' 
+       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+     )
      GROUP BY a.id, u.full_name, c.name, c.code, cl.name
      ORDER BY a.due_date DESC`,
     [facultyId]
@@ -110,18 +118,27 @@ const getByStudent = async (studentId) => {
   const { rows } = await pool.query(
     `SELECT a.id, a.title, a.description, a.due_date, a.max_marks, a.allow_late_submission, a.created_at,
             a.question_file_name, a.question_file_path,
-            u.full_name AS posted_by,
+            u.full_name AS posted_by, u.email AS posted_by_email, u.phone AS posted_by_phone, fc.designation AS posted_by_designation,
             c.name AS course_name, c.code AS course_code,
             ca.id AS course_assignment_id,
             s.id AS submission_id, s.submitted_at, s.is_late, s.is_evaluated,
             s.marks_awarded, s.feedback, s.file_name AS submission_file_name
      FROM assignments a
      JOIN users u ON u.id = a.created_by
+     LEFT JOIN faculty_codes fc ON fc.user_id = u.id
      JOIN course_assignments ca ON ca.id = a.course_assignment_id
      JOIN courses c ON c.id = ca.course_id
      JOIN student_profiles sp ON sp.class_id = ca.class_id
+     JOIN departments d ON d.id = c.dept_id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      LEFT JOIN assignment_submissions s ON s.assignment_id = a.id AND s.student_id = $1
      WHERE sp.user_id = $1 AND a.is_published = TRUE
+     AND (
+       d.department_type != 'semester_wise' 
+       OR d.active_term = 'all' 
+       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+     )
      ORDER BY a.due_date DESC`,
     [studentId]
   );

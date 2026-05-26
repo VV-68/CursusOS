@@ -4,39 +4,39 @@ import { assignmentAPI } from '../../services/api';
 
 const s = {
   page: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
-  title: { fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-  backBtn: { background: 'none', border: '1px solid #475569', color: '#94a3b8', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' },
+  title: { fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.025em', margin: 0 },
+  backBtn: { background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' },
   progress: {
     display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', padding: '1rem 1.5rem',
-    background: 'rgba(30,41,59,0.8)', borderRadius: '12px', border: '1px solid rgba(51,65,85,0.5)',
+    background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
-  stat: (color) => ({ fontSize: '1.5rem', fontWeight: '700', color }),
-  statLabel: { fontSize: '0.8rem', color: '#64748b', marginTop: '0.15rem' },
-  table: { width: '100%', borderCollapse: 'collapse', background: 'rgba(30,41,59,0.8)', borderRadius: '12px', overflow: 'hidden' },
-  th: { padding: '0.85rem 1rem', textAlign: 'left', background: 'rgba(51,65,85,0.6)', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  td: { padding: '0.75rem 1rem', borderBottom: '1px solid rgba(51,65,85,0.5)', color: '#e2e8f0', fontSize: '0.9rem' },
-  rowGreen: { borderLeft: '3px solid #4ade80' },
-  rowYellow: { borderLeft: '3px solid #fbbf24' },
-  rowRed: { borderLeft: '3px solid #f87171' },
-  badge: (color) => ({ display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: `${color}22`, color }),
-  link: { color: '#818cf8', textDecoration: 'none', cursor: 'pointer', fontSize: '0.85rem' },
-  evalBtn: { padding: '0.35rem 0.7rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' },
+  stat: (color) => ({ fontSize: '1.5rem', fontWeight: '800', color }),
+  statLabel: { fontSize: '0.8rem', color: '#64748b', marginTop: '0.15rem', fontWeight: '600' },
+  table: { width: '100%', borderCollapse: 'separate', borderSpacing: 0, background: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+  th: { padding: '1rem', textAlign: 'left', background: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' },
+  td: { padding: '1rem', borderBottom: '1px solid #f1f5f9', color: '#334155', fontSize: '0.9rem' },
+  rowGreen: { borderLeft: '4px solid #4ade80' },
+  rowYellow: { borderLeft: '4px solid #fbbf24' },
+  rowRed: { borderLeft: '4px solid #f87171' },
+  badge: (color) => ({ display: 'inline-block', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', background: `${color}15`, color }),
+  link: { color: '#007bff', textDecoration: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' },
+  evalBtn: { padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', background: '#fff', color: '#007bff', transition: 'all 0.2s' },
   // Evaluate panel
   evalPanel: {
     position: 'fixed', right: 0, top: 0, width: '380px', height: '100vh',
-    background: '#1e293b', borderLeft: '1px solid rgba(100,116,139,0.3)',
-    padding: '2rem', zIndex: 1001, overflowY: 'auto', boxShadow: '-4px 0 20px rgba(0,0,0,0.4)',
+    background: '#ffffff', borderLeft: '1px solid #e2e8f0',
+    padding: '2.5rem', zIndex: 1001, overflowY: 'auto', boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
   },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000 },
-  panelTitle: { fontSize: '1.15rem', fontWeight: '700', color: '#f1f5f9', marginBottom: '1.5rem' },
-  field: { marginBottom: '1rem' },
-  label: { display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.3rem', fontWeight: '500' },
-  input: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '0.6rem 0.8rem', background: 'rgba(15,23,42,0.8)', border: '1px solid #334155', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.9rem', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' },
-  saveBtn: { width: '100%', padding: '0.65rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', marginTop: '0.5rem' },
-  cancelBtn: { width: '100%', padding: '0.55rem', borderRadius: '8px', border: '1px solid #475569', cursor: 'pointer', fontWeight: '500', fontSize: '0.85rem', background: 'transparent', color: '#94a3b8', marginTop: '0.5rem' },
-  error: { padding: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 1000, backdropFilter: 'blur(4px)' },
+  panelTitle: { fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.5rem', letterSpacing: '-0.025em' },
+  field: { marginBottom: '1.25rem' },
+  label: { display: 'block', color: '#475569', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: '600' },
+  input: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem', boxSizing: 'border-box', transition: 'all 0.2s' },
+  textarea: { width: '100%', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b', fontSize: '0.95rem', minHeight: '120px', resize: 'vertical', boxSizing: 'border-box' },
+  saveBtn: { width: '100%', padding: '0.8rem', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', background: 'linear-gradient(135deg, #007bff, #0056b3)', color: '#fff', marginTop: '1rem', boxShadow: '0 4px 6px -1px rgba(0, 123, 255, 0.2)' },
+  cancelBtn: { width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid #e2e8f0', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem', background: '#fff', color: '#475569', marginTop: '0.75rem' },
+  error: { padding: '1rem', background: '#fef2f2', color: '#dc2626', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.9rem', border: '1px solid #fee2e2' },
 };
 
 function ViewSubmissions() {
@@ -191,7 +191,7 @@ function ViewSubmissions() {
       {/* Evaluate Slide Panel */}
       {evalTarget && (
         <>
-          <div className="modal-overlay" onClick={() => setEvalTarget(null)} />
+          <div style={s.overlay} onClick={() => setEvalTarget(null)} />
           <div style={s.evalPanel}>
             <h3 style={s.panelTitle}>Evaluate: {evalTarget.student_name}</h3>
             <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -200,7 +200,7 @@ function ViewSubmissions() {
             <div style={s.field}>
               <label style={s.label}>Marks Awarded *</label>
               <input
-                className="form-control" type="number" min="0"
+                style={s.input} type="number" min="0"
                 value={evalForm.marks_awarded}
                 onChange={(e) => setEvalForm({ ...evalForm, marks_awarded: e.target.value })}
                 placeholder="Enter marks"

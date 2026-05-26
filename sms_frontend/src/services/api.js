@@ -95,6 +95,8 @@ export const userAPI = {
   resetPassword: (id) => fetch(`${BASE_URL}/api/users/${id}/reset-password`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   delete: (id) => fetch(`${BASE_URL}/api/users/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
   updateRole: (id, role) => fetch(`${BASE_URL}/api/users/${id}/role`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ role }) }).then(handleResponse),
+  updateProfile: (data) => fetch(`${BASE_URL}/api/users/me`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  updateDesignation: (id, designation) => fetch(`${BASE_URL}/api/users/${id}/designation`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ designation }) }).then(handleResponse),
 };
 
 // ─── Institutions ──────────────────────────────────────────────
@@ -109,6 +111,7 @@ export const institutionAPI = {
 export const departmentAPI = {
   getAll: () => fetch(`${BASE_URL}/api/departments`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/departments`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  updateTerm: (id, active_term) => fetch(`${BASE_URL}/api/departments/${id}`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ active_term }) }).then(handleResponse),
   assignHOD: (id, data) => fetch(`${BASE_URL}/api/departments/${id}/hod`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   approveHOD: (id) => fetch(`${BASE_URL}/api/departments/${id}/hod/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   rejectHOD: (id) => fetch(`${BASE_URL}/api/departments/${id}/hod/reject`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),

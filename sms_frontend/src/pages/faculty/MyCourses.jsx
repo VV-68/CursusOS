@@ -73,6 +73,21 @@ function MyCourses() {
     return acc;
   }, {});
 
+  const handleNavigate = (path, c) => {
+    if (c.department_type === 'semester_wise' && c.active_term && c.active_term !== 'all') {
+      const isEven = c.period_number % 2 === 0;
+      if (c.active_term === 'even' && !isEven) {
+        alert('Not Allowed: You cannot access an odd semester course during an even term.');
+        return;
+      }
+      if (c.active_term === 'odd' && isEven) {
+        alert('Not Allowed: You cannot access an even semester course during an odd term.');
+        return;
+      }
+    }
+    navigate(path);
+  };
+
   if (loading) return <div style={styles.loading}>Loading your courses...</div>;
 
   return (
@@ -112,13 +127,13 @@ function MyCourses() {
                   <div style={styles.actions}>
                     <button
                       style={{ ...styles.btn, ...styles.btnAssignment }}
-                      onClick={() => navigate(`/faculty/assignments/${caId}`)}
+                      onClick={() => handleNavigate(`/faculty/assignments/${caId}`, c)}
                     >
                       📝 Assignments
                     </button>
                     <button
                       style={{ ...styles.btn, ...styles.btnMaterial }}
-                      onClick={() => navigate(`/faculty/materials/${caId}`)}
+                      onClick={() => handleNavigate(`/faculty/materials/${caId}`, c)}
                     >
                       📚 Materials
                     </button>

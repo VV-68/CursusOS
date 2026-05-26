@@ -6,9 +6,8 @@ const supabase = createClient(
 );
 
 const BUCKETS = {
-  QUESTIONS: 'assignments-questions',
+  FACULTY_UPLOAD: 'faculty_upload',
   SUBMISSIONS: 'assignment-submissions',
-  MATERIALS: 'study-materials',
 };
 
 const sanitizeName = (name) => name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -53,13 +52,13 @@ const deleteFolderPrefix = async (bucket, prefix) => {
 // ── Assignment question PDFs ─────────────────────────────────────────────────
 const uploadQuestionPdf = async (assignmentId, fileBuffer, originalName, mimeType) => {
   const path = `questions/${assignmentId}/${Date.now()}_${sanitizeName(originalName)}`;
-  return uploadToBucket(BUCKETS.QUESTIONS, path, fileBuffer, mimeType);
+  return uploadToBucket(BUCKETS.FACULTY_UPLOAD, path, fileBuffer, mimeType);
 };
 
 const getQuestionSignedUrl = (filePath, expiresIn = 3600) =>
-  getSignedUrlFromBucket(BUCKETS.QUESTIONS, filePath, expiresIn);
+  getSignedUrlFromBucket(BUCKETS.FACULTY_UPLOAD, filePath, expiresIn);
 
-const deleteQuestionFile = (filePath) => deleteFromBucket(BUCKETS.QUESTIONS, filePath);
+const deleteQuestionFile = (filePath) => deleteFromBucket(BUCKETS.FACULTY_UPLOAD, filePath);
 
 // ── Student submissions ──────────────────────────────────────────────────────
 const uploadSubmission = async (assignmentId, studentId, fileBuffer, originalName, mimeType) => {
@@ -80,13 +79,13 @@ const deleteAssignmentSubmissionsPrefix = async (assignmentId) => {
 // ── Study materials ──────────────────────────────────────────────────────────
 const uploadStudyMaterial = async (courseAssignmentId, materialId, fileBuffer, originalName, mimeType) => {
   const path = `materials/${courseAssignmentId}/${materialId}/${Date.now()}_${sanitizeName(originalName)}`;
-  return uploadToBucket(BUCKETS.MATERIALS, path, fileBuffer, mimeType);
+  return uploadToBucket(BUCKETS.FACULTY_UPLOAD, path, fileBuffer, mimeType);
 };
 
 const getMaterialSignedUrl = (filePath, expiresIn = 3600) =>
-  getSignedUrlFromBucket(BUCKETS.MATERIALS, filePath, expiresIn);
+  getSignedUrlFromBucket(BUCKETS.FACULTY_UPLOAD, filePath, expiresIn);
 
-const deleteMaterialFile = (filePath) => deleteFromBucket(BUCKETS.MATERIALS, filePath);
+const deleteMaterialFile = (filePath) => deleteFromBucket(BUCKETS.FACULTY_UPLOAD, filePath);
 
 module.exports = {
   BUCKETS,

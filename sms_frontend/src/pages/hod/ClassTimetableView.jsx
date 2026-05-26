@@ -75,16 +75,11 @@ export default function ClassTimetableView() {
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'center' }}>
-        <select
-          value={selectedSemester}
-          onChange={e => setSelectedSemester(e.target.value)}
-          style={{ padding: '0.5rem', minWidth: '200px' }}
-        >
-          <option value="">Select semester…</option>
-          {semesters.map(s => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        {selectedSemester && (
+          <div style={{ padding: '0.5rem 1rem', background: '#f3f4f6', borderRadius: 6, border: '1px solid #d1d5db', color: '#374151', fontSize: '0.95rem' }}>
+            <strong>Term:</strong> {semesters.find(s => s.id === selectedSemester)?.name} {semesters.find(s => s.id === selectedSemester)?.is_active ? '(Active)' : ''}
+          </div>
+        )}
         <button
           type="button"
           onClick={handlePdf}

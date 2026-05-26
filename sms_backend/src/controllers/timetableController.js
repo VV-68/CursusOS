@@ -6,7 +6,15 @@ const pool = require('../db/connection');
 const getTimetable = async (req, res) => {
   try {
     const { class_id } = req.params;
-    const { semester_id } = req.query;
+    let { semester_id } = req.query;
+    
+    if (!semester_id) {
+      const { rows } = await pool.query(`SELECT id FROM semesters WHERE is_active = TRUE LIMIT 1`);
+      if (rows.length > 0) {
+        semester_id = rows[0].id;
+      }
+    }
+    
     const timetable = await timetableModel.getTimetable(class_id, semester_id || null);
     res.json(timetable);
   } catch (err) {
@@ -52,7 +60,7 @@ const getAvailableCourses = async (req, res) => {
 
     const { rows: clsRows } = await pool.query(
       `SELECT c.id, c.dept_id, c.year, c.semester_id, c.name AS class_name, c.section,
-              d.department_type, d.structure_count
+              d.department_type, d.structure_count, d.active_term
        FROM classes c
        JOIN departments d ON d.id = c.dept_id
        WHERE c.id = $1
@@ -67,15 +75,23 @@ const getAvailableCourses = async (req, res) => {
 
     const cls = clsRows[0];
     const periodLabel = cls.department_type === 'year_wise' ? 'Year' : 'Semester';
-    const applicablePeriods = deptCreationModel.resolveClassPeriods(
+    let applicablePeriods = deptCreationModel.resolveClassPeriods(
       cls.department_type,
       cls.year,
       cls.structure_count
     );
 
+    if (cls.department_type === 'semester_wise' && cls.active_term && cls.active_term !== 'all') {
+      applicablePeriods = applicablePeriods.filter(p => {
+        if (cls.active_term === 'even') return p % 2 === 0;
+        if (cls.active_term === 'odd') return p % 2 !== 0;
+        return true;
+      });
+    }
+
     let targetPeriod = period_number ? parseInt(period_number, 10) : null;
     if (!targetPeriod) {
-      targetPeriod = applicablePeriods[0] || 1;
+      targetPeriod = applicablePeriods[0] || null;
     }
     if (!applicablePeriods.includes(targetPeriod)) {
       return res.status(400).json({

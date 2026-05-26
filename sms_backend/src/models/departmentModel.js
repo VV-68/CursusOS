@@ -10,7 +10,8 @@ const getAllDepartments = async (institution_id) => {
       u.full_name AS hod_name,
       u.id        AS hod_id,
       d.pending_hod_id,
-      d.institution_id
+      d.institution_id,
+      d.active_term
     FROM departments d
     LEFT JOIN users u ON u.id = d.hod_id
   `;
@@ -26,7 +27,7 @@ const getAllDepartments = async (institution_id) => {
 
 const getDepartmentById = async (id) => {
   const { rows } = await pool.query(
-    `SELECT d.id, d.name, d.code, d.hod_id, d.pending_hod_id, d.created_at, d.institution_id, u.full_name AS hod_name,
+    `SELECT d.id, d.name, d.code, d.hod_id, d.pending_hod_id, d.created_at, d.institution_id, d.active_term, u.full_name AS hod_name,
             pu.full_name AS pending_hod_name
      FROM departments d
      LEFT JOIN users u ON u.id = d.hod_id
@@ -95,6 +96,14 @@ const getPendingHOD = async (departmentId) => {
   return rows[0]?.pending_hod_id;
 };
 
+const updateDepartment = async (id, { active_term }) => {
+  const { rows } = await pool.query(
+    'UPDATE departments SET active_term = COALESCE($1, active_term) WHERE id = $2 RETURNING *',
+    [active_term, id]
+  );
+  return rows[0];
+};
+
 module.exports = {
   getAllDepartments,
   getDepartmentById,
@@ -102,5 +111,6 @@ module.exports = {
   assignHOD,
   getClassesInDepartment,
   requestHODChange,
-  getPendingHOD
+  getPendingHOD,
+  updateDepartment
 };
