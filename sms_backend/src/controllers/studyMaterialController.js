@@ -55,6 +55,15 @@ exports.create = async (req, res) => {
     }
 
     log('created', { id: material.id, course_assignment_id });
+    
+    // Notify class students
+    const { notifyClassStudents } = require('../services/notificationService');
+    await notifyClassStudents(
+      req.user.id, 
+      ca.class_id, 
+      `New study material posted: ${material.title}`
+    );
+
     res.status(201).json(material);
   } catch (err) {
     console.error('[study-materials] create error:', err);

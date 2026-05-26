@@ -69,6 +69,7 @@ const departmentCreationRoutes = require("./routes/departmentCreationRoutes");
 const semesterRoutes = require("./routes/semesterRoutes");
 const internalMarksRoutes = require("./routes/internalMarksRoutes");
 const institutionRoutes = require("./routes/institutionRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 
 
@@ -89,6 +90,7 @@ app.use("/api/department-creation", departmentCreationRoutes);
 app.use("/api/semesters", semesterRoutes);
 app.use("/api/internal-marks", internalMarksRoutes);
 app.use("/api/institutions", institutionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 
 // Global Error Handler

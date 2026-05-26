@@ -514,3 +514,18 @@ export const internalMarksAPI = {
   }).then(handleResponse),
 };
 
+// ─── Notifications ───────────────────────────────────────────────────────
+export const notificationAPI = {
+  getMine: () => fetch(`${BASE_URL}/api/notifications`, {
+    headers: getHeaders(true),
+  }).then(handleResponse),
+
+  clearAll: () => fetch(`${BASE_URL}/api/notifications`, {
+    method: 'DELETE', headers: getHeaders(true),
+  }).then(handleResponse),
+
+  deleteOne: (id) => fetch(`${BASE_URL}/api/notifications/${id}`, {
+    method: 'DELETE', headers: getHeaders(true),
+  }).then(handleResponse),
+};
+

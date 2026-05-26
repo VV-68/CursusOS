@@ -47,6 +47,27 @@ const updateMarks = async (req, res) => {
     // Optional: Log audit
     await logAudit(req.user.id, 'INTERNAL_MARKS_UPDATED', 'internal_marks', course_assignment_id, null, { count: marksData.length });
 
+    // Notify students in the class about internal marks update
+    try {
+      const { notifyClassStudents } = require('../services/notificationService');
+      const { rows: caRows } = await pool.query(
+        `SELECT ca.class_id, c.name AS course_name
+         FROM course_assignments ca
+         JOIN courses c ON c.id = ca.course_id
+         WHERE ca.id = $1`,
+        [course_assignment_id]
+      );
+      if (caRows.length > 0) {
+        await notifyClassStudents(
+          req.user.id,
+          caRows[0].class_id,
+          `📝 Internal marks updated for ${caRows[0].course_name}`
+        );
+      }
+    } catch (notifErr) {
+      console.error('[internalMarks] notification failed (non-fatal)', notifErr.message);
+    }
+
     res.json({ message: 'Internal marks updated successfully' });
   } catch (err) {
     console.error(err);

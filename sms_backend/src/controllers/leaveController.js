@@ -1,5 +1,6 @@
 const leaveModel = require('../models/leaveModel');
 const logAudit = require('../utils/auditLogger');
+const pool = require('../db/connection');
 
 const applyLeave = async (req, res) => {
   try {
@@ -8,6 +9,33 @@ const applyLeave = async (req, res) => {
       return res.status(400).json({ error: 'type, from_date, to_date, and reason are required' });
     }
     const request = await leaveModel.createLeaveRequest(req.user.id, type, from_date, to_date, reason, document_url);
+
+    // Notify approver
+    try {
+      const { notifyAdvisor, notifyHODs } = require('../services/notificationService');
+      const { rows: userRows } = await pool.query('SELECT full_name FROM users WHERE id = $1', [req.user.id]);
+      const userName = userRows[0]?.full_name || 'A user';
+      const leaveMsg = `🗓️ ${userName} applied for ${type} leave (${from_date} to ${to_date})`;
+
+      if (req.user.role === 'student') {
+        // Notify advisor
+        const { rows } = await pool.query(
+          `SELECT class_id FROM student_profiles WHERE user_id = $1`,
+          [req.user.id]
+        );
+        if (rows.length > 0 && rows[0].class_id) {
+          await notifyAdvisor(req.user.id, rows[0].class_id, leaveMsg);
+        }
+      } else if (['faculty', 'advisor'].includes(req.user.role)) {
+        // Notify HOD
+        if (req.user.dept_id) {
+          await notifyHODs(req.user.id, req.user.dept_id, leaveMsg);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[leave] notification failed (non-fatal)', notifErr.message);
+    }
+
     res.status(201).json(request);
   } catch (err) {
     console.error(err);

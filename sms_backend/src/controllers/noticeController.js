@@ -134,6 +134,22 @@ const createNotice = async (req, res) => {
       });
     }
 
+    // ── Send in-app notifications to targeted audience ──
+    try {
+      const { notifyAllStudents, notifyFacultiesAndHODs, notifyHODs } = require('../services/notificationService');
+      const noticeMsg = `📢 New notice: ${noticeRow.title}`;
+      if (resolvedAudience.includes('student')) {
+        await notifyAllStudents(req.user.id, noticeMsg);
+      }
+      if (resolvedAudience.includes('faculty') || resolvedAudience.includes('hod')) {
+        await notifyFacultiesAndHODs(req.user.id, noticeMsg);
+      } else if (resolvedAudience.includes('hod')) {
+        await notifyHODs(req.user.id, null, noticeMsg);
+      }
+    } catch (notifErr) {
+      console.error('[createNotice] notification failed (non-fatal)', notifErr.message);
+    }
+
     if (res.headersSent) {
       console.error('[createNotice] headers already sent before res.status(201)');
       return;

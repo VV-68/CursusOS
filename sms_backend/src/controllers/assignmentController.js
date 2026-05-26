@@ -56,6 +56,8 @@ exports.create = async (req, res) => {
 
     if (is_published === true || is_published === 'true') {
       assignment = await assignmentModel.setPublished(assignment.id, true);
+      const { notifyClassStudents } = require('../services/notificationService');
+      await notifyClassStudents(req.user.id, ca.class_id, `New assignment published: ${assignment.title}`);
     }
 
     await logAudit(req.user.id, 'ASSIGNMENT_CREATED', 'assignment', assignment.id, null, { title, course_assignment_id });
@@ -81,6 +83,10 @@ exports.publish = async (req, res) => {
     if (!ca) return res.status(403).json({ error: 'Not authorized for this course' });
 
     const updated = await assignmentModel.setPublished(id, !!is_published);
+    if (!!is_published) {
+      const { notifyClassStudents } = require('../services/notificationService');
+      await notifyClassStudents(req.user.id, ca.class_id, `New assignment published: ${updated.title}`);
+    }
     res.json(updated);
   } catch (err) {
     console.error('[assignments] publish error:', err);
@@ -332,6 +338,22 @@ exports.submit = async (req, res) => {
     }
 
     log('submitted', { assignment_id, student_id: req.user.id });
+    
+    // Notify course faculties
+    try {
+      const { notifyCourseFaculties } = require('../services/notificationService');
+      const pool = require('../db/connection');
+      const { rows: userRows } = await pool.query('SELECT full_name FROM users WHERE id = $1', [req.user.id]);
+      const studentName = userRows[0]?.full_name || 'A student';
+      await notifyCourseFaculties(
+        req.user.id, 
+        assignment.course_assignment_id, 
+        `${studentName} submitted the assignment: ${assignment.title}`
+      );
+    } catch (notifErr) {
+      console.error('[assignments] submit notification failed (non-fatal)', notifErr.message);
+    }
+
     res.status(201).json({ message: 'Submitted successfully', submission });
   } catch (err) {
     console.error('[assignments] submit error:', err);

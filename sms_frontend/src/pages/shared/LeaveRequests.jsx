@@ -6,7 +6,7 @@ function LeaveRequests() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [formData, setFormData] = useState({
-    type: 'sick',
+    type: 'casual',
     from_date: '',
     to_date: '',
     reason: ''
@@ -69,7 +69,7 @@ function LeaveRequests() {
             <label style={{ display: 'block' }}>Reason</label>
             <textarea name="reason" value={formData.reason} onChange={handleChange} required style={{ width: '100%', height: '80px' }}></textarea>
           </div>
-          <button type="submit">Submit Request</button>
+          <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>Submit Request</button>
         </form>
       </div>
 

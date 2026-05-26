@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { getMe } from '../services/api';
 import Logo from './Logo';
+import NotificationBell from './NotificationBell';
 
 const ROLE_COLORS = {
   admin: '#6f42c1',
@@ -56,6 +57,7 @@ function Navbar() {
           <>
             <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
             <Link to="/change-password" style={linkStyle}>Settings</Link>
+            <NotificationBell />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem', padding: '0.2rem 0.6rem', background: 'rgba(255,255,255,0.1)', borderRadius: '16px' }}>
               <span style={{ fontSize: '0.85rem', color: '#ecf0f1' }}>{displayName}</span>

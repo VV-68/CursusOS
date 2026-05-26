@@ -19,6 +19,24 @@ exports.updateMyProfile = async (req, res) => {
   try {
     const updated = await profileModel.updateProfile(req.user.id, req.body);
     if (!updated) return res.status(404).json({ error: 'Profile not found' });
+    
+    // Notify advisor
+    try {
+      const { notifyAdvisor } = require('../services/notificationService');
+      const profile = await profileModel.getFullProfile(req.user.id);
+      if (profile && profile.class_id) {
+        const { rows: userRows } = await pool.query('SELECT full_name FROM users WHERE id = $1', [req.user.id]);
+        const studentName = userRows[0]?.full_name || 'A student';
+        await notifyAdvisor(
+          req.user.id, 
+          profile.class_id, 
+          `${studentName} updated their profile.`
+        );
+      }
+    } catch (notifErr) {
+      console.error('[profile] notification failed (non-fatal)', notifErr.message);
+    }
+    
     res.json(updated);
   } catch (err) {
     console.error(err);

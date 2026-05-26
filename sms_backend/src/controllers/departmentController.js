@@ -58,6 +58,17 @@ const assignHOD = async (req, res) => {
     // If an HOD exists, request permission
     if (existing.hod_id) {
       await departmentModel.requestHODChange(id, hod_id);
+
+      // Notify current HOD about pending transfer
+      try {
+        const { notifyUser } = require('../services/notificationService');
+        const { rows: newHodRows } = await pool.query('SELECT full_name FROM users WHERE id = $1', [hod_id]);
+        const newHodName = newHodRows[0]?.full_name || 'a new faculty member';
+        await notifyUser(req.user.id, existing.hod_id, `⚠️ Admin has requested to transfer HOD role to ${newHodName}. Please approve or reject.`);
+      } catch (notifErr) {
+        console.error('[department] HOD change notification failed (non-fatal)', notifErr.message);
+      }
+
       return res.json({ message: 'HOD change requested. Awaiting approval from current HOD.', pending: true });
     }
 
