@@ -12,6 +12,7 @@ import CreateUser from './pages/admin/CreateUser';
 import Departments from './pages/admin/Departments';
 import AssignHOD from './pages/admin/AssignHOD';
 import CreateDepartment from './pages/admin/CreateDepartment';
+import InstitutionSettings from './pages/admin/InstitutionSettings';
 import EditDepartment from './pages/shared/EditDepartment';
 import Classes from './pages/hod/Classes';
 import AssignAdvisors from './pages/hod/AssignAdvisors';
@@ -100,6 +101,12 @@ function App() {
           <Route path="/admin/departments" element={
             <ProtectedRoute roles={['admin']}>
               <Departments />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/institution" element={
+            <ProtectedRoute roles={['admin']}>
+              <InstitutionSettings />
             </ProtectedRoute>
           } />
 

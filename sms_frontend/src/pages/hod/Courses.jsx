@@ -224,7 +224,7 @@ function Courses() {
                     ({group.courses.length} courses)
                   </span>
                 </h3>
-                <table className="json-preview-table" className="form-control">
+                <table className="json-preview-table form-control">
                   <thead>
                     <tr>
                       <th>Code</th>

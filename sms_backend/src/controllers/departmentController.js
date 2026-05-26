@@ -9,7 +9,8 @@ const uploadMiddleware = upload.single('file');
 
 const getAllDepartments = async (req, res) => {
   try {
-    const deps = await departmentModel.getAllDepartments();
+    const institution_id = req.user.institution_id;
+    const deps = await departmentModel.getAllDepartments(institution_id);
     // Non-admins can only see their own department
     if (req.user.role !== 'admin') {
       const filtered = deps.filter(d => d.id === req.user.dept_id);
@@ -31,7 +32,8 @@ const createDepartment = async (req, res) => {
 
     const dept = await departmentModel.createDepartment({
       name: name.trim(),
-      code: code.toUpperCase().trim().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+      code: code.toUpperCase().trim().replace(/[^A-Z0-9]/g, '').slice(0, 10),
+      institution_id: req.user.institution_id
     });
 
     await logAudit(req.user.id, 'DEPARTMENT_CREATED', 'department', dept.id, null, { name: dept.name, code: dept.code });

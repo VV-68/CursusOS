@@ -97,6 +97,13 @@ export const userAPI = {
   updateRole: (id, role) => fetch(`${BASE_URL}/api/users/${id}/role`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ role }) }).then(handleResponse),
 };
 
+// ─── Institutions ──────────────────────────────────────────────
+
+export const institutionAPI = {
+  getMine: () => fetch(`${BASE_URL}/api/institutions/mine`, { headers: getHeaders(true) }).then(handleResponse),
+  updateMine: (data) => fetch(`${BASE_URL}/api/institutions/mine`, { method: 'PUT', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+};
+
 // ─── Departments ─────────────────────────────────────────────
 
 export const departmentAPI = {

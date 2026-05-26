@@ -6,6 +6,56 @@ const pool = require('../db/connection');
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 const AuthController = {
+  register: async (req, res) => {
+    const { username, password, institutionName, location } = req.body;
+    
+    if (!username || !password || !institutionName || !location) {
+      return res.status(400).json({ error: 'Username, password, institutionName, and location are required' });
+    }
+    
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        
+        // Check if username exists
+        const existingUser = await client.query('SELECT id FROM users WHERE username = $1', [username.trim().toLowerCase()]);
+        if (existingUser.rows.length > 0) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'Username already taken' });
+        }
+        
+        // Insert institution
+        const instRes = await client.query(
+          'INSERT INTO institutions (name, location) VALUES ($1, $2) RETURNING id',
+          [institutionName.trim(), location.trim()]
+        );
+        const institutionId = instRes.rows[0].id;
+        
+        // Hash password
+        const passwordHash = await hashPassword(password);
+        
+        // Create admin user
+        await client.query(
+          `INSERT INTO users (username, password_hash, role, full_name, email, must_change_password, is_active, institution_id)
+           VALUES ($1, $2, 'admin', $1, NULL, FALSE, TRUE, $3)`,
+          [username.trim().toLowerCase(), passwordHash, institutionId]
+        );
+        
+        await client.query('COMMIT');
+        res.status(201).json({ message: 'Registration successful' });
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      console.error('Register error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  },
+
   login: async (req, res) => {
     const { username, password } = req.body;
 
@@ -42,6 +92,7 @@ const AuthController = {
           role: user.role,
           dept_id: user.dept_id,
           class_id: class_id,
+          institution_id: user.institution_id,
           must_change_password: user.must_change_password
         },
         JWT_SECRET,

@@ -1,15 +1,15 @@
 const pool = require('../db/connection');
 
-const createUser = async ({ username, full_name, role, dept_id, email, phone, password_hash }) => {
+const createUser = async ({ username, full_name, role, dept_id, email, phone, password_hash, institution_id }) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const { rows } = await client.query(
       `INSERT INTO users
-         (username, password_hash, role, full_name, email, phone, dept_id, must_change_password, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, TRUE)
-       RETURNING id, username, role, full_name, email, phone, dept_id, must_change_password, is_active, created_at`,
-      [username, password_hash, role, full_name, email || null, phone || null, dept_id]
+         (username, password_hash, role, full_name, email, phone, dept_id, institution_id, must_change_password, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, TRUE)
+       RETURNING id, username, role, full_name, email, phone, dept_id, institution_id, must_change_password, is_active, created_at`,
+      [username, password_hash, role, full_name, email || null, phone || null, dept_id, institution_id]
     );
     const newUser = rows[0];
 
@@ -53,14 +53,20 @@ const createUser = async ({ username, full_name, role, dept_id, email, phone, pa
   }
 };
 
-const getAllUsers = async (deptId = null, roleFilter = null) => {
+const getAllUsers = async (deptId = null, roleFilter = null, institution_id = null) => {
   let query = `
-    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.email, u.phone, u.is_active, u.created_at, fc.unique_code as faculty_code
+    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.created_at, fc.unique_code as faculty_code
     FROM users u
     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
     WHERE u.is_active = true
   `;
   const params = [];
+  
+  if (institution_id) {
+    params.push(institution_id);
+    query += ` AND u.institution_id = $${params.length}`;
+  }
+  
   if (deptId) {
     params.push(deptId);
     query += ` AND u.dept_id = $${params.length}`;
@@ -87,7 +93,7 @@ const getUserById = async (id) => {
 
 const getUserByUsernameOrEmail = async (identifier) => {
   const { rows } = await pool.query(
-    `SELECT u.id, u.username, u.password_hash, u.role, u.dept_id, u.is_active, u.must_change_password, u.full_name, fc.unique_code as faculty_code
+    `SELECT u.id, u.username, u.password_hash, u.role, u.dept_id, u.is_active, u.must_change_password, u.full_name, u.institution_id, fc.unique_code as faculty_code
      FROM users u
      LEFT JOIN faculty_codes fc ON u.id = fc.user_id
      WHERE u.username = $1 OR u.email = $1`,

@@ -1,7 +1,7 @@
 const pool = require('../db/connection');
 
-const getAllDepartments = async () => {
-  const { rows } = await pool.query(`
+const getAllDepartments = async (institution_id) => {
+  let query = `
     SELECT
       d.id,
       d.name,
@@ -9,17 +9,24 @@ const getAllDepartments = async () => {
       d.created_at,
       u.full_name AS hod_name,
       u.id        AS hod_id,
-      d.pending_hod_id
+      d.pending_hod_id,
+      d.institution_id
     FROM departments d
     LEFT JOIN users u ON u.id = d.hod_id
-    ORDER BY d.name ASC
-  `);
+  `;
+  const params = [];
+  if (institution_id) {
+    query += ' WHERE d.institution_id = $1';
+    params.push(institution_id);
+  }
+  query += ' ORDER BY d.name ASC';
+  const { rows } = await pool.query(query, params);
   return rows;
 };
 
 const getDepartmentById = async (id) => {
   const { rows } = await pool.query(
-    `SELECT d.id, d.name, d.code, d.hod_id, d.pending_hod_id, d.created_at, u.full_name AS hod_name,
+    `SELECT d.id, d.name, d.code, d.hod_id, d.pending_hod_id, d.created_at, d.institution_id, u.full_name AS hod_name,
             pu.full_name AS pending_hod_name
      FROM departments d
      LEFT JOIN users u ON u.id = d.hod_id
@@ -30,12 +37,12 @@ const getDepartmentById = async (id) => {
   return rows[0];
 };
 
-const createDepartment = async ({ name, code }) => {
+const createDepartment = async ({ name, code, institution_id }) => {
   const { rows } = await pool.query(
-    `INSERT INTO departments (name, code)
-     VALUES ($1, $2)
+    `INSERT INTO departments (name, code, institution_id)
+     VALUES ($1, $2, $3)
      RETURNING *`,
-    [name, code]
+    [name, code, institution_id]
   );
   return rows[0];
 };

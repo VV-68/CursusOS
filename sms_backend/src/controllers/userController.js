@@ -7,14 +7,14 @@ const pool = require('../db/connection');
 // Admin or HOD: list users
 const getAllUsers = async (req, res) => {
   try {
-    const { role: callerRole, dept_id: callerDept } = req.user;
+    const { role: callerRole, dept_id: callerDept, institution_id } = req.user;
     const { role, dept_id } = req.query;
 
     // HOD is always scoped to their own department
     const effectiveDept = callerRole === 'hod' ? callerDept : (dept_id || null);
     const roleFilter = role ? role.split(',') : null;
 
-    const users = await userModel.getAllUsers(effectiveDept, roleFilter);
+    const users = await userModel.getAllUsers(effectiveDept, roleFilter, institution_id);
     res.json(users);
   } catch (err) {
     console.error(err);
@@ -56,6 +56,7 @@ const createUser = async (req, res) => {
       full_name: full_name.trim(),
       role,
       dept_id,
+      institution_id: req.user.institution_id,
       email: email?.trim().toLowerCase() || null,
       phone: phone?.trim() || null,
       password_hash,

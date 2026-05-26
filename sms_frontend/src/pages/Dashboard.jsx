@@ -271,6 +271,7 @@ function Dashboard() {
       {/* ── ADMIN ── */}
       {activeTab === 'admin' && role === 'admin' && (
         <DashSection id="admin" title="Administration" icon="🛡️">
+          <DashCard to="/admin/institution" icon="🏫" label="Institution Settings" description="Update institution details" />
           <DashCard to="/admin/users" icon="👥" label="Manage Users" description="Create, edit, manage all users" />
           <DashCard to="/admin/departments" icon="🏛️" label="Manage Departments" description="Add or edit departments" />
           <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />

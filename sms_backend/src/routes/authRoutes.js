@@ -6,6 +6,7 @@ const verifyToken = require("../middleware/authMiddleware");
 
 // Public routes
 router.post("/login", AuthController.login);
+router.post("/register", AuthController.register);
 
 // Token required
 router.get("/me", verifyToken, AuthController.me);

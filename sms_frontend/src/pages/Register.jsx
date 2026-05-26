@@ -6,6 +6,8 @@ function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [institutionName, setInstitutionName] = useState('');
+  const [location, setLocation] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,7 +17,7 @@ function Register() {
     setError('');
     setLoading(true);
 
-    if (!username.trim() || !password || !confirmPassword) {
+    if (!username.trim() || !password || !confirmPassword || !institutionName.trim() || !location.trim()) {
       setError('All fields are required');
       setLoading(false);
       return;
@@ -34,7 +36,7 @@ function Register() {
     }
 
     try {
-      await register({ username, password });
+      await register({ username, password, institutionName, location });
       navigate('/login', { replace: true });
     } catch (err) {
       setError(err.message || 'Registration failed');
@@ -46,17 +48,39 @@ function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>Register</h1>
+        <h1>Register Admin</h1>
         <form onSubmit={handleSubmit}>
           {error && <div className="error-msg">{error}</div>}
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="institutionName">Institution Name</label>
+            <input
+              id="institutionName"
+              type="text"
+              value={institutionName}
+              onChange={(e) => setInstitutionName(e.target.value)}
+              placeholder="Enter institution name"
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="location">Location</label>
+            <input
+              id="location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter location"
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="username">Admin Username</label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              placeholder="Enter admin username"
               autoComplete="username"
               disabled={loading}
             />
