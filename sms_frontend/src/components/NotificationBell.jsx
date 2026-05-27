@@ -112,7 +112,7 @@ function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div style={{
+        <div className="notif-dropdown" style={{
           position: 'absolute',
           top: 'calc(100% + 10px)',
           right: '-8px',
@@ -129,7 +129,7 @@ function NotificationBell() {
           overflow: 'hidden',
         }}>
           {/* Header */}
-          <div style={{
+          <div className="notif-header" style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -137,10 +137,10 @@ function NotificationBell() {
             borderBottom: '1px solid #f1f5f9',
             background: '#fafbfd',
           }}>
-            <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1e293b' }}>
+            <span className="notif-title" style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1e293b' }}>
               Notifications
               {count > 0 && (
-                <span style={{
+                <span className="notif-badge" style={{
                   marginLeft: '0.5rem',
                   background: 'var(--primary-light)',
                   color: 'var(--primary)',
@@ -194,6 +194,7 @@ function NotificationBell() {
               notifications.map((n, i) => (
                 <div
                   key={n.id}
+                  className="notif-item"
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -225,7 +226,7 @@ function NotificationBell() {
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
+                    <p className="notif-text" style={{
                       fontSize: '0.84rem',
                       color: '#334155',
                       lineHeight: 1.45,
@@ -233,7 +234,7 @@ function NotificationBell() {
                       wordBreak: 'break-word',
                     }}>
                       {n.creator_name && (
-                        <strong style={{ color: '#1e293b' }}>{n.creator_name}: </strong>
+                        <strong className="notif-creator" style={{ color: '#1e293b' }}>{n.creator_name}: </strong>
                       )}
                       {n.message}
                     </p>

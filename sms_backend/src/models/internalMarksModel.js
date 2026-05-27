@@ -55,8 +55,9 @@ const getInternalMarksByStudent = async (student_id) => {
      JOIN course_assignments ca ON im.course_assignment_id = ca.id
      JOIN courses c ON ca.course_id = c.id
      JOIN semesters sem ON ca.semester_id = sem.id
-     JOIN departments d ON d.id = c.dept_id
-     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
+     JOIN classes cls ON ca.class_id = cls.id
+     JOIN departments d ON d.id = cls.dept_id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = cls.dept_id
      WHERE im.student_id = $1
      AND (
        d.department_type != 'semester_wise' 

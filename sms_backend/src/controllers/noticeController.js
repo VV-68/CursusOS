@@ -141,10 +141,19 @@ const createNotice = async (req, res) => {
       if (resolvedAudience.includes('student')) {
         await notifyAllStudents(req.user.id, noticeMsg);
       }
-      if (resolvedAudience.includes('faculty') || resolvedAudience.includes('hod')) {
+      if (resolvedAudience.includes('faculty') && resolvedAudience.includes('hod')) {
         await notifyFacultiesAndHODs(req.user.id, noticeMsg);
-      } else if (resolvedAudience.includes('hod')) {
-        await notifyHODs(req.user.id, null, noticeMsg);
+      } else {
+        if (resolvedAudience.includes('hod')) {
+          await notifyHODs(req.user.id, null, noticeMsg);
+        }
+        if (resolvedAudience.includes('faculty')) {
+          // Notify faculties and advisors
+          const { rows } = await pool.query(`SELECT id FROM users WHERE role IN ('faculty', 'advisor')`);
+          for (const row of rows) {
+            await require('../services/notificationService').notifyUser(req.user.id, row.id, noticeMsg);
+          }
+        }
       }
     } catch (notifErr) {
       console.error('[createNotice] notification failed (non-fatal)', notifErr.message);

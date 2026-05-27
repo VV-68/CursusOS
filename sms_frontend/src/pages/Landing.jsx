@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import Logo from '../components/Logo';
+import DarkModeToggle from '../components/DarkModeToggle';
 import './Landing.css';
 
 function Landing() {
@@ -13,8 +14,11 @@ function Landing() {
 
   return (
     <div className="landing-page">
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 50 }}>
+        <DarkModeToggle />
+      </div>
       <div className="landing-content">
-        <Logo size={140} showText={true} textColor="#ffffff" className="landing-logo" />
+        <Logo size={140} showText={true} className="landing-logo" />
 
         <p className="landing-description">
           Empowering educational institutions with a seamless, centralized platform. 

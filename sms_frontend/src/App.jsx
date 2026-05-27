@@ -51,6 +51,8 @@ import CompleteProfile from './pages/student/CompleteProfile';
 import AttendanceOverrides from './pages/advisor/AttendanceOverrides';
 import MyTimetable from './pages/faculty/MyTimetable';
 
+import { ThemeProvider } from './context/ThemeContext';
+import './styles/dark-mode.css';
 import './App.css';
 
 function App() {
@@ -59,9 +61,10 @@ function App() {
   const isLanding = location.pathname === '/';
 
   return (
-    <div className={isLanding ? "" : "app"}>
-      {!isLanding && <Navbar />}
-      <main className={isLanding ? "" : "main-content"}>
+    <ThemeProvider>
+      <div className={isLanding ? "" : "app"}>
+        {!isLanding && <Navbar />}
+        <main className={isLanding ? "" : "main-content"}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -345,6 +348,7 @@ function App() {
         </Routes>
       </main>
     </div>
+    </ThemeProvider>
   );
 }
 

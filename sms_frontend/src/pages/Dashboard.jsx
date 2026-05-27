@@ -25,7 +25,7 @@ function DashCard({ to, icon, label, description, variant = 'primary' }) {
     <Link to={to} className={`dash-card dash-card--${variant}`}>
       <span className="dash-card-icon">{icon}</span>
       <span className="dash-card-label">{label}</span>
-      {description && <span className="dash-card-desc">{description}</span>}
+      {/* {description && <span className="dash-card-desc">{description}</span>} */}
     </Link>
   );
 }
@@ -62,7 +62,7 @@ function InlineNotices() {
         </h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
 
-          <Link to="/notices" style={{
+          <Link to="/notices" className="dash-view-all" style={{
             fontSize: '0.8rem', padding: '0.3rem 0.75rem', background: '#f1f5f9',
             color: '#334155', borderRadius: 6, textDecoration: 'none'
           }}>View All →</Link>
@@ -159,7 +159,7 @@ function Dashboard() {
 
   // Build tabs based on role
   const tabs = [];
-  tabs.push({ id: 'general', label: '📌 General' });
+  /*if (!(role === 'admin'))*/ tabs.push({ id: 'general', label: '📌 General' });
   if (['faculty', 'advisor', 'hod'].includes(role)) tabs.push({ id: 'teaching', label: '🎓 Teaching' });
   if (role === 'advisor') tabs.push({ id: 'oversight', label: '📊 My Class' });
   if (role === 'hod') tabs.push({ id: 'dept', label: '🏛️ Department' });

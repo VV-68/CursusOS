@@ -1,0 +1,688 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — Unified Blue Theme (from logo / "View Timetable" card)
+   
+   Card blue gradient:  #0d47a1 → #1565c0
+   Primary accent:      #1565c0
+   Light accent:        #1976d2
+   Lighter tint:        #1e88e5
+   Glow/hover:          #42a5f5
+   Dark BG:             #0b1120
+   Card surface:        #0f1729
+   Form surface:        #1a1a2e
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── CSS Variables for Dark Mode ──────────────────────────────────────── */
+html.dark-mode {
+  --dm-bg:            #0b1120;
+  --dm-bg-gradient:   radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 70%);
+  --dm-surface:       #0f1729;
+  --dm-card-blue:     linear-gradient(135deg, #0d47a1, #1565c0);
+  --dm-card-blue-h:   linear-gradient(135deg, #1565c0, #1976d2);
+  --dm-card-border:   rgba(21, 101, 192, 0.4);
+  --dm-card-shadow:   0 8px 32px rgba(13, 71, 161, 0.25);
+  --dm-card-glow:     0 12px 36px rgba(21, 101, 192, 0.35);
+  --dm-form-bg:       #1a1a2e;
+  --dm-form-bg-focus: #1f1f38;
+  --dm-form-border:   rgba(255, 255, 255, 0.12);
+  --dm-input-ph:      #9ca3af;
+  --dm-text:          #ffffff;
+  --dm-text-sub:      #cbd5e1;
+  --dm-text-muted:    #94a3b8;
+  --dm-accent:        #1565c0;
+  --dm-accent-light:  #1976d2;
+  --dm-accent-glow:   #42a5f5;
+  --dm-table-head:    #0d2137;
+  --dm-table-border:  rgba(21, 101, 192, 0.15);
+  --dm-table-hover:   rgba(21, 101, 192, 0.08);
+  --dm-panel-bg:      rgba(15, 23, 41, 0.85);
+  --dm-btn-blue:      linear-gradient(135deg, #0d47a1, #1976d2);
+  --dm-btn-blue-h:    linear-gradient(135deg, #1565c0, #1e88e5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. BASE / BODY
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode body,
+html.dark-mode .app,
+html.dark-mode .main-content,
+html.dark-mode .auth-page {
+  background-color: var(--dm-bg);
+  background-image: var(--dm-bg-gradient);
+  background-attachment: fixed;
+  color: var(--dm-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. TYPOGRAPHY — all text to white/light
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode h1, html.dark-mode h2, html.dark-mode h3,
+html.dark-mode h4, html.dark-mode h5, html.dark-mode h6,
+html.dark-mode p, html.dark-mode label, html.dark-mode span, html.dark-mode td,
+html.dark-mode .dash-greeting, html.dark-mode .dash-card-label,
+html.dark-mode .dash-card-desc, html.dark-mode .dash-role-label,
+html.dark-mode .dept-card__title, html.dark-mode .dept-field label,
+html.dark-mode .dash-section-title {
+  color: var(--dm-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. DASHBOARD CARDS — Blue gradient from image
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .dash-card {
+  background: var(--dm-card-blue);
+  border: 1px solid var(--dm-card-border);
+  box-shadow: var(--dm-card-shadow);
+  color: var(--dm-text);
+}
+html.dark-mode .dash-card * { color: #ffffff !important; }
+
+html.dark-mode .dash-card:hover {
+  background: var(--dm-card-blue-h);
+  border-color: var(--dm-accent-glow);
+  box-shadow: var(--dm-card-glow);
+  transform: translateY(-3px);
+}
+
+html.dark-mode .dash-card--secondary {
+  background: linear-gradient(135deg, #023e8a, #0d47a1);
+  border-color: rgba(13, 71, 161, 0.4);
+}
+html.dark-mode .dash-card--secondary * { color: #ffffff !important; }
+html.dark-mode .dash-card--secondary:hover {
+  background: linear-gradient(135deg, #0d47a1, #1565c0);
+  border-color: var(--dm-accent-glow);
+}
+
+/* ── Dashboard header panel ───────────────────────────────────────────── */
+html.dark-mode .dash-header {
+  background: var(--dm-panel-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--dm-card-border);
+  box-shadow: var(--dm-card-shadow);
+}
+html.dark-mode .dash-header * { color: var(--dm-text); }
+
+/* ── Dashboard section titles — blue accent ───────────────────────────── */
+html.dark-mode .dash-section-title {
+  color: var(--dm-accent-glow) !important;
+}
+
+/* ── Glassmorphism blobs ──────────────────────────────────────────────── */
+html.dark-mode .dashboard-page::before {
+  background: radial-gradient(circle, rgba(21, 101, 192, 0.15) 0%, transparent 60%);
+}
+html.dark-mode .dashboard-page::after {
+  background: radial-gradient(circle, rgba(13, 71, 161, 0.12) 0%, transparent 60%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. DEPT CARDS / AUTH / GENERAL PANELS — Dark surface
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .auth-card,
+html.dark-mode .dept-card,
+html.dark-mode .dept-wizard__header,
+html.dark-mode .student-form,
+html.dark-mode .empty-state,
+html.dark-mode .card,
+html.dark-mode .dash-alert--warning {
+  background: var(--dm-panel-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--dm-card-border);
+  box-shadow: var(--dm-card-shadow);
+  color: var(--dm-text);
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+html.dark-mode .auth-card:hover,
+html.dark-mode .dept-card:hover,
+html.dark-mode .card:hover {
+  border-color: var(--dm-accent-glow);
+  box-shadow: var(--dm-card-glow);
+}
+
+/* Notification Bell Overrides */
+html.dark-mode .notif-dropdown {
+  background: var(--dm-surface) !important;
+  border-color: var(--dm-card-border) !important;
+  box-shadow: var(--dm-card-shadow) !important;
+}
+html.dark-mode .notif-header {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-bottom-color: var(--dm-card-border) !important;
+}
+html.dark-mode .notif-title {
+  color: var(--dm-text) !important;
+}
+html.dark-mode .notif-badge {
+  background: rgba(21, 101, 192, 0.2) !important;
+  color: var(--dm-accent-glow) !important;
+}
+html.dark-mode .notif-item {
+  border-bottom-color: var(--dm-table-border) !important;
+}
+html.dark-mode .notif-item:hover {
+  background: rgba(21, 101, 192, 0.1) !important;
+}
+html.dark-mode .notif-text {
+  color: var(--dm-text-sub) !important;
+}
+html.dark-mode .notif-creator {
+  color: var(--dm-text) !important;
+}
+
+/* Dashboard specific overrides */
+html.dark-mode .dash-header {
+  background: var(--dm-card-blue) !important;
+  border-left: none !important;
+  border: 1px solid var(--dm-accent-glow) !important;
+  box-shadow: 0 4px 15px rgba(13, 71, 161, 0.4) !important;
+}
+html.dark-mode .dash-greeting {
+  color: #ffffff !important;
+}
+html.dark-mode .dash-role-label {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+html.dark-mode .dash-role-badge {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+html.dark-mode .dash-view-all {
+  background: var(--dm-btn-blue) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+html.dark-mode .dash-view-all:hover {
+  background: var(--dm-btn-blue-h) !important;
+}
+
+html.dark-mode .dept-wizard__header h1 {
+  -webkit-text-fill-color: var(--dm-accent-glow) !important;
+  background: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. FORMS — Light black with visible grey placeholders
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea,
+html.dark-mode .form-control,
+html.dark-mode .search-input,
+html.dark-mode .filter-select,
+html.dark-mode .dept-field input,
+html.dark-mode .dept-field select,
+html.dark-mode .dept-field textarea,
+html.dark-mode .form-group input:not([type="checkbox"]):not([type="radio"]),
+html.dark-mode .form-group select,
+html.dark-mode .form-group textarea {
+  background: var(--dm-form-bg) !important;
+  border-color: var(--dm-form-border) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark-mode input:focus,
+html.dark-mode select:focus,
+html.dark-mode textarea:focus,
+html.dark-mode .form-control:focus,
+html.dark-mode .dept-field input:focus,
+html.dark-mode .dept-field select:focus,
+html.dark-mode .dept-field textarea:focus {
+  background: var(--dm-form-bg-focus) !important;
+  border-color: var(--dm-accent-light) !important;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.25) !important;
+}
+
+/* Placeholders — visible grey */
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder,
+html.dark-mode .form-control::placeholder {
+  color: var(--dm-input-ph) !important;
+  opacity: 1 !important;
+}
+html.dark-mode input:-ms-input-placeholder,
+html.dark-mode textarea:-ms-input-placeholder {
+  color: var(--dm-input-ph) !important;
+}
+
+/* File inputs */
+html.dark-mode input[type="file"],
+html.dark-mode .form-control[type="file"] {
+  background: var(--dm-form-bg) !important;
+  color: var(--dm-text-sub) !important;
+}
+html.dark-mode input[type="file"]::file-selector-button,
+html.dark-mode .form-control[type="file"]::file-selector-button {
+  background: rgba(21, 101, 192, 0.25);
+  color: var(--dm-accent-glow);
+  border: none;
+}
+html.dark-mode input[type="file"]::file-selector-button:hover {
+  background: var(--dm-accent);
+  color: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. TABLES / LISTS — lighter blue-tinted rows
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .table-container {
+  background: var(--dm-panel-bg);
+  border: 1px solid var(--dm-card-border);
+  box-shadow: var(--dm-card-shadow);
+}
+
+html.dark-mode table,
+html.dark-mode .student-table {
+  background: transparent;
+}
+
+html.dark-mode .student-table th,
+html.dark-mode table th,
+html.dark-mode thead,
+html.dark-mode .json-preview-table th {
+  background: var(--dm-table-head) !important;
+  color: var(--dm-text-sub) !important;
+  border-bottom-color: var(--dm-table-border) !important;
+}
+
+html.dark-mode .student-table td,
+html.dark-mode table td,
+html.dark-mode .json-preview-table td {
+  border-bottom-color: var(--dm-table-border) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark-mode .student-table tr:hover td,
+html.dark-mode table tr:hover td,
+html.dark-mode .json-preview-table tbody tr:hover {
+  background: var(--dm-table-hover) !important;
+}
+
+html.dark-mode .json-preview-table {
+  border-color: var(--dm-card-border);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. BUTTONS — all use blue from logo
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .btn-primary,
+html.dark-mode .dept-btn--primary {
+  background: var(--dm-btn-blue) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
+}
+html.dark-mode .btn-primary:hover:not(:disabled),
+html.dark-mode .dept-btn--primary:hover:not(:disabled) {
+  background: var(--dm-btn-blue-h) !important;
+  box-shadow: 0 4px 16px rgba(21, 101, 192, 0.4);
+  transform: translateY(-1px);
+}
+
+html.dark-mode .btn-secondary,
+html.dark-mode .dept-btn--secondary {
+  background: var(--dm-form-bg) !important;
+  color: var(--dm-text-sub) !important;
+  border: 1px solid var(--dm-form-border) !important;
+}
+html.dark-mode .btn-secondary:hover:not(:disabled),
+html.dark-mode .dept-btn--secondary:hover:not(:disabled) {
+  background: var(--dm-form-bg-focus) !important;
+  border-color: var(--dm-accent-light) !important;
+  color: var(--dm-accent-glow) !important;
+}
+
+html.dark-mode .btn-outline,
+html.dark-mode .dept-btn--outline {
+  background: transparent !important;
+  color: var(--dm-accent-glow) !important;
+  border-color: var(--dm-accent-light) !important;
+}
+html.dark-mode .btn-outline:hover:not(:disabled),
+html.dark-mode .dept-btn--outline:hover:not(:disabled) {
+  background: rgba(21, 101, 192, 0.15) !important;
+}
+
+html.dark-mode .dept-btn--ghost {
+  color: var(--dm-accent-glow) !important;
+}
+html.dark-mode .dept-btn--ghost:hover:not(:disabled) {
+  background: rgba(21, 101, 192, 0.12) !important;
+}
+
+html.dark-mode .btn-edit {
+  background: var(--dm-accent) !important;
+  color: #fff !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. MODALS
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .modal-content,
+html.dark-mode .modal-overlay .modal-content,
+html.dark-mode .json-upload-modal {
+  background: rgba(11, 17, 32, 0.95) !important;
+  border-color: var(--dm-card-border) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+  color: var(--dm-text);
+}
+
+html.dark-mode .json-upload-modal__header {
+  background: var(--dm-surface) !important;
+  border-bottom-color: var(--dm-table-border) !important;
+}
+html.dark-mode .json-upload-modal__header h2 { color: var(--dm-text) !important; }
+
+html.dark-mode .json-upload-modal__footer {
+  background: var(--dm-surface) !important;
+  border-top-color: var(--dm-table-border) !important;
+}
+
+html.dark-mode .json-upload-zone {
+  background: var(--dm-form-bg) !important;
+  border-color: var(--dm-form-border) !important;
+}
+html.dark-mode .json-upload-zone:hover {
+  border-color: var(--dm-accent-light) !important;
+  background: var(--dm-form-bg-focus) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. DEPT WIZARD COMPONENTS (steps, periods, courses, radios)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .dept-step {
+  background: var(--dm-form-bg);
+  color: var(--dm-text-sub);
+}
+html.dark-mode .dept-step.active {
+  background: var(--dm-btn-blue);
+  color: #fff;
+}
+html.dark-mode .dept-step.completed {
+  background: rgba(21, 101, 192, 0.2);
+  color: var(--dm-accent-glow);
+}
+
+html.dark-mode .period-card {
+  border-color: var(--dm-card-border);
+  background: var(--dm-surface);
+}
+html.dark-mode .period-header {
+  background: linear-gradient(135deg, var(--dm-surface), var(--dm-table-head));
+}
+html.dark-mode .period-header:hover {
+  background: linear-gradient(135deg, var(--dm-table-head), rgba(21, 101, 192, 0.15));
+}
+html.dark-mode .period-body {
+  border-top-color: var(--dm-table-border);
+}
+
+html.dark-mode .course-row {
+  background: var(--dm-form-bg);
+}
+html.dark-mode .course-row:hover {
+  background: var(--dm-form-bg-focus);
+}
+
+html.dark-mode .dept-radio {
+  border-color: var(--dm-form-border);
+  background: var(--dm-form-bg);
+  color: var(--dm-text);
+}
+html.dark-mode .dept-radio:hover {
+  border-color: var(--dm-accent-light);
+  background: rgba(21, 101, 192, 0.1);
+}
+html.dark-mode .dept-radio.selected {
+  border-color: var(--dm-accent);
+  background: linear-gradient(135deg, rgba(13, 71, 161, 0.3), rgba(21, 101, 192, 0.2));
+}
+html.dark-mode .dept-radio__label { color: var(--dm-text) !important; }
+html.dark-mode .dept-radio__desc { color: var(--dm-text-muted) !important; }
+
+html.dark-mode .dept-footer {
+  border-top-color: var(--dm-table-border);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   10. INLINE STYLE OVERRIDES — catch hardcoded JSX colors
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* White backgrounds */
+html.dark-mode [style*="background: #fff"],
+html.dark-mode [style*="background: rgb(255, 255, 255)"],
+html.dark-mode [style*="background: white"],
+html.dark-mode [style*="background: '#fff'"],
+html.dark-mode [style*="background:#fff"] {
+  background-color: var(--dm-panel-bg) !important;
+  color: var(--dm-text) !important;
+  border-color: var(--dm-card-border) !important;
+}
+
+html.dark-mode [style*="background: #fff"]:hover,
+html.dark-mode [style*="background: rgb(255, 255, 255)"]:hover {
+  border-color: var(--dm-accent-glow) !important;
+  box-shadow: var(--dm-card-glow) !important;
+}
+
+/* Specific blue badges (like in CourseSemesterSelector) */
+html.dark-mode [style*="background: #cce5ff"],
+html.dark-mode [style*="background: rgb(204, 229, 255)"] {
+  background-color: rgba(21, 101, 192, 0.2) !important;
+  color: var(--dm-accent-light) !important;
+}
+
+html.dark-mode [style*="color: #3b82f6"],
+html.dark-mode [style*="color: rgb(59, 130, 246)"] {
+  color: var(--dm-accent-glow) !important;
+}
+
+/* Light grey backgrounds → cards */
+html.dark-mode div[style*="background: #f8fafc"],
+html.dark-mode div[style*="background: rgb(248, 250, 252)"],
+html.dark-mode div[style*="background: #f9f9f9"],
+html.dark-mode div[style*="background: rgb(249, 249, 249)"],
+html.dark-mode div[style*="background: #f5f5f5"],
+html.dark-mode div[style*="background: rgb(245, 245, 245)"],
+html.dark-mode div[style*="background: #f1f5f9"],
+html.dark-mode div[style*="background: rgb(241, 245, 249)"],
+html.dark-mode div[style*="background: #f3f4f6"],
+html.dark-mode div[style*="background: rgb(243, 244, 246)"],
+html.dark-mode div[style*="background: #f8f9fa"],
+html.dark-mode div[style*="background: rgb(248, 249, 250)"],
+html.dark-mode div[style*="background: #e6f2ff"],
+html.dark-mode div[style*="background: rgb(230, 242, 255)"] {
+  background-color: var(--dm-surface) !important;
+  border: 1px solid var(--dm-card-border) !important;
+  box-shadow: var(--dm-card-shadow) !important;
+  transition: border-color 0.3s, box-shadow 0.3s !important;
+}
+
+html.dark-mode div[style*="background: #f8fafc"]:hover,
+html.dark-mode div[style*="background: rgb(248, 250, 252)"]:hover,
+html.dark-mode div[style*="background: #f9f9f9"]:hover,
+html.dark-mode div[style*="background: rgb(249, 249, 249)"]:hover,
+html.dark-mode div[style*="background: #f5f5f5"]:hover,
+html.dark-mode div[style*="background: rgb(245, 245, 245)"]:hover,
+html.dark-mode div[style*="background: #f1f5f9"]:hover,
+html.dark-mode div[style*="background: rgb(241, 245, 249)"]:hover,
+html.dark-mode div[style*="background: #f3f4f6"]:hover,
+html.dark-mode div[style*="background: rgb(243, 244, 246)"]:hover,
+html.dark-mode div[style*="background: #f8f9fa"]:hover,
+html.dark-mode div[style*="background: rgb(248, 249, 250)"]:hover,
+html.dark-mode div[style*="background: #e6f2ff"]:hover,
+html.dark-mode div[style*="background: rgb(230, 242, 255)"]:hover {
+  border-color: var(--dm-accent-glow) !important;
+  box-shadow: var(--dm-card-glow) !important;
+}
+
+/* Table row/cell/span specific overrides without borders/shadows */
+html.dark-mode tr[style*="background: #f1f5f9"],
+html.dark-mode th[style*="background: #f1f5f9"],
+html.dark-mode td[style*="background: #f1f5f9"],
+html.dark-mode span[style*="background: #f1f5f9"],
+html.dark-mode span[style*="background: rgb(241, 245, 249)"],
+html.dark-mode tr[style*="background: #f5f5f5"],
+html.dark-mode [style*="background: #e8eaf6"] {
+  background-color: var(--dm-table-head) !important;
+}
+
+html.dark-mode [style*="background: #f9fafb"] {
+  background-color: var(--dm-surface) !important;
+}
+
+/* Dark text → white */
+html.dark-mode [style*="color: #1e293b"],
+html.dark-mode [style*="color: rgb(30, 41, 59)"],
+html.dark-mode [style*="color: #334155"],
+html.dark-mode [style*="color: rgb(51, 65, 85)"] {
+  color: var(--dm-text) !important;
+}
+
+html.dark-mode [style*="color: #475569"],
+html.dark-mode [style*="color: rgb(71, 85, 105)"] {
+  color: #e2e8f0 !important;
+}
+
+html.dark-mode [style*="color: #64748b"],
+html.dark-mode [style*="color: rgb(100, 116, 139)"],
+html.dark-mode [style*="color: #6b7280"] {
+  color: var(--dm-text-sub) !important;
+}
+
+html.dark-mode [style*="color: #94a3b8"],
+html.dark-mode [style*="color: rgb(148, 163, 184)"],
+html.dark-mode [style*="color: #9ca3af"],
+html.dark-mode [style*="color: #d1d5db"] {
+  color: var(--dm-text-muted) !important;
+}
+
+/* Border overrides */
+html.dark-mode [style*="border: 1px solid #e2e8f0"],
+html.dark-mode [style*="border: 1px solid #ccc"],
+html.dark-mode [style*="border: 1px solid #cbd5e1"],
+html.dark-mode [style*="border: 1px solid #e5e7eb"],
+html.dark-mode [style*="border: 1px solid #d1d5db"] {
+  border-color: var(--dm-table-border) !important;
+}
+
+html.dark-mode [style*="borderBottom: 1px solid #e2e8f0"],
+html.dark-mode [style*="borderBottom: 1px solid #ccc"],
+html.dark-mode [style*="borderBottom: 1px solid #e5e7eb"],
+html.dark-mode [style*="borderTop: 1px solid #f1f5f9"] {
+  border-bottom-color: var(--dm-table-border) !important;
+  border-top-color: var(--dm-table-border) !important;
+}
+
+/* Alert boxes in dark mode */
+html.dark-mode [style*="background: #e6f2ff"],
+html.dark-mode [style*="background: #cce5ff"] {
+  background-color: rgba(21, 101, 192, 0.15) !important;
+  color: var(--dm-accent-glow) !important;
+}
+
+html.dark-mode [style*="background: #d4edda"],
+html.dark-mode [style*="background: #ecfdf5"] {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #6ee7b7 !important;
+}
+
+html.dark-mode [style*="background: #f8d7da"],
+html.dark-mode [style*="background: #fef2f2"] {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #fca5a5 !important;
+}
+
+html.dark-mode [style*="background: #fff3cd"],
+html.dark-mode [style*="background: #fffbeb"] {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+  color: #fcd34d !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   11. NOTIFICATION BELL
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .notification-dropdown {
+  background: var(--dm-panel-bg) !important;
+  border-color: var(--dm-card-border) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   12. AUTH CARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .auth-card h1 {
+  color: var(--dm-accent-glow) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   13. DEPT ALERTS in dark mode
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .dept-alert--error {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+html.dark-mode .dept-alert--success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+html.dark-mode .dept-alert--info {
+  background: rgba(21, 101, 192, 0.1) !important;
+  color: var(--dm-accent-glow) !important;
+  border-color: rgba(21, 101, 192, 0.25) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   14. JSON PREVIEW & CODE BLOCKS
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .json-preview-stats__item {
+  background: var(--dm-form-bg) !important;
+  border-color: var(--dm-form-border) !important;
+  color: var(--dm-text-sub) !important;
+}
+html.dark-mode .json-preview-stats__item strong {
+  color: var(--dm-text) !important;
+}
+
+html.dark-mode .json-field-legend code {
+  background: var(--dm-form-bg) !important;
+  color: var(--dm-accent-glow) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   15. SKELETON LOADING
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode .dept-skeleton {
+  background: linear-gradient(90deg, var(--dm-surface) 25%, var(--dm-form-bg) 50%, var(--dm-surface) 75%);
+  background-size: 200% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   16. SCROLLBAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode ::-webkit-scrollbar { width: 8px; }
+html.dark-mode ::-webkit-scrollbar-track { background: var(--dm-bg); }
+html.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(21, 101, 192, 0.3);
+  border-radius: 4px;
+}
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(21, 101, 192, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   17. LINKS
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.dark-mode a {
+  color: var(--dm-accent-glow);
+}
+html.dark-mode a:hover {
+  color: #90caf9;
+}
+/* Keep navbar links white */
+html.dark-mode .navbar a,
+html.dark-mode .navbar-links a {
+  color: #e2e8f0;
+}

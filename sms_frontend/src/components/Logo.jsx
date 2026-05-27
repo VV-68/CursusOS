@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Logo({ size = 120, showText = true, textColor = '#fff', className = '' }) {
+function Logo({ size = 120, showText = true, textColor = null, className = '' }) {
   return (
     <div className={`logo-container ${className}`} style={{ display: 'flex', alignItems: 'center', gap: `${size / 8}px`, justifyContent: 'center' }}>
       <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 123, 255, 0.3))' }}>
@@ -32,8 +32,8 @@ function Logo({ size = 120, showText = true, textColor = '#fff', className = '' 
         </g>
       </svg>
       {showText && (
-        <div style={{ fontSize: `${size / 25}rem`, fontWeight: 400, letterSpacing: '-1px', margin: 0, color: textColor, fontFamily: "'Eurostile Extended', 'Eurostile', 'Michroma', sans-serif" }}>
-          cursus<span style={{ color: '#007bff' }}>OS</span>
+        <div className="logo-text-base" style={{ fontSize: `${size / 25}rem`, fontWeight: 400, letterSpacing: '-1px', margin: 0, ...(textColor ? { color: textColor } : {}), fontFamily: "'Eurostile Extended', 'Eurostile', 'Michroma', sans-serif" }}>
+          <span className="logo-text-cursus">cursus</span><span style={{ color: '#007bff' }}>OS</span>
         </div>
       )}
     </div>

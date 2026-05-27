@@ -51,7 +51,23 @@ const markAttendance = async (course_assignment_id, date, period_no, records, ma
 };
 
 const getSummary = async (student_id) => {
-  const { rows } = await pool.query('SELECT * FROM v_attendance_summary WHERE student_id = $1', [student_id]);
+  const query = `
+    SELECT v.* 
+    FROM v_attendance_summary v
+    JOIN course_assignments ca ON ca.id = v.course_assignment_id
+    JOIN courses c ON c.id = ca.course_id
+    JOIN classes cls ON ca.class_id = cls.id
+    JOIN departments d ON d.id = cls.dept_id
+    LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = cls.dept_id
+    WHERE v.student_id = $1
+    AND (
+      d.department_type != 'semester_wise' 
+      OR d.active_term = 'all' 
+      OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
+      OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+    )
+  `;
+  const { rows } = await pool.query(query, [student_id]);
   return rows;
 };
 

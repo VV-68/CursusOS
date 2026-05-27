@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { getMe } from '../services/api';
+import { getMe, logout } from '../services/api';
 import Logo from './Logo';
 import NotificationBell from './NotificationBell';
+import DarkModeToggle from './DarkModeToggle';
 
 const ROLE_COLORS = {
   admin: '#6f42c1',
@@ -35,9 +36,14 @@ function Navbar() {
     }
   }, [hasToken]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      try {
+        await logout();
+      } catch (e) {}
+      localStorage.clear();
+      window.location.href = '/login';
+    }
   };
 
   const displayName = userInfo?.full_name || role || '';
@@ -57,6 +63,7 @@ function Navbar() {
           <>
             <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
             <Link to="/change-password" style={linkStyle}>Settings</Link>
+            <DarkModeToggle />
             <NotificationBell />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem', padding: '0.2rem 0.6rem', background: 'rgba(255,255,255,0.1)', borderRadius: '16px' }}>

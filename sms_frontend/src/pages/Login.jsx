@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login } from '../services/api';
 import Logo from '../components/Logo';
+import DarkModeToggle from '../components/DarkModeToggle';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -47,7 +48,10 @@ function Login() {
 
   return (
     <div className="auth-page">
-      <Logo size={100} textColor="#23364d" />
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 50 }}>
+        <DarkModeToggle />
+      </div>
+      <Logo size={100} />
       <div className="auth-card">
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
