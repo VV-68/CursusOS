@@ -4,7 +4,8 @@ const getAttendanceSheet = async (course_assignment_id, date, period_no) => {
   const { rows } = await pool.query(
     `SELECT u.id as student_id, u.full_name as student_name, p.roll_no, ar.status
      FROM course_assignments ca
-     JOIN student_profiles p ON p.class_id = ca.class_id
+     JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id
+     JOIN student_profiles p ON p.user_id = sah.student_id
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      LEFT JOIN course_sessions cs ON cs.course_assignment_id = ca.id AND cs.date = $2 AND cs.period_no = $3
      LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = u.id
@@ -80,8 +81,9 @@ const getLowAttendance = async (dept_id, class_id) => {
       ROUND((SUM(v.classes_present)::numeric / NULLIF(SUM(v.classes_done), 0)) * 100, 2) AS percentage
     FROM v_attendance_summary v
     JOIN users u ON u.id = v.student_id
+    JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
     JOIN student_profiles sp ON sp.user_id = u.id
-    JOIN classes c ON c.id = sp.class_id
+    JOIN classes c ON c.id = sah.class_id
     WHERE 1=1
   `;
   const params = [];

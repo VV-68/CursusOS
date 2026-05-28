@@ -35,8 +35,8 @@ const getPendingForAdvisor = async (advisor_id) => {
      FROM leave_requests lr
      JOIN users u ON lr.student_id = u.id AND u.role = 'student'
      JOIN student_profiles p ON p.user_id = u.id
-     JOIN classes c ON c.id = p.class_id
-     WHERE (c.advisor1_id = $1 OR c.advisor2_id = $1) AND lr.status = 'pending'
+     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
+     WHERE (sah.advisor1_id = $1 OR sah.advisor2_id = $1) AND lr.status = 'pending'
      ORDER BY lr.created_at DESC`,
     [advisor_id]
   );

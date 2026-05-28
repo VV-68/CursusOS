@@ -7,7 +7,10 @@ const ADVISOR_SAFE_FIELDS = `
   sp.guardian_name, sp.guardian_phone, sp.guardian_email,
   sp.isverified,
   u.full_name, u.email, u.phone,
-  c.name AS class_name
+  c.name AS class_name,
+  sah.current_semester,
+  sah.current_year,
+  sem.name AS current_semester_name
 `;
 
 // Full fields including bank and sensitive data (student own view / admin)
@@ -23,6 +26,8 @@ const getFullProfile = async (user_id) => {
      FROM student_profiles sp
      JOIN users u ON u.id = sp.user_id
      JOIN classes c ON c.id = sp.class_id
+     LEFT JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
+     LEFT JOIN semesters sem ON sem.id = sah.semester_id
      WHERE sp.user_id = $1`,
     [user_id]
   );
@@ -36,6 +41,8 @@ const getSafeProfile = async (user_id) => {
      FROM student_profiles sp
      JOIN users u ON u.id = sp.user_id
      JOIN classes c ON c.id = sp.class_id
+     LEFT JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
+     LEFT JOIN semesters sem ON sem.id = sah.semester_id
      WHERE sp.user_id = $1`,
     [user_id]
   );
@@ -48,8 +55,10 @@ const getStudentsByClass = async (class_id) => {
     `SELECT ${ADVISOR_SAFE_FIELDS}
      FROM student_profiles sp
      JOIN users u ON u.id = sp.user_id
-     JOIN classes c ON c.id = sp.class_id
-     WHERE sp.class_id = $1 AND u.is_active = TRUE
+     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
+     JOIN classes c ON c.id = sah.class_id
+     LEFT JOIN semesters sem ON sem.id = sah.semester_id
+     WHERE sah.class_id = $1 AND u.is_active = TRUE
      ORDER BY sp.roll_no ASC`,
     [class_id]
   );

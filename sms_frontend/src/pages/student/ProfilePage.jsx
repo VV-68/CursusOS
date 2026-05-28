@@ -118,6 +118,7 @@ function ProfilePage() {
         </h1>
         <p style={{ margin: '0.5rem 0 0', color: '#64748b', fontSize: '0.95rem' }}>
           {profile?.full_name} — {profile?.class_name} (Roll: {profile?.roll_no})
+          {profile?.current_semester_name ? ` • ${profile.current_semester_name} (Year ${profile.current_year})` : ''}
         </p>
       </div>
 

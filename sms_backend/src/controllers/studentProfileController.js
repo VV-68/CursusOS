@@ -133,8 +133,9 @@ exports.getMyCourses = async (req, res) => {
        LEFT JOIN faculty_codes fc1 ON fc1.user_id = u1.id
        LEFT JOIN users u2     ON u2.id  = ca.faculty2_id
        LEFT JOIN faculty_codes fc2 ON fc2.user_id = u2.id
-       JOIN student_profiles sp ON sp.class_id = ca.class_id AND sp.user_id = $1
-       JOIN semesters s ON s.id  = ca.semester_id AND s.is_active = TRUE
+       JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1 AND sah.is_active = true
+       JOIN student_profiles sp ON sp.user_id = sah.student_id
+       JOIN semesters s ON s.id = ca.semester_id
        WHERE d.department_type != 'semester_wise' 
          OR d.active_term = 'all' 
          OR (d.active_term = 'even' AND dc.period_number % 2 = 0)

@@ -108,7 +108,8 @@ const getByStudent = async (studentId) => {
      LEFT JOIN faculty_codes fc ON fc.user_id = u.id
      JOIN course_assignments ca ON ca.id = m.course_assignment_id
      JOIN courses c ON c.id = ca.course_id
-     JOIN student_profiles sp ON sp.class_id = ca.class_id
+     JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1
+     JOIN student_profiles sp ON sp.user_id = sah.student_id
      JOIN departments d ON d.id = c.dept_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      WHERE sp.user_id = $1 AND m.is_published = TRUE

@@ -5,7 +5,8 @@ const getInternalMarksSheet = async (course_assignment_id) => {
     SELECT u.id as student_id, u.full_name as student_name, p.roll_no,
            im.internal_type, im.marks_obtained, im.max_marks
     FROM course_assignments ca
-    JOIN student_profiles p ON p.class_id = ca.class_id
+    JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id
+    JOIN student_profiles p ON p.user_id = sah.student_id
     JOIN users u ON p.user_id = u.id AND u.role = 'student'
     LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
     WHERE ca.id = $1
@@ -80,6 +81,7 @@ const getInternalMarksByClass = async (class_id) => {
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      JOIN classes cls ON p.class_id = cls.id
      JOIN course_assignments ca ON ca.class_id = cls.id
+     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.semester_id = ca.semester_id
      JOIN courses c ON ca.course_id = c.id
      LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
      WHERE cls.id = $1
@@ -98,6 +100,7 @@ const getInternalMarksByDepartment = async (dept_id) => {
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      JOIN classes cls ON p.class_id = cls.id
      JOIN course_assignments ca ON ca.class_id = cls.id
+     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.semester_id = ca.semester_id
      JOIN courses c ON ca.course_id = c.id
      JOIN semesters sem ON ca.semester_id = sem.id
      LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id

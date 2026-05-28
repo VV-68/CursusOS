@@ -3,7 +3,8 @@ const pool = require('../db/connection');
 const getMarksSheet = async (course_assignment_id, exam_type) => {
   let query = `SELECT u.id as student_id, u.full_name as student_name, p.roll_no, m.marks_obtained, m.max_marks, m.exam_type
      FROM course_assignments ca
-     JOIN student_profiles p ON p.class_id = ca.class_id
+     JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id
+     JOIN student_profiles p ON p.user_id = sah.student_id
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      LEFT JOIN marks m ON m.student_id = u.id AND m.course_assignment_id = ca.id`;
   const params = [course_assignment_id];

@@ -70,6 +70,7 @@ const semesterRoutes = require("./routes/semesterRoutes");
 const internalMarksRoutes = require("./routes/internalMarksRoutes");
 const institutionRoutes = require("./routes/institutionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const progressionRoutes = require("./routes/progressionRoutes");
 
 
 
@@ -91,6 +92,7 @@ app.use("/api/semesters", semesterRoutes);
 app.use("/api/internal-marks", internalMarksRoutes);
 app.use("/api/institutions", institutionRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/progression", progressionRoutes);
 
 
 // Global Error Handler

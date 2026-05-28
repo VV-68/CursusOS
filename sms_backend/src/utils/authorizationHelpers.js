@@ -31,7 +31,8 @@ const isStudentInAssignment = async (studentId, courseAssignmentId) => {
   const { rows } = await pool.query(
     `SELECT 1
      FROM student_profiles sp
-     JOIN course_assignments ca ON ca.class_id = sp.class_id
+     JOIN student_academic_history sah ON sah.student_id = sp.user_id AND sah.is_active = true
+     JOIN course_assignments ca ON ca.class_id = sah.class_id AND ca.semester_id = sah.semester_id
      JOIN courses c ON c.id = ca.course_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      JOIN departments d ON d.id = c.dept_id
@@ -54,9 +55,9 @@ const isAdvisorOfStudent = async (advisorId, studentId) => {
   const { rows } = await pool.query(
     `SELECT 1
      FROM student_profiles sp
-     JOIN classes cl ON cl.id = sp.class_id
+     JOIN student_academic_history sah ON sah.student_id = sp.user_id AND sah.is_active = true
      WHERE sp.user_id = $1
-       AND (cl.advisor1_id = $2 OR cl.advisor2_id = $2)`,
+       AND (sah.advisor1_id = $2 OR sah.advisor2_id = $2)`,
     [studentId, advisorId]
   );
   return rows.length > 0;
