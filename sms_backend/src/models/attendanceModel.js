@@ -63,9 +63,7 @@ const getSummary = async (student_id) => {
     WHERE v.student_id = $1
     AND (
       d.department_type != 'semester_wise' 
-      OR d.active_term = 'all' 
-      OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-      OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+      OR dc.period_number = cls.current_semester_number
     )
   `;
   const { rows } = await pool.query(query, [student_id]);

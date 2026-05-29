@@ -101,12 +101,6 @@ const getByFaculty = async (facultyId) => {
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      LEFT JOIN assignment_submissions s ON s.assignment_id = a.id
      WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1)
-     AND (
-       d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
-     )
      GROUP BY a.id, u.full_name, c.name, c.code, cl.name
      ORDER BY a.due_date DESC`,
     [facultyId]
@@ -116,7 +110,8 @@ const getByFaculty = async (facultyId) => {
 
 const getByStudent = async (studentId) => {
   const { rows } = await pool.query(
-    `SELECT a.id, a.title, a.description, a.due_date, a.max_marks, a.allow_late_submission, a.created_at,
+    `SELECT DISTINCT
+            a.id, a.title, a.description, a.due_date, a.max_marks, a.allow_late_submission, a.created_at,
             a.question_file_name, a.question_file_path,
             u.full_name AS posted_by, u.email AS posted_by_email, u.phone AS posted_by_phone, fc.designation AS posted_by_designation,
             c.name AS course_name, c.code AS course_code,
@@ -131,15 +126,10 @@ const getByStudent = async (studentId) => {
      JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1
      JOIN student_profiles sp ON sp.user_id = sah.student_id
      JOIN departments d ON d.id = c.dept_id
+     JOIN classes cl ON cl.id = ca.class_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      LEFT JOIN assignment_submissions s ON s.assignment_id = a.id AND s.student_id = $1
      WHERE sp.user_id = $1 AND a.is_published = TRUE
-     AND (
-       d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
-     )
      ORDER BY a.due_date DESC`,
     [studentId]
   );

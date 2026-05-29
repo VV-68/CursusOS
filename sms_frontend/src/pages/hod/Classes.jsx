@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { classAPI, departmentAPI, getMe, semesterAPI } from '../../services/api';
+import { classAPI, departmentAPI, getMe, semesterAPI, progressionAPI } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
@@ -62,7 +62,7 @@ function Classes() {
     e.preventDefault();
     setFormError('');
 
-    if (!formData.name.trim()) { setFormError('Class name is required'); return; }
+    if (!formData.name.trim()) { setFormError('Batch name is required'); return; }
     if (!formData.year) { setFormError('Year is required'); return; }
     if (!formData.section.trim()) { setFormError('Section is required'); return; }
     if (!formData.dept_id) { setFormError('Department is required'); return; }
@@ -99,6 +99,28 @@ function Classes() {
     }
   };
 
+  const handleSemesterToggle = async (cls, newValue) => {
+    const currentIsEven = Number(cls.current_semester_number) % 2 === 0;
+    const targetIsEven = newValue === 'even';
+
+    if (currentIsEven === targetIsEven) return;
+
+    if (!currentIsEven && targetIsEven) {
+      if (!window.confirm(`Directly promote batch ${cls.name} from Odd (Sem ${cls.current_semester_number}) to Even (Sem ${Number(cls.current_semester_number) + 1})?`)) return;
+      try {
+        await progressionAPI.directPromote({ batchId: cls.id });
+        await fetchClasses();
+        alert('Batch promoted to even semester successfully.');
+      } catch (err) { alert(err.message); }
+    } else if (currentIsEven && !targetIsEven) {
+      if (!window.confirm(`Request year progression for batch ${cls.name} from Even (Sem ${cls.current_semester_number}) to Odd (Sem ${Number(cls.current_semester_number) + 1})? This requires Admin approval.`)) return;
+      try {
+        await progressionAPI.requestPromotion({ batchId: cls.id, remarks: 'Year progression request via dropdown' });
+        alert('Promotion request sent to admin.');
+      } catch (err) { alert(err.message); }
+    }
+  };
+
   const btnStyle = (bg) => ({
     padding: '0.3rem 0.7rem', background: bg, color: '#fff',
     border: 'none', borderRadius: '4px', cursor: 'pointer',
@@ -120,25 +142,38 @@ function Classes() {
     <div style={{ padding: '2rem' }}>
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=dept')}>← Back</button>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.75rem' }}>
-        <h2>📚 Classes</h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            padding: '0.5rem 1rem',
-            background: showForm ? '#64748b' : 'linear-gradient(135deg, #007bff, #007bff)',
-            color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer',
-            fontWeight: 600, fontSize: '.85rem',
-            boxShadow: showForm ? 'none' : '0 2px 8px rgba(99,102,241,.25)'
-          }}
-        >
-          {showForm ? '✕ Cancel' : '+ Create Class'}
-        </button>
+        <h2>📚 Batch List</h2>
+        <div style={{ display: 'flex', gap: '.5rem' }}>
+          <button
+            onClick={() => navigate('/hod/batch-progression')}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#0ea5e9',
+              color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '.85rem'
+            }}
+          >
+            Batch Progression
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              padding: '0.5rem 1rem',
+              background: showForm ? '#64748b' : 'linear-gradient(135deg, #007bff, #007bff)',
+              color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '.85rem',
+              boxShadow: showForm ? 'none' : '0 2px 8px rgba(99,102,241,.25)'
+            }}
+          >
+            {showForm ? '✕ Cancel' : '+ Create Batch'}
+          </button>
+        </div>
       </div>
 
-      {/* ── Create Class Form ───────────────────────── */}
+      {/* ── Create Batch Form ───────────────────────── */}
       {showForm && (
         <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #dee2e6' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>New Class</h3>
+          <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>New Batch</h3>
           {formError && (
             <div style={{ color: '#721c24', background: '#f8d7da', padding: '0.5rem 0.75rem', borderRadius: '4px', marginBottom: '0.75rem', fontSize: '.88rem' }}>
               ⚠️ {formError}
@@ -146,7 +181,7 @@ function Classes() {
           )}
           <form onSubmit={handleCreate} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div style={{ flex: '1', minWidth: '180px' }}>
-              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '.88rem' }}>Class Name *</label>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '.88rem' }}>Batch Name *</label>
               <input
                 type="text"
                 value={formData.name}
@@ -232,13 +267,13 @@ function Classes() {
         </div>
       )}
 
-      {/* ── Classes Table ────────────────────────────── */}
+      {/* ── Batch Table ────────────────────────────── */}
       {loading ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading classes...</div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading batches...</div>
       ) : classes.length === 0 ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-          <p style={{ fontSize: '1.2rem' }}>No classes found</p>
-          <p style={{ fontSize: '.88rem' }}>Click "Create Class" to add your first class.</p>
+          <p style={{ fontSize: '1.2rem' }}>No batches found</p>
+          <p style={{ fontSize: '.88rem' }}>Click "Create Batch" to add your first batch.</p>
         </div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -246,6 +281,7 @@ function Classes() {
             <tr style={{ background: '#f1f5f9', textAlign: 'left' }}>
               <th style={{ padding: '0.75rem', fontWeight: 600, fontSize: '.88rem', color: '#475569' }}>Name</th>
               <th style={{ padding: '0.75rem', fontWeight: 600, fontSize: '.88rem', color: '#475569' }}>Year</th>
+              <th style={{ padding: '0.75rem', fontWeight: 600, fontSize: '.88rem', color: '#475569' }}>Current Sem</th>
               <th style={{ padding: '0.75rem', fontWeight: 600, fontSize: '.88rem', color: '#475569' }}>Section</th>
               <th style={{ padding: '0.75rem', fontWeight: 600, fontSize: '.88rem', color: '#475569' }}>Advisor 1</th>
               <th style={{ padding: '0.75rem', fontWeight: 600, fontSize: '.88rem', color: '#475569' }}>Advisor 2</th>
@@ -257,6 +293,21 @@ function Classes() {
               <tr key={c.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.75rem', fontWeight: 500 }}>{c.name}</td>
                 <td style={{ padding: '0.75rem' }}>{c.year}</td>
+                <td style={{ padding: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontWeight: '600' }}>{c.current_semester_number || '—'}</span>
+                    {userRole === 'hod' && c.current_semester_number && (
+                      <select
+                        value={Number(c.current_semester_number) % 2 === 0 ? 'even' : 'odd'}
+                        onChange={(e) => handleSemesterToggle(c, e.target.value)}
+                        style={{ padding: '0.1rem 0.3rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.75rem' }}
+                      >
+                        <option value="odd">Odd</option>
+                        <option value="even">Even</option>
+                      </select>
+                    )}
+                  </div>
+                </td>
                 <td style={{ padding: '0.75rem' }}>
                   <span style={{ background: '#cce5ff', color: '#0056b3', padding: '.15rem .5rem', borderRadius: '4px', fontWeight: 600, fontSize: '.82rem' }}>
                     {c.section}
@@ -283,6 +334,9 @@ function Classes() {
                     </Link>
                     <Link to={`/hod/classes/${c.id}/timetable`}>
                       <button style={btnStyle('#007bff')}>📅 Timetable</button>
+                    </Link>
+                    <Link to={`/hod/classes/${c.id}/students`}>
+                      <button style={btnStyle('#10b981')}>🧑‍🎓 Students</button>
                     </Link>
                     <button
                       style={btnStyle(deleting === c.id ? '#94a3b8' : '#ef4444')}

@@ -74,17 +74,6 @@ function MyCourses() {
   }, {});
 
   const handleNavigate = (path, c) => {
-    if (c.department_type === 'semester_wise' && c.active_term && c.active_term !== 'all') {
-      const isEven = c.period_number % 2 === 0;
-      if (c.active_term === 'even' && !isEven) {
-        alert('Not Allowed: You cannot access an odd semester course during an even term.');
-        return;
-      }
-      if (c.active_term === 'odd' && isEven) {
-        alert('Not Allowed: You cannot access an even semester course during an odd term.');
-        return;
-      }
-    }
     navigate(path);
   };
 

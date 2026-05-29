@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { getStudentActiveAcademicState } = require('../services/academicStateService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
@@ -13,6 +14,12 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role === 'student') {
+      const academicState = await getStudentActiveAcademicState(decoded.id);
+      if (!academicState || academicState.batch_is_active === false || academicState.batch_is_graduated === true) {
+        return res.status(401).json({ message: "Batch is inactive or graduated. Access denied." });
+      }
+    }
     req.user = decoded;
     next();
   } catch (err) {

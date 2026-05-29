@@ -181,6 +181,25 @@ function Users() {
                   <td style={{ padding: '0.75rem' }}>{u.email || '—'}</td>
                   <td style={{ padding: '0.75rem' }}>{u.phone || '—'}</td>
                   <td style={{ padding: '0.75rem' }}>
+                    {!u.is_approved && (
+                      <span style={{ display: 'inline-block', marginBottom: '0.3rem', padding: '0.15rem 0.5rem', background: '#fff3cd', color: '#856404', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>Pending Approval</span>
+                    )}
+                    <br/>
+                    {((callerRole === 'admin') || (callerRole === 'hod' && u.role === 'student')) && !u.is_approved && (
+                      <button
+                        onClick={async () => {
+                          if (window.confirm('Approve this user?')) {
+                            try {
+                              await userAPI.approveUser(u.id);
+                              fetchUsers();
+                            } catch (err) { alert(err.message); }
+                          }
+                        }}
+                        style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                      >
+                        Approve
+                      </button>
+                    )}
                     <button
                       onClick={() => handleReset(u.id, u.full_name)}
                       style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#ffc107', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}

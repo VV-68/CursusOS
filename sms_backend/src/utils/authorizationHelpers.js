@@ -15,9 +15,7 @@ const getFacultyAssignment = async (facultyId, courseAssignmentId) => {
      WHERE ca.id = $1 AND (ca.faculty1_id = $2 OR ca.faculty2_id = $2)
      AND (
        d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+       OR dc.period_number = cl.current_semester_number
      )`,
     [courseAssignmentId, facultyId]
   );
@@ -36,12 +34,11 @@ const isStudentInAssignment = async (studentId, courseAssignmentId) => {
      JOIN courses c ON c.id = ca.course_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      JOIN departments d ON d.id = c.dept_id
+     JOIN classes cl ON cl.id = ca.class_id
      WHERE sp.user_id = $1 AND ca.id = $2
      AND (
        d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+       OR dc.period_number = cl.current_semester_number
      )`,
     [studentId, courseAssignmentId]
   );
@@ -82,9 +79,7 @@ const getFacultyAssignments = async (facultyId) => {
      WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1) AND s.is_active = TRUE
      AND (
        d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+       OR dc.period_number = cl.current_semester_number
      )
      ORDER BY d.code, cl.name, c.name`,
     [facultyId]

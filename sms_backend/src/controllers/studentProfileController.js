@@ -44,7 +44,7 @@ exports.updateMyProfile = async (req, res) => {
   }
 };
 
-// GET /api/profile/student/:student_id — advisor/hod/admin views a student's profile
+// GET /api/profile/student/:student_id — advisor/hod/admin/faculty views a student's profile
 exports.getStudentProfile = async (req, res) => {
   try {
     const { student_id } = req.params;
@@ -75,12 +75,50 @@ exports.getStudentProfile = async (req, res) => {
       return res.json(profile); // full profile including bank
     }
 
+    if (req.user.role === 'faculty') {
+       // We can allow faculty to view safe profile if needed, maybe if they teach the student.
+       // For now, allow viewing safe profile.
+       const profile = await profileModel.getSafeProfile(student_id);
+       return res.json(profile);
+    }
+
     // Faculty (non-advisor, non-hod) cannot view student profiles
     return res.status(403).json({ error: 'Not authorized to view student profiles' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+exports.verifyProfile = async (req, res) => {
+    try {
+        const { student_id } = req.params;
+        const { status, remarks } = req.body; // status: 1 (verified), 2 (rejected)
+
+        if (req.user.role === 'advisor') {
+            const authorized = await isAdvisorOfStudent(req.user.id, student_id);
+            if (!authorized) return res.status(403).json({ error: 'This student is not in your class' });
+        } else if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        const updated = await profileModel.updateVerificationStatus(student_id, status);
+
+        // Notify student
+        try {
+            const { notifyStudent } = require('../services/notificationService');
+            let message = status === 1 ? 'Your profile has been verified and approved.' : 'Your profile verification has been rejected.';
+            if (status === 2 && remarks) {
+                message += ` Remarks: ${remarks}`;
+            }
+            await notifyStudent(student_id, message);
+        } catch(e) { console.error('Notification failed', e); }
+
+        res.json(updated);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 // GET /api/profile/class/:class_id — advisor views all students in their class
@@ -117,14 +155,15 @@ exports.getClassStudents = async (req, res) => {
 // GET /api/profile/my-courses
 exports.getMyCourses = async (req, res) => {
   try {
+    const params = [req.user.id];
+
     const { rows } = await pool.query(
-      `SELECT c.name, c.code, c.credits,
+      `SELECT DISTINCT
+              c.name, c.code, c.credits,
               u1.full_name AS faculty1_name, u1.email AS faculty1_email, u1.phone AS faculty1_phone, fc1.designation AS faculty1_designation,
               u2.full_name AS faculty2_name, u2.email AS faculty2_email, u2.phone AS faculty2_phone, fc2.designation AS faculty2_designation,
               ca.id AS course_assignment_id,
-              dc.period_number,
-              d.active_term,
-              d.department_type
+              dc.period_number
        FROM course_assignments ca
        JOIN courses c   ON c.id  = ca.course_id
        LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
@@ -133,15 +172,11 @@ exports.getMyCourses = async (req, res) => {
        LEFT JOIN faculty_codes fc1 ON fc1.user_id = u1.id
        LEFT JOIN users u2     ON u2.id  = ca.faculty2_id
        LEFT JOIN faculty_codes fc2 ON fc2.user_id = u2.id
-       JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1 AND sah.is_active = true
+       JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1
        JOIN student_profiles sp ON sp.user_id = sah.student_id
        JOIN semesters s ON s.id = ca.semester_id
-       WHERE d.department_type != 'semester_wise' 
-         OR d.active_term = 'all' 
-         OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-         OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
        ORDER BY c.code`,
-      [req.user.id]
+      params
     );
     res.json(rows);
   } catch (err) {

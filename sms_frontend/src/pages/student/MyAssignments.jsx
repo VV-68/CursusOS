@@ -15,12 +15,32 @@ function MyAssignments() {
   const [uploading, setUploading] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState({});
+  const [currentSemester, setCurrentSemester] = useState(1);
+  const [selectedSemester, setSelectedSemester] = useState(null);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchInitial(); }, []);
   
-  const fetchAll = async () => {
+  useEffect(() => {
+    if (selectedSemester) fetchCoursesForSemester(selectedSemester);
+  }, [selectedSemester]);
+  
+  const fetchInitial = async () => {
     try {
-      const allCA = await profileAPI.getMyCourses();
+      const profile = await profileAPI.getMyProfile();
+      const sem = profile?.current_semester || 1;
+      setCurrentSemester(sem);
+      setSelectedSemester(sem);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  const fetchCoursesForSemester = async (sem) => {
+    setLoading(true);
+    try {
+      let allCA = await profileAPI.getMyCourses();
+      allCA = allCA.filter(c => c.period_number === sem);
       setCourseAssignments(allCA);
       
       const allAssignments = await assignmentAPI.listMine();
@@ -53,33 +73,11 @@ function MyAssignments() {
   };
 
   const toggleCourse = (ca) => {
-    if (ca.department_type === 'semester_wise' && ca.active_term && ca.active_term !== 'all') {
-      const isEven = ca.period_number % 2 === 0;
-      if (ca.active_term === 'even' && !isEven) {
-        alert('Not Allowed: You cannot access an odd semester course during an even term.');
-        return;
-      }
-      if (ca.active_term === 'odd' && isEven) {
-        alert('Not Allowed: You cannot access an even semester course during an odd term.');
-        return;
-      }
-    }
     setExpandedCourse(expandedCourse === ca.course_assignment_id ? null : ca.course_assignment_id);
   };
 
   const handleMaterialsClick = (e, ca) => {
     e.stopPropagation();
-    if (ca.department_type === 'semester_wise' && ca.active_term && ca.active_term !== 'all') {
-      const isEven = ca.period_number % 2 === 0;
-      if (ca.active_term === 'even' && !isEven) {
-        alert('Not Allowed: You cannot access an odd semester course during an even term.');
-        return;
-      }
-      if (ca.active_term === 'odd' && isEven) {
-        alert('Not Allowed: You cannot access an even semester course during an odd term.');
-        return;
-      }
-    }
     navigate(`/student/materials/${ca.course_assignment_id}`);
   };
 
@@ -143,8 +141,35 @@ function MyAssignments() {
     <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=academics')}>← Back</button>
       
-      <div className="dept-wizard__header">
+      <div className="dept-wizard__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ color: '#007bff', margin: 0 }}>📝 My Assignments</h1>
+        {currentSemester > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <label style={{ fontWeight: '500', color: '#475569', fontSize: '0.9rem' }}>Semester:</label>
+            <select
+              value={selectedSemester || ''}
+              onChange={(e) => setSelectedSemester(Number(e.target.value))}
+              style={{
+                padding: '0.4rem 2rem 0.4rem 0.8rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                background: '#fff',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                color: '#1e293b',
+                cursor: 'pointer',
+                appearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.5rem center'
+              }}
+            >
+              {Array.from({ length: currentSemester }, (_, i) => i + 1).map((sem) => (
+                <option key={sem} value={sem}>Semester {sem}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
       
       {error && <div className="dept-alert dept-alert--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}

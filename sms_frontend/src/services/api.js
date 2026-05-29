@@ -97,6 +97,7 @@ export const userAPI = {
   updateRole: (id, role) => fetch(`${BASE_URL}/api/users/${id}/role`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ role }) }).then(handleResponse),
   updateProfile: (data) => fetch(`${BASE_URL}/api/users/me`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   updateDesignation: (id, designation) => fetch(`${BASE_URL}/api/users/${id}/designation`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ designation }) }).then(handleResponse),
+  approveUser: (id) => fetch(`${BASE_URL}/api/users/${id}/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Institutions ──────────────────────────────────────────────
@@ -111,7 +112,7 @@ export const institutionAPI = {
 export const departmentAPI = {
   getAll: () => fetch(`${BASE_URL}/api/departments`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/departments`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
-  updateTerm: (id, active_term) => fetch(`${BASE_URL}/api/departments/${id}`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ active_term }) }).then(handleResponse),
+
   assignHOD: (id, data) => fetch(`${BASE_URL}/api/departments/${id}/hod`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   approveHOD: (id) => fetch(`${BASE_URL}/api/departments/${id}/hod/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   rejectHOD: (id) => fetch(`${BASE_URL}/api/departments/${id}/hod/reject`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
@@ -395,7 +396,7 @@ export const studyMaterialAPI = {
 // ─── Student Profile ─────────────────────────────────────────────────────
 
 export const profileAPI = {
-  getMyCourses: () => fetch(`${BASE_URL}/api/profile/my-courses`, {
+  getMyCourses: (semester) => fetch(`${BASE_URL}/api/profile/my-courses${semester ? `?semester=${semester}` : ''}`, {
     headers: getHeaders(true),
   }).then(handleResponse),
 
@@ -529,3 +530,84 @@ export const notificationAPI = {
   }).then(handleResponse),
 };
 
+// ─── Batch Progression ─────────────────────────────────────────────────────
+export const progressionAPI = {
+  requestPromotion: (data) => fetch(`${BASE_URL}/api/progression/batch-promotion-requests`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+  directPromote: (data) => fetch(`${BASE_URL}/api/progression/batch-promotion-direct`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+  listPromotions: (status) => fetch(`${BASE_URL}/api/progression/batch-promotion-requests${status ? `?status=${status}` : ''}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+  reviewPromotion: (requestId, approve, remarks = '') => fetch(`${BASE_URL}/api/progression/batch-promotion-requests/${requestId}/review`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ approve, remarks })
+  }).then(handleResponse),
+  requestDeactivation: (data) => fetch(`${BASE_URL}/api/progression/batch-deactivation-requests`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+  listDeactivations: (status) => fetch(`${BASE_URL}/api/progression/batch-deactivation-requests${status ? `?status=${status}` : ''}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+  reviewDeactivation: (requestId, approve) => fetch(`${BASE_URL}/api/progression/batch-deactivation-requests/${requestId}/review`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ approve })
+  }).then(handleResponse),
+};
+
+export const documentAPI = {
+  uploadDocument: async (file, documentType) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('document_type', documentType);
+    
+    const token = getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${BASE_URL}/api/documents/upload`, {
+      method: 'POST',
+      headers, // Content-Type is not set for FormData so browser handles boundary
+      body: formData
+    });
+    return handleResponse(response);
+  },
+  
+  getMyDocuments: async () => {
+    const response = await fetch(`${BASE_URL}/api/documents/me`, {
+      headers: getHeaders(true)
+    });
+    return handleResponse(response);
+  },
+  
+  getStudentDocuments: async (studentId) => {
+    const response = await fetch(`${BASE_URL}/api/documents/student/${studentId}`, {
+      headers: getHeaders(true)
+    });
+    return handleResponse(response);
+  },
+  
+  getDocumentUrl: async (id) => {
+    const response = await fetch(`${BASE_URL}/api/documents/download/${id}`, {
+      headers: getHeaders(true)
+    });
+    return handleResponse(response);
+  },
+  
+  deleteMyDocument: async (id) => {
+    const response = await fetch(`${BASE_URL}/api/documents/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true)
+    });
+    return handleResponse(response);
+  },
+  
+  verifyDocument: async (id, status) => {
+    const response = await fetch(`${BASE_URL}/api/documents/${id}/verify`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify({ status })
+    });
+    return handleResponse(response);
+  }
+};

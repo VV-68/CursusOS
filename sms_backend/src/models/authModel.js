@@ -11,7 +11,7 @@ const AuthModel = {
 
   findUserByUsername: async (username) => {
     const { rows } = await pool.query(
-      "SELECT id, username, password_hash, role, dept_id, is_active, must_change_password FROM users WHERE username = $1",
+      "SELECT id, username, password_hash, role, dept_id, is_active, is_approved, must_change_password FROM users WHERE username = $1 OR email = $1",
       [username]
     );
     return rows[0];

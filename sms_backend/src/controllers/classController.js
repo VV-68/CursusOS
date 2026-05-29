@@ -34,14 +34,14 @@ const getUnrestrictedClasses = async (req, res) => {
 
 const createClass = async (req, res) => {
   try {
-    const { name, year, section, dept_id, semester_id } = req.body;
+    const { name, year, section, dept_id, semester_id, batch_year, max_semesters } = req.body;
     
     // If HOD, they can only create class for their own department
     if (req.user.role === 'hod' && req.user.dept_id !== dept_id) {
       return res.status(403).json({ error: 'Forbidden. You can only create classes for your own department.' });
     }
 
-    const newClass = await classModel.createClass({ name, year, section, dept_id, semester_id });
+    const newClass = await classModel.createClass({ name, year, section, dept_id, semester_id, batch_year, max_semesters });
     res.status(201).json(newClass);
   } catch (err) {
     console.error(err);
@@ -108,7 +108,7 @@ const getStudentsInClass = async (req, res) => {
 const updateClass = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, year, section, semester_id } = req.body;
+    const { name, year, section, semester_id, batch_year, current_semester_number, current_year_number, is_active } = req.body;
 
     const allClasses = await classModel.getAllClasses();
     const classObj = allClasses.find(c => c.id === id);
@@ -118,7 +118,7 @@ const updateClass = async (req, res) => {
       return res.status(403).json({ error: 'Forbidden. Not your department.' });
     }
 
-    const updatedClass = await classModel.updateClass(id, { name, year, section, semester_id });
+    const updatedClass = await classModel.updateClass(id, { name, year, section, semester_id, batch_year, current_semester_number, current_year_number, is_active });
     res.json(updatedClass);
   } catch (err) {
     console.error(err);

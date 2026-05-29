@@ -152,7 +152,6 @@ function Departments() {
                 <th style={{ padding: '0.75rem' }}>Name</th>
                 <th style={{ padding: '0.75rem' }}>Code</th>
                 <th style={{ padding: '0.75rem' }}>HOD</th>
-                <th style={{ padding: '0.75rem' }}>Active Term</th>
                 <th style={{ padding: '0.75rem' }}>Created</th>
                 <th style={{ padding: '0.75rem' }}>Actions</th>
               </tr>
@@ -166,22 +165,6 @@ function Departments() {
                     <td style={{ padding: '0.75rem' }}>{d.name}</td>
                     <td style={{ padding: '0.75rem' }}><code>{d.code}</code></td>
                     <td style={{ padding: '0.75rem' }}>{d.hod_name || <span style={{ color: '#999' }}>Not Assigned</span>}</td>
-                    <td style={{ padding: '0.75rem' }}>
-                      <select 
-                        value={d.active_term || 'all'} 
-                        onChange={async (e) => {
-                          try {
-                            await departmentAPI.updateTerm(d.id, e.target.value);
-                            fetchDepartments();
-                          } catch (err) { alert(err.message); }
-                        }}
-                        style={{ padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                      >
-                        <option value="all">All</option>
-                        <option value="even">Even</option>
-                        <option value="odd">Odd</option>
-                      </select>
-                    </td>
                     <td style={{ padding: '0.75rem' }}>{d.created_at ? new Date(d.created_at).toLocaleDateString() : '—'}</td>
                     <td style={{ padding: '0.75rem' }}>
                       <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
@@ -190,6 +173,9 @@ function Departments() {
                         </Link>
                         <Link to={`/admin/departments/${d.id}/edit`}>
                           <button style={btnStyle('#007bff')}>✏️ Edit</button>
+                        </Link>
+                        <Link to={`/admin/departments/${d.id}/students`}>
+                          <button style={btnStyle('#10b981')}>🧑‍🎓 View Students</button>
                         </Link>
                         <button
                           style={btnStyle(deleting === d.id ? '#999' : '#dc3545')}

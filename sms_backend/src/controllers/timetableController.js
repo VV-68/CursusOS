@@ -60,7 +60,7 @@ const getAvailableCourses = async (req, res) => {
 
     const { rows: clsRows } = await pool.query(
       `SELECT c.id, c.dept_id, c.year, c.semester_id, c.name AS class_name, c.section,
-              d.department_type, d.structure_count, d.active_term
+              d.department_type, d.structure_count, c.current_semester_number
        FROM classes c
        JOIN departments d ON d.id = c.dept_id
        WHERE c.id = $1
@@ -81,12 +81,8 @@ const getAvailableCourses = async (req, res) => {
       cls.structure_count
     );
 
-    if (cls.department_type === 'semester_wise' && cls.active_term && cls.active_term !== 'all') {
-      applicablePeriods = applicablePeriods.filter(p => {
-        if (cls.active_term === 'even') return p % 2 === 0;
-        if (cls.active_term === 'odd') return p % 2 !== 0;
-        return true;
-      });
+    if (cls.department_type === 'semester_wise' && cls.current_semester_number) {
+      applicablePeriods = [cls.current_semester_number];
     }
 
     let targetPeriod = period_number ? parseInt(period_number, 10) : null;

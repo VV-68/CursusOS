@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
-import { internalMarksAPI, courseAssignmentAPI } from '../../services/api';
+import { internalMarksAPI, courseAssignmentAPI, departmentAPI } from '../../services/api';
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 
 function InternalMarks() {
   const navigate = useNavigate();
+  const [allAssignments, setAllAssignments] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState('');
   const [examType, setExamType] = useState('series1');
   const [students, setStudents] = useState([]);
   const [maxMarks, setMaxMarks] = useState(50);
+
+  const [selectedBatch, setSelectedBatch] = useState('All');
+  const [selectedTerm, setSelectedTerm] = useState('current');
+  const [uniqueBatches, setUniqueBatches] = useState([]);
 
   useEffect(() => {
     fetchAssignments();
@@ -20,10 +26,60 @@ function InternalMarks() {
     }
   }, [selectedAssignment, examType]);
 
+  // Filter assignments when batch/term changes
+  useEffect(() => {
+    let filtered = allAssignments;
+
+    if (selectedBatch !== 'All') {
+      filtered = filtered.filter(c => c.class_name === selectedBatch);
+    }
+
+    if (selectedTerm !== 'All' && selectedTerm !== 'current') {
+      filtered = filtered.filter(c => {
+        const pn = parseInt(c.period_number, 10);
+        if (!isNaN(pn)) {
+          const isOdd = pn % 2 !== 0;
+          return selectedTerm === 'odd' ? isOdd : !isOdd;
+        }
+        return true;
+      });
+    }
+
+    setAssignments(filtered);
+
+    if (selectedAssignment && !filtered.find(a => a.course_assignment_id === selectedAssignment)) {
+      setSelectedAssignment('');
+      setStudents([]);
+    }
+  }, [selectedBatch, selectedTerm, allAssignments]);
+
   const fetchAssignments = async () => {
     try {
       const data = await courseAssignmentAPI.getMine();
-      setAssignments(data);
+      setAllAssignments(data);
+      const batches = [...new Set(data.map(c => c.class_name))];
+      setUniqueBatches(batches);
+
+      // Get department active term
+      if (selectedTerm === 'current') {
+        try {
+          const token = localStorage.getItem('token');
+          if (token) {
+            const { dept_id } = jwtDecode(token);
+            if (dept_id) {
+              const depts = await departmentAPI.getAll();
+              const myDept = depts.find(d => d.id === dept_id);
+              if (myDept && (myDept.active_term === 'odd' || myDept.active_term === 'even')) {
+                setSelectedTerm(myDept.active_term);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching department:", e);
+        }
+        setSelectedTerm('All');
+      }
     } catch (err) {
       alert(err.message || 'Failed to fetch courses');
     }
@@ -101,19 +157,42 @@ function InternalMarks() {
     }
   };
 
+  const selectStyle = {
+    padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc'
+  };
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=teaching')}>← Back</button>
       <h2>Manage Internal Marks</h2>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#64748b', marginBottom: '0.3rem', textTransform: 'uppercase' }}>Batch</label>
+          <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={selectStyle}>
+            <option value="All">All Batches</option>
+            {uniqueBatches.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#64748b', marginBottom: '0.3rem', textTransform: 'uppercase' }}>Term</label>
+          <select value={selectedTerm} onChange={e => setSelectedTerm(e.target.value)} style={selectStyle}>
+            <option value="All">All Terms</option>
+            <option value="odd">Odd Semester</option>
+            <option value="even">Even Semester</option>
+          </select>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-        <select value={selectedAssignment} onChange={e => setSelectedAssignment(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+        <select value={selectedAssignment} onChange={e => setSelectedAssignment(e.target.value)} style={selectStyle}>
           <option value="">Select Course Offering...</option>
           {assignments.map(a => (
             <option key={a.course_assignment_id} value={a.course_assignment_id}>{a.course_name} ({a.course_code}) - {a.class_name}</option>
           ))}
         </select>
 
-        <select value={examType} onChange={e => setExamType(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+        <select value={examType} onChange={e => setExamType(e.target.value)} style={selectStyle}>
           <option value="series1">Series 1</option>
           <option value="series2">Series 2</option>
           <option value="assignment1">Assignment 1</option>

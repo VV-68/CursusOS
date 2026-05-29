@@ -62,9 +62,7 @@ const getInternalMarksByStudent = async (student_id) => {
      WHERE im.student_id = $1
      AND (
        d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
+       OR dc.period_number = cls.current_semester_number
      )
      ORDER BY sem.start_date DESC, c.name ASC, im.internal_type ASC`,
     [student_id]

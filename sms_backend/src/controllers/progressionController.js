@@ -22,13 +22,97 @@ const promoteClass = async (req, res) => {
     const { newSemesterId, newYear, newSemesterNumber, newAdvisor1, newAdvisor2, remarks } = req.body;
     
     const result = await progressionService.promoteClass(
-      classId, newSemesterId, newYear, newSemesterNumber, newAdvisor1, newAdvisor2, remarks
+      classId, newSemesterId, newYear, newSemesterNumber, newAdvisor1, newAdvisor2, remarks, req.user?.id
     );
     
     res.status(200).json({ message: 'Class promoted successfully', data: result });
   } catch (err) {
     console.error('Error promoting class:', err);
     res.status(500).json({ error: 'Failed to promote class' });
+  }
+};
+
+const requestBatchPromotion = async (req, res) => {
+  try {
+    const { batchId, remarks } = req.body;
+    const result = await progressionService.createBatchPromotionRequest({
+      batchId,
+      requestedBy: req.user.id,
+      remarks,
+    });
+    res.status(201).json({ message: 'Batch promotion request created', data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to create promotion request' });
+  }
+};
+
+const directPromoteBatch = async (req, res) => {
+  try {
+    const { batchId } = req.body;
+    const result = await progressionService.directPromoteOddToEven(batchId, req.user.id);
+    res.status(200).json({ message: 'Batch promoted to even semester directly', data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to promote batch' });
+  }
+};
+
+const reviewBatchPromotion = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { approve, remarks } = req.body;
+    const result = await progressionService.applyPromotion(requestId, req.user.id, !!approve, remarks);
+    res.status(200).json({ message: `Promotion request ${approve ? 'approved' : 'rejected'}`, data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to review promotion request' });
+  }
+};
+
+const listBatchPromotionRequests = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const result = await progressionService.listPromotionRequests(status || null);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to list promotion requests' });
+  }
+};
+
+const requestBatchDeactivation = async (req, res) => {
+  try {
+    const { batchId, reason } = req.body;
+    const result = await progressionService.createBatchDeactivationRequest({
+      batchId,
+      requestedBy: req.user.id,
+      reason,
+    });
+    res.status(201).json({ message: 'Batch deactivation request created', data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to create deactivation request' });
+  }
+};
+
+const reviewBatchDeactivation = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { approve } = req.body;
+    const result = await progressionService.reviewBatchDeactivationRequest({
+      requestId,
+      reviewerId: req.user.id,
+      approve: !!approve,
+    });
+    res.status(200).json({ message: `Deactivation request ${approve ? 'approved' : 'rejected'}`, data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to review deactivation request' });
+  }
+};
+
+const listBatchDeactivationRequests = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const result = await progressionService.listDeactivationRequests(status || null);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to list deactivation requests' });
   }
 };
 
@@ -49,5 +133,13 @@ const getStudentAcademicState = async (req, res) => {
 module.exports = {
   promoteStudent,
   promoteClass,
-  getStudentAcademicState
+  getStudentAcademicState,
+  requestBatchPromotion,
+  directPromoteBatch,
+  reviewBatchPromotion,
+  listBatchPromotionRequests,
+  requestBatchDeactivation,
+  reviewBatchDeactivation,
+  listBatchDeactivationRequests,
 };
+

@@ -22,6 +22,9 @@ router.patch('/:id/role', authMiddleware, roleGuard('admin', 'hod'), userControl
 // PATCH /api/users/me → users can update own profile (email, phone)
 router.patch('/me', authMiddleware, userController.updateMyProfile);
 
+// PATCH /api/users/:id/approve → admin or hod approves user creation
+router.patch('/:id/approve', authMiddleware, roleGuard('admin', 'hod'), userController.approveUser);
+
 // PATCH /api/users/:id/designation → hod or admin updates designation
 router.patch('/:id/designation', authMiddleware, roleGuard('admin', 'hod'), userController.updateDesignation);
 

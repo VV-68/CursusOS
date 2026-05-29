@@ -87,12 +87,6 @@ const getByFaculty = async (facultyId) => {
      JOIN departments d ON d.id = cl.dept_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1)
-     AND (
-       d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
-     )
      ORDER BY m.created_at DESC`,
     [facultyId]
   );
@@ -101,7 +95,8 @@ const getByFaculty = async (facultyId) => {
 
 const getByStudent = async (studentId) => {
   const { rows } = await pool.query(
-    `SELECT m.*, u.full_name AS posted_by_name, u.email AS posted_by_email, u.phone AS posted_by_phone, fc.designation AS posted_by_designation,
+    `SELECT DISTINCT m.id, m.course_assignment_id, m.title, m.description, m.material_type, m.file_path, m.file_name, m.external_link, m.posted_by, m.is_published, m.created_at, m.updated_at,
+            u.full_name AS posted_by_name, u.email AS posted_by_email, u.phone AS posted_by_phone, fc.designation AS posted_by_designation,
             c.name AS course_name, c.code AS course_code
      FROM study_materials m
      JOIN users u ON u.id = m.posted_by
@@ -111,14 +106,9 @@ const getByStudent = async (studentId) => {
      JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1
      JOIN student_profiles sp ON sp.user_id = sah.student_id
      JOIN departments d ON d.id = c.dept_id
+     JOIN classes cl ON cl.id = ca.class_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
      WHERE sp.user_id = $1 AND m.is_published = TRUE
-     AND (
-       d.department_type != 'semester_wise' 
-       OR d.active_term = 'all' 
-       OR (d.active_term = 'even' AND dc.period_number % 2 = 0)
-       OR (d.active_term = 'odd' AND dc.period_number % 2 != 0)
-     )
      ORDER BY m.created_at DESC`,
     [studentId]
   );

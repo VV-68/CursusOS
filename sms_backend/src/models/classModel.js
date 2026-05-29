@@ -3,6 +3,7 @@ const pool = require('../db/connection');
 const getAllClasses = async () => {
   const { rows } = await pool.query(`
     SELECT c.*, 
+    c.name AS batch_name,
     u1.full_name as advisor1_name, 
     fc1.unique_code as advisor1_code,
     u2.full_name as advisor2_name,
@@ -19,10 +20,19 @@ const getAllClasses = async () => {
 };
 
 const createClass = async (classData) => {
-  const { name, year, section, dept_id, semester_id } = classData;
+  const { name, year, section, dept_id, semester_id, batch_year, max_semesters } = classData;
+  const currentYear = year || 1;
+  const currentSem = (currentYear - 1) * 2 + 1;
+  const batchYear = batch_year || new Date().getFullYear();
+  const maxSems = max_semesters || 8;
+
   const { rows } = await pool.query(
-    'INSERT INTO classes (name, year, section, dept_id, semester_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [name, year, section, dept_id, semester_id]
+    `INSERT INTO classes (
+      name, year, section, dept_id, semester_id,
+      batch_year, current_year_number, current_semester_number, is_active, max_semesters
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9)
+    RETURNING *`,
+    [name, year, section, dept_id, semester_id, batchYear, currentYear, currentSem, maxSems]
   );
   return rows[0];
 };
@@ -86,10 +96,17 @@ const getStudentsInClass = async (classId) => {
 };
 
 const updateClass = async (classId, classData) => {
-  const { name, year, section, semester_id } = classData;
+  const { name, year, section, semester_id, batch_year, current_semester_number, current_year_number, is_active } = classData;
   const { rows } = await pool.query(
-    'UPDATE classes SET name = $1, year = $2, section = $3, semester_id = $4 WHERE id = $5 RETURNING *',
-    [name, year, section, semester_id, classId]
+    `UPDATE classes
+     SET name = $1, year = $2, section = $3, semester_id = $4,
+         batch_year = COALESCE($6, batch_year),
+         current_semester_number = COALESCE($7, current_semester_number),
+         current_year_number = COALESCE($8, current_year_number),
+         is_active = COALESCE($9, is_active)
+     WHERE id = $5
+     RETURNING *`,
+    [name, year, section, semester_id, classId, batch_year || null, current_semester_number || null, current_year_number || null, is_active]
   );
   return rows[0];
 };

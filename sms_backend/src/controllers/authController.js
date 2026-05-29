@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { comparePassword, hashPassword } = require('../utils/passwordUtils');
 const userModel = require('../models/userModel');
 const pool = require('../db/connection');
+const { getStudentActiveAcademicState } = require('../services/academicStateService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
@@ -73,6 +74,10 @@ const AuthController = {
         return res.status(401).json({ error: 'Account is disabled' });
       }
 
+      if (user.is_approved === false) {
+        return res.status(401).json({ error: 'Account is pending approval' });
+      }
+
       const isValid = await comparePassword(password, user.password_hash);
       if (!isValid) {
         return res.status(401).json({ error: 'Invalid credentials' });
@@ -83,6 +88,14 @@ const AuthController = {
         const { rows } = await pool.query('SELECT class_id FROM student_profiles WHERE user_id = $1', [user.id]);
         if (rows.length > 0) {
           class_id = rows[0].class_id;
+        }
+
+        const academicState = await getStudentActiveAcademicState(user.id);
+        if (!academicState) {
+          return res.status(401).json({ error: 'Student academic state not found. Contact admin.' });
+        }
+        if (academicState.batch_is_active === false || academicState.batch_is_graduated === true) {
+          return res.status(401).json({ error: 'Batch is inactive or graduated. Login is disabled.' });
         }
       }
 

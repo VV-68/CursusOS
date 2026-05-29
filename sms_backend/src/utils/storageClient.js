@@ -88,6 +88,7 @@ const getMaterialSignedUrl = (filePath, expiresIn = 3600) =>
 const deleteMaterialFile = (filePath) => deleteFromBucket(BUCKETS.FACULTY_UPLOAD, filePath);
 
 module.exports = {
+  supabase,
   BUCKETS,
   uploadQuestionPdf,
   getQuestionSignedUrl,

@@ -6,7 +6,7 @@ import { departmentCreationAPI, departmentAPI, logout, getMe, noticeAPI } from '
 const ROLE_LABELS = {
   admin: 'Administrator',
   hod: 'Head of Department',
-  advisor: 'Class Advisor',
+  advisor: 'Batch Advisor',
   faculty: 'Faculty',
   student: 'Student',
 };
@@ -251,7 +251,7 @@ function Dashboard() {
 
       {/* ── OVERSIGHT (advisor) ── */}
       {activeTab === 'oversight' && role === 'advisor' && (
-        <DashSection id="oversight" title="My Class" icon="📊">
+        <DashSection id="oversight" title="My Batch" icon="📊">
           <DashCard to="/advisor/timetable" icon="📅" label="Manage Timetable" description="Upload class timetable" />
           <DashCard to="/advisor/attendance/low" icon="⚠️" label="Low Attendance" description="Students below threshold" variant="secondary" />
           <DashCard to="/advisor/students" icon="🎓" label="My Students" description="View student details" />
@@ -265,7 +265,8 @@ function Dashboard() {
         <DashSection id="dept" title="Department Management" icon="🏛️">
           <DashCard to="/admin/users/create" icon="➕" label="Add Faculty / Advisor" description="Register new staff" />
           <DashCard to="/admin/users" icon="👥" label="View Dept Users" description="Manage department users" />
-          <DashCard to="/hod/classes" icon="🏫" label="Manage Classes" description="Create and assign classes" />
+          <DashCard to="/hod/classes" icon="🏫" label="Manage Batches" description="Create and progress batches" />
+          <DashCard to="/hod/batch-progression" icon="📈" label="Batch Progression" description="Request promotions and deactivation" />
           <DashCard to="/hod/courses" icon="📚" label="Manage Courses" description="Department course catalog" />
           <DashCard to="/hod/internals" icon="📊" label="Dept Internals" description="View all class internal marks" />
         </DashSection>
@@ -277,6 +278,7 @@ function Dashboard() {
           <DashCard to="/admin/institution" icon="🏫" label="Institution Settings" description="Update institution details" />
           <DashCard to="/admin/users" icon="👥" label="Manage Users" description="Create, edit, manage all users" />
           <DashCard to="/admin/departments" icon="🏛️" label="Manage Departments" description="Add or edit departments" />
+          <DashCard to="/admin/batch-lifecycle" icon="✅" label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
           <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />
         </DashSection>
       )}

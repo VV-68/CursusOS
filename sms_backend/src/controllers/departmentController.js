@@ -231,17 +231,6 @@ const getDeptCourses = async (req, res) => {
   }
 };
 
-const updateDepartment = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { active_term } = req.body;
-    const updated = await departmentModel.updateDepartment(id, { active_term });
-    if (!updated) return res.status(404).json({ error: 'Department not found' });
-    res.json(updated);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
 
-module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange, updateDepartment };
+
+module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange };

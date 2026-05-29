@@ -60,7 +60,7 @@ function MyInternals() {
           <div>
             {Object.entries(internals).map(([semName, semData]) => (
               <div key={semName} style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ccc', borderRadius: '8px', background: '#fff' }}>
-                <h3 style={{ marginTop: 0, color: '#0d6efd', borderBottom: '2px solid #0d6efd', paddingBottom: '0.5rem' }}>{semName}</h3>
+                {/* <h3 style={{ marginTop: 0, color: '#0d6efd', borderBottom: '2px solid #0d6efd', paddingBottom: '0.5rem' }}>{semName}</h3> */}
                 
                 {Object.keys(semData.courses).length > 0 ? (
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>

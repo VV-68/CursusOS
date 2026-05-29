@@ -71,7 +71,8 @@ const StudentController = {
           dept_id: dept_id,
           email: emailLower,
           phone: phone || null,
-          password_hash
+          password_hash,
+          is_approved: req.user.role !== 'advisor'
         });
       } catch (err) {
          if (err.code === '23505') {
@@ -211,7 +212,8 @@ const StudentController = {
             dept_id: dept_id,
             email: emailLower,
             phone: row['phone'] || null,
-            password_hash
+            password_hash,
+            is_approved: req.user.role !== 'advisor'
           });
 
           await StudentModel.createStudentProfile(authUser.id, class_id, roll_no.toString());

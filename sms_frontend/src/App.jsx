@@ -10,16 +10,20 @@ import ChangePassword from './pages/shared/ChangePassword';
 import Users from './pages/admin/Users';
 import CreateUser from './pages/admin/CreateUser';
 import Departments from './pages/admin/Departments';
+import AdminDepartmentStudents from './pages/admin/AdminDepartmentStudents';
 import AssignHOD from './pages/admin/AssignHOD';
 import CreateDepartment from './pages/admin/CreateDepartment';
+import BatchLifecycleApprovals from './pages/admin/BatchLifecycleApprovals';
 import InstitutionSettings from './pages/admin/InstitutionSettings';
 import EditDepartment from './pages/shared/EditDepartment';
 import Classes from './pages/hod/Classes';
 import AssignAdvisors from './pages/hod/AssignAdvisors';
+import BatchStudents from './pages/hod/BatchStudents';
 import ClassTimetableView from './pages/hod/ClassTimetableView';
 import Courses from './pages/hod/Courses';
 
 import AssignCourse from './pages/hod/AssignCourse';
+import BatchProgression from './pages/hod/BatchProgression';
 import Timetable from './pages/advisor/Timetable';
 import TimetableView from './pages/shared/TimetableView';
 import MarkAttendance from './pages/faculty/MarkAttendance';
@@ -108,6 +112,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/admin/departments/:id/students" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminDepartmentStudents />
+            </ProtectedRoute>
+          } />
+
           <Route path="/admin/institution" element={
             <ProtectedRoute roles={['admin']}>
               <InstitutionSettings />
@@ -132,6 +142,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/admin/batch-lifecycle" element={
+            <ProtectedRoute roles={['admin']}>
+              <BatchLifecycleApprovals />
+            </ProtectedRoute>
+          } />
+
           <Route path="/hod/department/edit" element={
             <ProtectedRoute roles={['hod']}>
               <EditDepartment />
@@ -150,6 +166,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/hod/classes/:id/students" element={
+            <ProtectedRoute roles={['hod', 'admin']}>
+              <BatchStudents />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/hod/classes/:classId/timetable" element={
             <ProtectedRoute roles={['hod']}>
               <ClassTimetableView />
@@ -173,6 +195,12 @@ function App() {
           <Route path="/hod/internals" element={
             <ProtectedRoute roles={['hod', 'admin']}>
               <DepartmentInternals />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/batch-progression" element={
+            <ProtectedRoute roles={['hod']}>
+              <BatchProgression />
             </ProtectedRoute>
           } />
 
@@ -339,7 +367,7 @@ function App() {
           } />
 
           <Route path="/advisor/student/:student_id" element={
-            <ProtectedRoute roles={['advisor', 'hod', 'admin']}>
+            <ProtectedRoute roles={['advisor', 'hod', 'admin', 'faculty']}>
               <StudentProfile />
             </ProtectedRoute>
           } />

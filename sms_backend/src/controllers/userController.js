@@ -49,6 +49,8 @@ const createUser = async (req, res) => {
       dept_id = req.body.dept_id || null;
     }
 
+    const is_approved = req.user.role === 'admin';
+
     const password_hash = await hashDefault();
 
     const newUser = await userModel.createUser({
@@ -60,14 +62,15 @@ const createUser = async (req, res) => {
       email: email?.trim().toLowerCase() || null,
       phone: phone?.trim() || null,
       password_hash,
+      is_approved
     });
 
     await logAudit(req.user.id, 'USER_CREATED', 'user', newUser.id, null, {
-      username: newUser.username, role, dept_id
+      username: newUser.username, role, dept_id, is_approved
     });
 
-    let message = 'User created successfully';
-    let pending = false;
+    let message = is_approved ? 'User created successfully' : 'User created and pending admin approval';
+    let pending = !is_approved;
 
     // If role is hod and dept_id is provided, link it in the departments table
     if (role === 'hod' && dept_id) {
@@ -230,4 +233,34 @@ const updateDesignation = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, createUser, resetPassword, deleteUser, updateRole, updateMyProfile, updateDesignation };
+const approveUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Fetch the target user to check role and dept
+    const targetUser = await userModel.getUserById(id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    
+    if (req.user.role === 'hod') {
+      if (targetUser.role !== 'student') {
+        return res.status(403).json({ error: 'HODs can only approve students' });
+      }
+      if (targetUser.dept_id !== req.user.dept_id) {
+        return res.status(403).json({ error: 'Student is not in your department' });
+      }
+    }
+    
+    const { rows } = await pool.query(
+      `UPDATE users SET is_approved = true, updated_at = NOW() WHERE id = $1 RETURNING id, username`,
+      [id]
+    );
+    
+    await logAudit(req.user.id, 'USER_APPROVED', 'user', id, null, null);
+    res.json({ message: 'User approved successfully', user: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllUsers, createUser, resetPassword, deleteUser, updateRole, updateMyProfile, updateDesignation, approveUser };
