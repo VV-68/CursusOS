@@ -135,6 +135,7 @@ const applyPromotion = async (requestId, reviewerId, approve, remarks) => {
       `UPDATE classes
        SET current_semester_number = $1,
            current_year_number = $2,
+           year = year + 1,
            semester_id = COALESCE($3, semester_id),
            is_active = true,
            deactivation_requested = false
@@ -374,15 +375,129 @@ const listPromotionRequests = async (status = null) => {
   return rows;
 };
 
-const listDeactivationRequests = async (status = null) => {
+const listDeactivationRequests = async (statusFilter = null) => {
+  let query = `
+    SELECT r.*, c.name as batch_name, c.dept_id,
+           u_req.full_name as requested_by_name,
+           u_rev.full_name as reviewed_by_name
+    FROM batch_deactivation_requests r
+    JOIN classes c ON r.batch_id = c.id
+    LEFT JOIN users u_req ON r.requested_by = u_req.id
+    LEFT JOIN users u_rev ON r.reviewed_by = u_rev.id
+  `;
   const params = [];
-  let q = `SELECT bdr.*, c.name as batch_name FROM batch_deactivation_requests bdr JOIN classes c ON c.id = bdr.batch_id WHERE 1=1`;
-  if (status) {
-    params.push(status);
-    q += ` AND bdr.status = $${params.length}`;
+  if (statusFilter) {
+    query += ` WHERE r.status = $1`;
+    params.push(statusFilter);
   }
-  q += ` ORDER BY bdr.requested_at DESC`;
-  const { rows } = await pool.query(q, params);
+  query += ` ORDER BY r.requested_at DESC`;
+  const { rows } = await pool.query(query, params);
+  return rows;
+};
+
+const createBatchReactivationRequest = async ({ batchId, requestedBy, reason }) => {
+  const batch = await getBatchCurrentState(batchId);
+  if (!batch) throw new Error('Batch not found');
+  if (batch.is_active !== false) throw new Error('Batch is already active');
+
+  const pending = await pool.query(
+    `SELECT id FROM batch_reactivation_requests WHERE batch_id = $1 AND status = 'pending' LIMIT 1`,
+    [batchId]
+  );
+  if (pending.rows[0]) throw new Error('Pending reactivation request already exists');
+
+  const { rows } = await pool.query(
+    `INSERT INTO batch_reactivation_requests (batch_id, requested_by, reason, status)
+     VALUES ($1, $2, $3, 'pending')
+     RETURNING *`,
+    [batchId, requestedBy, reason || null]
+  );
+
+  const admins = await pool.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+  for (const admin of admins.rows) {
+    await notifyUser(requestedBy, admin.id, `Reactivation request pending for batch ${batch.name}.`);
+  }
+  return rows[0];
+};
+
+const reviewBatchReactivationRequest = async ({ requestId, reviewerId, approve }) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const reqRes = await client.query(
+      `SELECT * FROM batch_reactivation_requests WHERE id = $1 FOR UPDATE`,
+      [requestId]
+    );
+    const req = reqRes.rows[0];
+    if (!req) throw new Error('Reactivation request not found');
+    if (req.status !== 'pending') throw new Error('Reactivation request already reviewed');
+
+    const status = approve ? 'approved' : 'rejected';
+    const reviewed = await client.query(
+      `UPDATE batch_reactivation_requests
+       SET status = $2, reviewed_by = $3, reviewed_at = now()
+       WHERE id = $1
+       RETURNING *`,
+      [requestId, status, reviewerId]
+    );
+
+    if (approve) {
+      await client.query(
+        `UPDATE classes
+         SET is_active = true,
+             course_completed = false,
+             is_graduated = false,
+             deactivated_at = null,
+             deactivation_approved_by = null,
+             deactivation_requested = false
+         WHERE id = $1`,
+        [req.batch_id]
+      );
+      await client.query(
+        `UPDATE users u
+         SET is_active = true
+         FROM student_profiles sp
+         WHERE sp.class_id = $1 AND sp.user_id = u.id AND u.role = 'student'`,
+        [req.batch_id]
+      );
+    }
+
+    const batchRes = await client.query(`SELECT name, dept_id FROM classes WHERE id = $1`, [req.batch_id]);
+    const batch = batchRes.rows[0];
+
+    await client.query('COMMIT');
+    await notifyUser(reviewerId, req.requested_by, `Reactivation request ${approve ? 'approved' : 'rejected'} for batch ${batch.name}.`);
+    
+    if (approve) {
+      await notifyHODs(reviewerId, batch.dept_id, `Batch ${batch.name} has been reactivated.`);
+    }
+
+    return reviewed.rows[0];
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+const listReactivationRequests = async (statusFilter = null) => {
+  let query = `
+    SELECT r.*, c.name as batch_name, c.dept_id,
+           u_req.full_name as requested_by_name,
+           u_rev.full_name as reviewed_by_name
+    FROM batch_reactivation_requests r
+    JOIN classes c ON r.batch_id = c.id
+    LEFT JOIN users u_req ON r.requested_by = u_req.id
+    LEFT JOIN users u_rev ON r.reviewed_by = u_rev.id
+  `;
+  const params = [];
+  if (statusFilter) {
+    query += ` WHERE r.status = $1`;
+    params.push(statusFilter);
+  }
+  query += ` ORDER BY r.requested_at DESC`;
+  const { rows } = await pool.query(query, params);
   return rows;
 };
 
@@ -400,4 +515,7 @@ module.exports = {
   createBatchDeactivationRequest,
   reviewBatchDeactivationRequest,
   listDeactivationRequests,
+  createBatchReactivationRequest,
+  reviewBatchReactivationRequest,
+  listReactivationRequests,
 };

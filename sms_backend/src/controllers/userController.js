@@ -251,11 +251,56 @@ const approveUser = async (req, res) => {
     }
     
     const { rows } = await pool.query(
-      `UPDATE users SET is_approved = true, updated_at = NOW() WHERE id = $1 RETURNING id, username`,
+      `UPDATE users SET is_approved = true, updated_at = NOW() WHERE id = $1 RETURNING id, username, role`,
       [id]
     );
     
     await logAudit(req.user.id, 'USER_APPROVED', 'user', id, null, null);
+    
+    try {
+      const { notifyUser } = require('../services/notificationService');
+      // Notify the user themselves
+      // await notifyUser(id, `Your ${targetUser.role} account has been verified and approved. You can now login.`);
+
+      // If faculty was approved by admin, notify the HOD
+      if (targetUser.role === 'faculty') {
+        const hodQuery = await pool.query('SELECT id FROM users WHERE dept_id = $1 AND role = $2 AND is_active = true LIMIT 1', [targetUser.dept_id, 'hod']);
+        if (hodQuery.rows.length > 0) {
+          await notifyUser(req.user.id, hodQuery.rows[0].id, `The admin has verified and approved the account for new faculty: ${targetUser.full_name}.`);
+        }
+      }
+
+      // If student was approved by HOD, notify the Advisor
+      if (targetUser.role === 'student') {
+        const advisorQuery = await pool.query(`
+          SELECT c.advisor1_id, c.advisor2_id, sp.class_id FROM classes c 
+          JOIN student_profiles sp ON c.id = sp.class_id 
+          WHERE sp.user_id = $1
+        `, [targetUser.id]);
+        
+        if (advisorQuery.rows.length > 0) {
+          const { advisor1_id, advisor2_id, class_id } = advisorQuery.rows[0];
+          if (advisor1_id) {
+            await notifyUser(req.user.id, advisor1_id, `The HOD has verified and approved the account for your student: ${targetUser.full_name}.`);
+          }
+          if (advisor2_id) {
+            await notifyUser(req.user.id, advisor2_id, `The HOD has verified and approved the account for your student: ${targetUser.full_name}.`);
+          }
+          
+          // Add to academic history upon approval
+          try {
+            const studentModel = require('../models/studentModel');
+            await studentModel.addToAcademicHistory(targetUser.id, class_id);
+          } catch (e) {
+            console.error('Failed to add student to academic history', e);
+          }
+        }
+      }
+
+    } catch (e) {
+      console.error('Failed to send approval notification', e);
+    }
+    
     res.json({ message: 'User approved successfully', user: rows[0] });
   } catch (err) {
     console.error(err);

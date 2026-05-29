@@ -77,6 +77,17 @@ const StudentModel = {
       [user_id]
     );
     return rows[0];
+  },
+
+  addToAcademicHistory: async (student_id, class_id) => {
+    const classData = await pool.query('SELECT semester_id, current_year_number, current_semester_number, advisor1_id, advisor2_id FROM classes WHERE id = $1', [class_id]);
+    if (classData.rows.length > 0) {
+       const cls = classData.rows[0];
+       await pool.query(`
+         INSERT INTO student_academic_history (student_id, class_id, semester_id, current_year, current_semester, advisor1_id, advisor2_id, remarks)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'Initial Admission')
+       `, [student_id, class_id, cls.semester_id, cls.current_year_number, cls.current_semester_number, cls.advisor1_id, cls.advisor2_id]);
+    }
   }
 };
 

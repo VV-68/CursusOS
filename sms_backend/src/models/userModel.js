@@ -55,9 +55,11 @@ const createUser = async ({ username, full_name, role, dept_id, email, phone, pa
 
 const getAllUsers = async (deptId = null, roleFilter = null, institution_id = null) => {
   let query = `
-    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.is_approved, u.created_at, fc.unique_code as faculty_code, fc.designation
+    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.is_approved, u.created_at, fc.unique_code as faculty_code, fc.designation, sp.class_id, c.name as class_name
     FROM users u
     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
+    LEFT JOIN student_profiles sp ON u.id = sp.user_id
+    LEFT JOIN classes c ON sp.class_id = c.id
     WHERE u.is_active = true
   `;
   const params = [];

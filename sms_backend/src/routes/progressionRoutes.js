@@ -18,4 +18,8 @@ router.get('/batch-deactivation-requests', authMiddleware, roleGuard('admin', 'h
 router.post('/batch-deactivation-requests', authMiddleware, roleGuard('hod'), progressionController.requestBatchDeactivation);
 router.patch('/batch-deactivation-requests/:requestId/review', authMiddleware, roleGuard('admin'), progressionController.reviewBatchDeactivation);
 
+router.get('/batch-reactivation-requests', authMiddleware, roleGuard('admin', 'hod'), progressionController.listBatchReactivationRequests);
+router.post('/batch-reactivation-requests', authMiddleware, roleGuard('hod'), progressionController.requestBatchReactivation);
+router.patch('/batch-reactivation-requests/:requestId/review', authMiddleware, roleGuard('admin'), progressionController.reviewBatchReactivation);
+
 module.exports = router;

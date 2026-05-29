@@ -6,6 +6,7 @@ function BatchLifecycleApprovals() {
   const navigate = useNavigate();
   const [promotionRequests, setPromotionRequests] = useState([]);
   const [deactivationRequests, setDeactivationRequests] = useState([]);
+  const [reactivationRequests, setReactivationRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [error, setError] = useState('');
@@ -14,12 +15,14 @@ function BatchLifecycleApprovals() {
     setLoading(true);
     setError('');
     try {
-      const [promotions, deactivations] = await Promise.all([
+      const [promotions, deactivations, reactivations] = await Promise.all([
         progressionAPI.listPromotions('pending'),
         progressionAPI.listDeactivations('pending'),
+        progressionAPI.listReactivations('pending'),
       ]);
       setPromotionRequests(promotions || []);
       setDeactivationRequests(deactivations || []);
+      setReactivationRequests(reactivations || []);
     } catch (err) {
       setError(err.message || 'Failed to load requests');
     } finally {
@@ -53,6 +56,19 @@ function BatchLifecycleApprovals() {
       await loadRequests();
     } catch (err) {
       alert(err.message || 'Failed to review deactivation request');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const reviewReactivation = async (requestId, approve) => {
+    if (!window.confirm(`${approve ? 'Approve' : 'Reject'} this reactivation request?`)) return;
+    setActionLoading(`react-${requestId}-${approve ? 'a' : 'r'}`);
+    try {
+      await progressionAPI.reviewReactivation(requestId, approve);
+      await loadRequests();
+    } catch (err) {
+      alert(err.message || 'Failed to review reactivation request');
     } finally {
       setActionLoading('');
     }
@@ -101,7 +117,7 @@ function BatchLifecycleApprovals() {
 
           <div>
             <h3 style={{ marginBottom: '0.6rem' }}>Pending Deactivation Requests</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', marginBottom: '1.5rem' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                   <th style={{ padding: '0.75rem' }}>Batch</th>
@@ -119,6 +135,33 @@ function BatchLifecycleApprovals() {
                     <td style={{ padding: '0.75rem', display: 'flex', gap: '0.4rem' }}>
                       <button onClick={() => reviewDeactivation(r.id, true)} disabled={actionLoading === `deact-${r.id}-a`} style={{ padding: '0.3rem 0.7rem', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>{actionLoading === `deact-${r.id}-a` ? '...' : 'Approve'}</button>
                       <button onClick={() => reviewDeactivation(r.id, false)} disabled={actionLoading === `deact-${r.id}-r`} style={{ padding: '0.3rem 0.7rem', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>{actionLoading === `deact-${r.id}-r` ? '...' : 'Reject'}</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <h3 style={{ marginBottom: '0.6rem' }}>Pending Reactivation Requests</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                  <th style={{ padding: '0.75rem' }}>Batch</th>
+                  <th style={{ padding: '0.75rem' }}>Reason</th>
+                  <th style={{ padding: '0.75rem' }}>Requested At</th>
+                  <th style={{ padding: '0.75rem' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reactivationRequests.length === 0 ? <tr><td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: '#64748b' }}>No pending reactivation requests</td></tr> : reactivationRequests.map((r) => (
+                  <tr key={r.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '0.75rem', fontWeight: 600 }}>{r.batch_name || 'Batch'}</td>
+                    <td style={{ padding: '0.75rem' }}>{r.reason || '—'}</td>
+                    <td style={{ padding: '0.75rem' }}>{r.requested_at ? new Date(r.requested_at).toLocaleString() : '—'}</td>
+                    <td style={{ padding: '0.75rem', display: 'flex', gap: '0.4rem' }}>
+                      <button onClick={() => reviewReactivation(r.id, true)} disabled={actionLoading === `react-${r.id}-a`} style={{ padding: '0.3rem 0.7rem', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>{actionLoading === `react-${r.id}-a` ? '...' : 'Approve'}</button>
+                      <button onClick={() => reviewReactivation(r.id, false)} disabled={actionLoading === `react-${r.id}-r`} style={{ padding: '0.3rem 0.7rem', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>{actionLoading === `react-${r.id}-r` ? '...' : 'Reject'}</button>
                     </td>
                   </tr>
                 ))}

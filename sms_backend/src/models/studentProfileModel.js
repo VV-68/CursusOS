@@ -80,6 +80,21 @@ const getStudentsByClass = async (class_id) => {
   return rows;
 };
 
+const getPendingStudentsByClass = async (class_id) => {
+  const { rows } = await pool.query(
+    `SELECT sp.id, sp.user_id, sp.class_id, sp.roll_no,
+            u.full_name, u.email, u.phone, u.created_at,
+            c.name AS class_name
+     FROM student_profiles sp
+     JOIN users u ON u.id = sp.user_id
+     JOIN classes c ON c.id = sp.class_id
+     WHERE sp.class_id = $1 AND u.is_approved = FALSE AND u.is_active = TRUE
+     ORDER BY sp.roll_no ASC`,
+    [class_id]
+  );
+  return rows;
+};
+
 const updateProfile = async (user_id, fields) => {
   const {
     dob, gender, blood_group, address,
@@ -164,4 +179,4 @@ const updateVerificationStatus = async (user_id, status) => {
     return rows[0];
 };
 
-module.exports = { getFullProfile, getSafeProfile, getStudentsByClass, updateProfile, updateVerificationStatus };
+module.exports = { getFullProfile, getSafeProfile, getStudentsByClass, getPendingStudentsByClass, updateProfile, updateVerificationStatus };

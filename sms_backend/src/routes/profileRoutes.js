@@ -10,5 +10,5 @@ router.patch('/me',                   authMiddleware, roleGuard('student'), ctrl
 router.get('/student/:student_id',    authMiddleware, roleGuard('advisor','hod','admin', 'faculty'), ctrl.getStudentProfile);
 router.get('/class/:class_id',        authMiddleware, roleGuard('advisor','hod','admin'), ctrl.getClassStudents);
 router.put('/student/:student_id/verify', authMiddleware, roleGuard('advisor', 'admin'), ctrl.verifyProfile);
-
+router.get('/class/:class_id/pending',    authMiddleware, roleGuard('advisor'), ctrl.getPendingClassStudents);
 module.exports = router;

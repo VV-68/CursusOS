@@ -265,6 +265,7 @@ function Dashboard() {
         <DashSection id="dept" title="Department Management" icon="🏛️">
           <DashCard to="/admin/users/create" icon="➕" label="Add Faculty / Advisor" description="Register new staff" />
           <DashCard to="/admin/users" icon="👥" label="View Dept Users" description="Manage department users" />
+          <DashCard to="/admin/users?role=student&pending=true" icon="✔️" label="Student Verification" description="Verify unverified students" />
           <DashCard to="/hod/classes" icon="🏫" label="Manage Batches" description="Create and progress batches" />
           <DashCard to="/hod/batch-progression" icon="📈" label="Batch Progression" description="Request promotions and deactivation" />
           <DashCard to="/hod/courses" icon="📚" label="Manage Courses" description="Department course catalog" />
@@ -277,6 +278,7 @@ function Dashboard() {
         <DashSection id="admin" title="Administration" icon="🛡️">
           <DashCard to="/admin/institution" icon="🏫" label="Institution Settings" description="Update institution details" />
           <DashCard to="/admin/users" icon="👥" label="Manage Users" description="Create, edit, manage all users" />
+          <DashCard to="/admin/users?role=faculty&pending=true" icon="✔️" label="Faculty Verification" description="Verify unverified faculties" />
           <DashCard to="/admin/departments" icon="🏛️" label="Manage Departments" description="Add or edit departments" />
           <DashCard to="/admin/batch-lifecycle" icon="✅" label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
           <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />

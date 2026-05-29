@@ -152,6 +152,20 @@ exports.getClassStudents = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+exports.getPendingClassStudents = async (req, res) => {
+  try {
+    const { class_id } = req.params;
+    if (req.user.role !== 'advisor') {
+      return res.status(403).json({ error: 'Only advisors can view pending students here' });
+    }
+    const students = await profileModel.getPendingStudentsByClass(class_id);
+    res.json(students);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 // GET /api/profile/my-courses
 exports.getMyCourses = async (req, res) => {
   try {

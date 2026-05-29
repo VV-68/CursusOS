@@ -130,6 +130,48 @@ const getStudentAcademicState = async (req, res) => {
   }
 };
 
+const requestBatchReactivation = async (req, res) => {
+  try {
+    const { batchId, reason } = req.body;
+    if (!batchId) {
+      return res.status(400).json({ error: 'batchId is required' });
+    }
+    const result = await progressionService.createBatchReactivationRequest({
+      batchId,
+      requestedBy: req.user.id,
+      reason,
+    });
+    res.status(201).json({ message: 'Batch reactivation request created successfully', data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to create batch reactivation request' });
+  }
+};
+
+const reviewBatchReactivation = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { approve } = req.body;
+    const result = await progressionService.reviewBatchReactivationRequest({
+      requestId,
+      reviewerId: req.user.id,
+      approve: !!approve,
+    });
+    res.status(200).json({ message: `Reactivation request ${approve ? 'approved' : 'rejected'}`, data: result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Failed to review reactivation request' });
+  }
+};
+
+const listBatchReactivationRequests = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const result = await progressionService.listReactivationRequests(status || null);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to list reactivation requests' });
+  }
+};
+
 module.exports = {
   promoteStudent,
   promoteClass,
@@ -141,5 +183,8 @@ module.exports = {
   requestBatchDeactivation,
   reviewBatchDeactivation,
   listBatchDeactivationRequests,
+  requestBatchReactivation,
+  reviewBatchReactivation,
+  listBatchReactivationRequests,
 };
 

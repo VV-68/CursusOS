@@ -10,6 +10,7 @@ function MyStudents() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
   const [studentsByClass, setStudentsByClass] = useState({});
+  const [pendingStudentsByClass, setPendingStudentsByClass] = useState({});
   const [activeClass, setActiveClass] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -42,8 +43,12 @@ function MyStudents() {
   const loadStudents = async (classId, forceRefresh = false) => {
     if (!forceRefresh && studentsByClass[classId]) return;
     try {
-      const data = await profileAPI.getClassStudents(classId);
+      const [data, pendingData] = await Promise.all([
+        profileAPI.getClassStudents(classId),
+        profileAPI.getPendingClassStudents(classId)
+      ]);
       setStudentsByClass((prev) => ({ ...prev, [classId]: data }));
+      setPendingStudentsByClass((prev) => ({ ...prev, [classId]: pendingData }));
     } catch (err) { console.error(err); }
   };
 
@@ -171,6 +176,40 @@ function MyStudents() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {(pendingStudentsByClass[activeClass] && pendingStudentsByClass[activeClass].length > 0) && (
+        <div style={{ marginTop: '2rem' }}>
+          <h2 style={{ color: '#f59e0b', fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            ⏳ Pending HOD Approval
+          </h2>
+          <div className="dept-card" style={{ padding: 0, overflow: 'hidden', borderLeft: '4px solid #fde68a' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Roll No</th>
+                    <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Full Name</th>
+                    <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Email</th>
+                    <th style={{ padding: '1rem', color: '#475569', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingStudentsByClass[activeClass].map((st) => (
+                    <tr key={st.user_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '1rem', color: '#1e293b' }}>{st.roll_no || '—'}</td>
+                      <td style={{ padding: '1rem', color: '#1e293b', fontWeight: '500' }}>{st.full_name}</td>
+                      <td style={{ padding: '1rem', color: '#475569' }}>{st.email}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', background: '#fffbeb', color: '#f59e0b', border: '1px solid #fde68a' }}>Awaiting Approval</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

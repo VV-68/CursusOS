@@ -69,6 +69,7 @@ const StudentController = {
           full_name: full_name.trim(),
           role: 'student',
           dept_id: dept_id,
+          institution_id: req.user.institution_id,
           email: emailLower,
           phone: phone || null,
           password_hash,
@@ -82,6 +83,18 @@ const StudentController = {
       }
 
       const profile = await StudentModel.createStudentProfile(authUser.id, class_id, roll_no.trim());
+
+      if (req.user.role !== 'advisor') {
+        await StudentModel.addToAcademicHistory(authUser.id, class_id);
+      } else {
+        try {
+          const { notifyUser } = require('../services/notificationService');
+          const hodQuery = await pool.query('SELECT id FROM users WHERE dept_id = $1 AND role = $2 AND is_active = true LIMIT 1', [dept_id, 'hod']);
+          if (hodQuery.rows.length > 0) {
+            await notifyUser(req.user.id, hodQuery.rows[0].id, `A new student (${full_name}) was added to your department by an advisor and is pending your verification.`);
+          }
+        } catch (e) { console.error('Failed to notify HOD', e); }
+      }
 
       res.status(201).json({ message: 'Student created successfully', user: authUser, profile });
     } catch (err) {
@@ -210,6 +223,7 @@ const StudentController = {
             full_name: name,
             role: 'student',
             dept_id: dept_id,
+            institution_id: req.user.institution_id,
             email: emailLower,
             phone: row['phone'] || null,
             password_hash,
@@ -217,11 +231,24 @@ const StudentController = {
           });
 
           await StudentModel.createStudentProfile(authUser.id, class_id, roll_no.toString());
+          if (req.user.role !== 'advisor') {
+            await StudentModel.addToAcademicHistory(authUser.id, class_id);
+          }
           created++;
         } catch(err) {
           skipped++;
           errors.push(`Row ${i+2} (${email}, ${roll_no}): Duplicate email or roll no.`);
         }
+      }
+
+      if (req.user.role === 'advisor' && created > 0) {
+        try {
+          const { notifyUser } = require('../services/notificationService');
+          const hodQuery = await pool.query('SELECT id FROM users WHERE dept_id = $1 AND role = $2 AND is_active = true LIMIT 1', [dept_id, 'hod']);
+          if (hodQuery.rows.length > 0) {
+            await notifyUser(req.user.id, hodQuery.rows[0].id, `${created} new student(s) were added to your department via bulk upload and are pending your verification.`);
+          }
+        } catch (e) { console.error('Failed to notify HOD', e); }
       }
 
       res.json({ total: records.length, created, skipped, errors });

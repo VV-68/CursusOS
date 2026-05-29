@@ -7,6 +7,7 @@ function BatchProgression() {
   const [batches, setBatches] = useState([]);
   const [promotionRequests, setPromotionRequests] = useState([]);
   const [deactivationRequests, setDeactivationRequests] = useState([]);
+  const [reactivationRequests, setReactivationRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [error, setError] = useState('');
@@ -15,14 +16,16 @@ function BatchProgression() {
     setLoading(true);
     setError('');
     try {
-      const [batchData, promotionData, deactivationData] = await Promise.all([
+      const [batchData, promotionData, deactivationData, reactivationData] = await Promise.all([
         classAPI.getAll(),
         progressionAPI.listPromotions(),
         progressionAPI.listDeactivations(),
+        progressionAPI.listReactivations(),
       ]);
       setBatches(batchData || []);
       setPromotionRequests(promotionData || []);
       setDeactivationRequests(deactivationData || []);
+      setReactivationRequests(reactivationData || []);
     } catch (err) {
       setError(err.message || 'Failed to load batch progression data');
     } finally {
@@ -67,6 +70,23 @@ function BatchProgression() {
     }
   };
 
+  const requestReactivation = async (batch) => {
+    const reason = window.prompt(`Reason for reactivating "${batch.name}"?`, 'Resuming operations');
+    if (reason === null) return;
+    setActionLoading(`reactivate-${batch.id}`);
+    try {
+      await progressionAPI.requestReactivation({
+        batchId: batch.id,
+        reason: reason || 'Resuming operations',
+      });
+      await loadData();
+    } catch (err) {
+      alert(err.message || 'Failed to request reactivation');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=dept')}>← Back</button>
@@ -95,30 +115,47 @@ function BatchProgression() {
                   <tr><td colSpan="5" style={{ padding: '1rem', textAlign: 'center', color: '#64748b' }}>No batches found</td></tr>
                 ) : batches.map((b) => {
                   const semester = Number(b.current_semester_number || 1);
-                  const canPromote = b.is_active !== false && !b.is_graduated && semester % 2 === 0;
+                  const maxSemesters = Number(b.max_semesters || 8);
+                  const isCourseCompleted = semester >= maxSemesters || b.course_completed;
+                  const canPromote = b.is_active !== false && !b.is_graduated && semester % 2 === 0 && !isCourseCompleted;
+                  const canDeactivate = isCourseCompleted && b.is_active !== false;
+                  const canReactivate = b.is_active === false;
+
                   return (
                     <tr key={b.id} style={{ borderTop: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '0.75rem', fontWeight: 600 }}>{b.name}</td>
-                      <td style={{ padding: '0.75rem' }}>{b.current_semester_number || '—'}</td>
+                      <td style={{ padding: '0.75rem' }}>{b.current_semester_number || '—'} {isCourseCompleted && <span style={{fontSize: '0.7rem', color: '#059669', display: 'block'}}>(Max Reached)</span>}</td>
                       <td style={{ padding: '0.75rem' }}>{b.current_year_number || b.year || '—'}</td>
                       <td style={{ padding: '0.75rem' }}>
                         {b.is_active === false ? <span style={{ color: '#991b1b' }}>Inactive</span> : (b.is_graduated ? <span style={{ color: '#065f46' }}>Graduated</span> : <span style={{ color: '#1d4ed8' }}>Active</span>)}
                       </td>
                       <td style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <button
-                          disabled={!canPromote || actionLoading === `promote-${b.id}`}
-                          onClick={() => requestPromotion(b)}
-                          style={{ padding: '0.3rem 0.7rem', background: canPromote ? '#2563eb' : '#94a3b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: canPromote ? 'pointer' : 'not-allowed', fontSize: '.8rem' }}
-                        >
-                          {actionLoading === `promote-${b.id}` ? 'Requesting...' : 'Request Promotion'}
-                        </button>
-                        <button
-                          disabled={b.is_active === false || actionLoading === `deactivate-${b.id}`}
-                          onClick={() => requestDeactivation(b)}
-                          style={{ padding: '0.3rem 0.7rem', background: b.is_active === false ? '#94a3b8' : '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: b.is_active === false ? 'not-allowed' : 'pointer', fontSize: '.8rem' }}
-                        >
-                          {actionLoading === `deactivate-${b.id}` ? 'Requesting...' : 'Deactivate Batch'}
-                        </button>
+                        {!isCourseCompleted && (
+                          <button
+                            disabled={!canPromote || actionLoading === `promote-${b.id}`}
+                            onClick={() => requestPromotion(b)}
+                            style={{ padding: '0.3rem 0.7rem', background: canPromote ? '#2563eb' : '#94a3b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: canPromote ? 'pointer' : 'not-allowed', fontSize: '.8rem' }}
+                          >
+                            {actionLoading === `promote-${b.id}` ? 'Requesting...' : 'Request Promotion'}
+                          </button>
+                        )}
+                        {canReactivate ? (
+                          <button
+                            disabled={actionLoading === `reactivate-${b.id}`}
+                            onClick={() => requestReactivation(b)}
+                            style={{ padding: '0.3rem 0.7rem', background: '#059669', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '.8rem' }}
+                          >
+                            {actionLoading === `reactivate-${b.id}` ? 'Requesting...' : 'Reactivate Batch'}
+                          </button>
+                        ) : (
+                          <button
+                            disabled={!canDeactivate || actionLoading === `deactivate-${b.id}`}
+                            onClick={() => requestDeactivation(b)}
+                            style={{ padding: '0.3rem 0.7rem', background: canDeactivate ? '#dc2626' : '#94a3b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: canDeactivate ? 'pointer' : 'not-allowed', fontSize: '.8rem' }}
+                          >
+                            {actionLoading === `deactivate-${b.id}` ? 'Requesting...' : 'Mark Course Completed & Deactivate'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -127,7 +164,7 @@ function BatchProgression() {
             </table>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem' }}>
               <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Promotion Requests</h3>
               <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
@@ -143,6 +180,17 @@ function BatchProgression() {
               <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Deactivation Requests</h3>
               <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
                 {deactivationRequests.length === 0 ? <p style={{ color: '#64748b', margin: 0 }}>No requests</p> : deactivationRequests.slice(0, 12).map((r) => (
+                  <div key={r.id} style={{ padding: '0.5rem 0', borderTop: '1px solid #f1f5f9' }}>
+                    <div style={{ fontWeight: 600 }}>{r.batch_name || 'Batch'}</div>
+                    <div style={{ fontSize: '.84rem', color: '#475569' }}>{r.status}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem' }}>
+              <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Reactivation Requests</h3>
+              <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                {reactivationRequests.length === 0 ? <p style={{ color: '#64748b', margin: 0 }}>No requests</p> : reactivationRequests.slice(0, 12).map((r) => (
                   <div key={r.id} style={{ padding: '0.5rem 0', borderTop: '1px solid #f1f5f9' }}>
                     <div style={{ fontWeight: 600 }}>{r.batch_name || 'Batch'}</div>
                     <div style={{ fontSize: '.84rem', color: '#475569' }}>{r.status}</div>

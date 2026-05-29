@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
-import { userAPI, departmentAPI } from '../../services/api';
-import { Link } from 'react-router-dom';
+import { userAPI, departmentAPI, classAPI } from '../../services/api';
+import { Link, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
 function Users() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [filterDept, setFilterDept] = useState('');
-  const [filterRole, setFilterRole] = useState('');
+  
+  const [filterDept, setFilterDept] = useState(searchParams.get('dept') || '');
+  const [filterRole, setFilterRole] = useState(searchParams.get('role') || '');
+  const [filterStatus, setFilterStatus] = useState(searchParams.get('pending') === 'true' ? 'pending' : '');
+  const [filterBatch, setFilterBatch] = useState(searchParams.get('batch') || '');
+  const [classes, setClasses] = useState([]);
 
   const token = localStorage.getItem('token');
   let callerRole = '';
@@ -19,11 +26,12 @@ function Users() {
 
   useEffect(() => {
     fetchDepartments();
+    fetchClasses();
   }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, [filterDept, filterRole]);
+  }, [filterDept, filterRole, filterStatus, filterBatch]);
 
   const fetchDepartments = async () => {
     try {
@@ -34,6 +42,15 @@ function Users() {
     }
   };
 
+  const fetchClasses = async () => {
+    try {
+      const data = await classAPI.getAll();
+      setClasses(data);
+    } catch (err) {
+      console.error('Failed to load classes:', err);
+    }
+  };
+
   const fetchUsers = async () => {
     setLoading(true);
     setError('');
@@ -41,7 +58,18 @@ function Users() {
       const params = {};
       if (filterDept) params.dept_id = filterDept;
       if (filterRole) params.role = filterRole;
-      const data = await userAPI.getAll(params);
+      let data = await userAPI.getAll(params);
+      
+      if (filterStatus === 'pending') {
+        data = data.filter(u => u.is_approved === false);
+      } else if (filterStatus === 'verified') {
+        data = data.filter(u => u.is_approved === true);
+      }
+
+      if (filterBatch) {
+        data = data.filter(u => u.class_id === filterBatch);
+      }
+      
       setUsers(data);
     } catch (err) {
       setError(err.message);
@@ -142,6 +170,20 @@ function Users() {
           <option value="faculty">Faculty</option>
           <option value="student">Student</option>
         </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+          <option value="">All Statuses</option>
+          <option value="verified">Verified</option>
+          <option value="pending">Pending Approval</option>
+        </select>
+        {filterRole === 'student' && (
+          <select value={filterBatch} onChange={(e) => setFilterBatch(e.target.value)} style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+            <option value="">All Batches</option>
+            {classes
+              .filter(c => !filterDept || c.dept_id === filterDept)
+              .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+            }
+          </select>
+        )}
       </div>
 
       {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
@@ -169,7 +211,14 @@ function Users() {
               users.map((u) => (
                 <tr key={u.id} style={{ borderBottom: '1px solid #eee' }}>
                   <td style={{ padding: '0.75rem' }}>{u.username}</td>
-                  <td style={{ padding: '0.75rem' }}>{u.full_name}</td>
+                  <td style={{ padding: '0.75rem' }}>
+                    {u.full_name}
+                    {u.role === 'student' && u.class_name && (
+                      <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem' }}>
+                        Batch: {u.class_name}
+                      </div>
+                    )}
+                  </td>
                   <td style={{ padding: '0.75rem' }}>
                     {u.designation || '—'}
                     {callerRole === 'hod' && ['faculty', 'advisor'].includes(u.role) && (

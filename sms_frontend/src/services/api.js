@@ -416,6 +416,10 @@ export const profileAPI = {
     headers: getHeaders(true)
   }).then(handleResponse),
 
+  getPendingClassStudents: (classId) => fetch(`${BASE_URL}/api/profile/class/${classId}/pending`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
   createStudentManually: (data) => fetch(`${BASE_URL}/api/students/profile`, {
     method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
   }).then(handleResponse),
@@ -551,6 +555,16 @@ export const progressionAPI = {
     headers: getHeaders(true)
   }).then(handleResponse),
   reviewDeactivation: (requestId, approve) => fetch(`${BASE_URL}/api/progression/batch-deactivation-requests/${requestId}/review`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ approve })
+  }).then(handleResponse),
+
+  requestReactivation: (data) => fetch(`${BASE_URL}/api/progression/batch-reactivation-requests`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+  listReactivations: (status) => fetch(`${BASE_URL}/api/progression/batch-reactivation-requests${status ? `?status=${status}` : ''}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+  reviewReactivation: (requestId, approve) => fetch(`${BASE_URL}/api/progression/batch-reactivation-requests/${requestId}/review`, {
     method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ approve })
   }).then(handleResponse),
 };

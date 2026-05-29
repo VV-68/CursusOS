@@ -2,6 +2,7 @@ const documentModel = require('../models/studentDocumentModel');
 const profileModel = require('../models/studentProfileModel');
 const { isAdvisorOfStudent } = require('../utils/authorizationHelpers');
 const { supabase } = require('../utils/storageClient');
+const pool = require('../db/connection');
 
 exports.uploadDocument = async (req, res) => {
   try {
@@ -63,7 +64,6 @@ exports.getStudentDocuments = async (req, res) => {
       const authorized = await isAdvisorOfStudent(req.user.id, student_id);
       if (!authorized) return res.status(403).json({ error: 'This student is not in your class' });
     } else if (req.user.role === 'hod') {
-      const { pool } = require('../db/connection');
       const { rows } = await pool.query(
         `SELECT 1 FROM student_profiles sp
          JOIN classes c ON c.id = sp.class_id
