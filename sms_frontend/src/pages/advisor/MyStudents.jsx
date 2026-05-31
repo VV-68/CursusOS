@@ -15,6 +15,7 @@ function MyStudents() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterVerified, setFilterVerified] = useState('all'); // all, verified, unverified
+  const [activeOnly, setActiveOnly] = useState(true);
 
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -74,8 +75,11 @@ function MyStudents() {
     const matchesSearch = !search || st.full_name?.toLowerCase().includes(search.toLowerCase()) || st.roll_no?.toLowerCase().includes(search.toLowerCase()) || st.email?.toLowerCase().includes(search.toLowerCase());
     const isVerified = st.isverified === 1;
     const matchesFilter = filterVerified === 'all' || (filterVerified === 'verified' && isVerified) || (filterVerified === 'unverified' && !isVerified);
-    return matchesSearch && matchesFilter;
+    const matchesActive = activeOnly ? st.is_active !== false : st.is_active === false;
+    return matchesSearch && matchesFilter && matchesActive;
   });
+
+  const pendingStudents = (pendingStudentsByClass[activeClass] || []).filter(st => activeOnly ? st.is_active !== false : st.is_active === false);
 
   if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading students...</div>;
 
@@ -129,6 +133,16 @@ function MyStudents() {
               <option value="unverified">Unverified Only</option>
             </select>
           </div>
+          <div className="dept-field" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f8fafc', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <input 
+              type="checkbox" 
+              id="activeOnly" 
+              checked={activeOnly} 
+              onChange={e => setActiveOnly(e.target.checked)} 
+              style={{ width: '1.2rem', height: '1.2rem', accentColor: '#007bff', cursor: 'pointer', margin: 0 }} 
+            />
+            <label htmlFor="activeOnly" style={{ color: '#475569', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', margin: 0 }}>Active Students Only</label>
+          </div>
         </div>
       </div>
 
@@ -163,14 +177,16 @@ function MyStudents() {
                       )}
                     </td>
                     <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
-                      <button className="dept-btn dept-btn--outline" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem', marginRight: '0.5rem' }} onClick={() => navigate(`/advisor/student/${st.user_id}`)}>
-                        View
-                      </button>
-                      {st.isverified !== 1 && (
-                        <button className="dept-btn dept-btn--success" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleVerify(st.user_id)}>
-                          Verify
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'nowrap' }}>
+                        <button className="dept-btn dept-btn--outline" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }} onClick={() => navigate(`/advisor/student/${st.user_id}`)}>
+                          View
                         </button>
-                      )}
+                        {st.isverified !== 1 && (
+                          <button className="dept-btn dept-btn--success" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleVerify(st.user_id)}>
+                            Verify
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -180,7 +196,7 @@ function MyStudents() {
         </div>
       )}
 
-      {(pendingStudentsByClass[activeClass] && pendingStudentsByClass[activeClass].length > 0) && (
+      {(pendingStudents.length > 0) && (
         <div style={{ marginTop: '2rem' }}>
           <h2 style={{ color: '#f59e0b', fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             ⏳ Pending HOD Approval
@@ -197,7 +213,7 @@ function MyStudents() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pendingStudentsByClass[activeClass].map((st) => (
+                  {pendingStudents.map((st) => (
                     <tr key={st.user_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '1rem', color: '#1e293b' }}>{st.roll_no || '—'}</td>
                       <td style={{ padding: '1rem', color: '#1e293b', fontWeight: '500' }}>{st.full_name}</td>

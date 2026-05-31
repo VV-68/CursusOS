@@ -25,8 +25,9 @@ function DepartmentInternals() {
     if (deptId) {
       classAPI.getAll()
         .then(data => {
-          // Filter to classes in this department if possible
-          setClasses(data);
+          // Filter out deactivated batches
+          const activeClasses = data.filter(c => c.is_active !== false);
+          setClasses(activeClasses);
         })
         .catch(() => {});
     }

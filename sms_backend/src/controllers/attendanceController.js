@@ -18,6 +18,13 @@ const validateSlot = async (req, res) => {
     const { course_assignment_id, date, period_no = 1 } = req.query;
     if (!course_assignment_id || !date) return res.status(400).json({ error: 'Missing params' });
 
+    const dayName = getDayName(date);
+    if (dayName === 'Sunday') {
+      return res.status(400).json({
+          error: 'No timetable slots exist on Sunday'
+      });
+    }
+
     // Advisors, HODs, admins bypass timetable check
     if (['advisor', 'hod', 'admin'].includes(req.user.role)) {
       return res.json({ allowed: true, reason: 'role_bypass' });
@@ -57,6 +64,13 @@ const getAttendanceSheet = async (req, res) => {
     const { course_assignment_id, date, period_no = 1 } = req.query;
     if (!course_assignment_id || !date) return res.status(400).json({ error: 'Missing params' });
 
+    const dayName = getDayName(date);
+    if (dayName === 'Sunday') {
+      return res.status(400).json({
+          error: 'No timetable slots exist on Sunday'
+      });
+    }
+
     if (req.user.role === 'faculty') {
       const assignment = await getFacultyAssignment(req.user.id, course_assignment_id);
       if (!assignment) return res.status(403).json({ error: 'You are not assigned to this course' });
@@ -91,6 +105,13 @@ const getAttendanceSheet = async (req, res) => {
 const markAttendance = async (req, res) => {
   try {
     const { course_assignment_id, date, period_no = 1, records } = req.body;
+
+    const dayName = getDayName(date);
+    if (dayName === 'Sunday') {
+      return res.status(400).json({
+          error: 'No timetable slots exist on Sunday'
+      });
+    }
 
     // 1. Course ownership check
     if (req.user.role === 'faculty') {
@@ -158,6 +179,28 @@ const requestOverride = async (req, res) => {
     const override = await overrideModel.createOverrideRequest(
       course_assignment_id, req.user.id, date, period_no, reason || ''
     );
+    
+    try {
+      const { rows: classInfo } = await pool.query(`
+        SELECT cl.advisor1_id, cl.advisor2_id, c.code, c.name, cl.name as class_name
+        FROM course_assignments ca
+        JOIN classes cl ON cl.id = ca.class_id
+        JOIN courses c ON c.id = ca.course_id
+        WHERE ca.id = $1
+      `, [course_assignment_id]);
+      
+      if (classInfo.length > 0) {
+        const { advisor1_id, advisor2_id, code, name, class_name } = classInfo[0];
+        const { notifyUser } = require('../services/notificationService');
+        const msg = `Faculty has requested an attendance override for ${class_name} (${code} - ${name}) on ${date} (Period ${period_no}).`;
+        
+        if (advisor1_id) await notifyUser(req.user.id, advisor1_id, msg);
+        if (advisor2_id) await notifyUser(req.user.id, advisor2_id, msg);
+      }
+    } catch (e) {
+      console.error('Failed to send override notification to advisor:', e);
+    }
+
     res.status(201).json(override);
   } catch (err) {
     console.error(err);
@@ -235,6 +278,28 @@ const reviewOverride = async (req, res) => {
 
     const updated = await overrideModel.reviewOverride(id, status, req.user.id);
     await logAudit(req.user.id, `OVERRIDE_${status.toUpperCase()}`, 'attendance_overrides', id, null, { override_id: id });
+
+    try {
+      const { notifyUser } = require('../services/notificationService');
+      const { rows: overrideData } = await pool.query(`
+        SELECT ao.faculty_id, ao.requested_date, ao.requested_period, c.code, cl.name as class_name
+        FROM attendance_overrides ao
+        JOIN course_assignments ca ON ca.id = ao.course_assignment_id
+        JOIN courses c ON c.id = ca.course_id
+        JOIN classes cl ON cl.id = ca.class_id
+        WHERE ao.id = $1
+      `, [id]);
+      
+      if (overrideData.length > 0) {
+        const d = overrideData[0];
+        // Format date string from DB date object if necessary
+        const dt = d.requested_date instanceof Date ? d.requested_date.toISOString().split('T')[0] : d.requested_date;
+        const msg = `Your attendance override request for ${d.class_name} (${d.code}) on ${dt} (Period ${d.requested_period}) has been ${status} by ${req.user.role}.`;
+        await notifyUser(req.user.id, d.faculty_id, msg);
+      }
+    } catch (e) {
+      console.error('Failed to notify faculty of override response:', e);
+    }
 
     res.json(updated);
   } catch (err) {

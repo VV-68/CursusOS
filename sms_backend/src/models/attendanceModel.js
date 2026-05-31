@@ -4,7 +4,7 @@ const getAttendanceSheet = async (course_assignment_id, date, period_no) => {
   const { rows } = await pool.query(
     `SELECT u.id as student_id, u.full_name as student_name, p.roll_no, ar.status
      FROM course_assignments ca
-     JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id
+     JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.is_active = TRUE
      JOIN student_profiles p ON p.user_id = sah.student_id
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      LEFT JOIN course_sessions cs ON cs.course_assignment_id = ca.id AND cs.date = $2 AND cs.period_no = $3

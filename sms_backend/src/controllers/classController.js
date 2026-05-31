@@ -9,10 +9,17 @@ const getAllClasses = async (req, res) => {
     const { role, dept_id, id } = req.user;
     
     let filtered_classes = classes;
+    
+    // 1. Institution boundary check
+    if (req.user.institution_id) {
+      filtered_classes = filtered_classes.filter(c => c.institution_id === req.user.institution_id);
+    }
+
+    // 2. Role boundary check
     if (role === 'hod') {
-      filtered_classes = classes.filter(c => c.dept_id === dept_id);
+      filtered_classes = filtered_classes.filter(c => c.dept_id === dept_id);
     } else if (role === 'advisor') {
-      filtered_classes = classes.filter(c => c.advisor1_id === id || c.advisor2_id === id);
+      filtered_classes = filtered_classes.filter(c => c.advisor1_id === id || c.advisor2_id === id);
     } else if (role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -26,7 +33,17 @@ const getAllClasses = async (req, res) => {
 const getUnrestrictedClasses = async (req, res) => {
   try {
     const classes = await classModel.getAllClasses();
-    res.json(classes);
+    let filtered_classes = classes;
+    
+    if (req.user.institution_id) {
+      filtered_classes = filtered_classes.filter(c => c.institution_id === req.user.institution_id);
+    }
+
+    if (['hod', 'faculty', 'advisor'].includes(req.user.role) && req.user.dept_id) {
+      filtered_classes = filtered_classes.filter(c => c.dept_id === req.user.dept_id);
+    }
+    
+    res.json(filtered_classes);
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -88,6 +105,30 @@ const assignAdvisors = async (req, res) => {
 
     console.log('[assignAdvisors] logging audit...');
     await logAudit(req.user.id, 'ADVISOR_REASSIGNED', 'class', req.params.id, old_value, new_value);
+
+    // Demote old advisors to faculty if they have no other classes
+    const userModel = require('../models/userModel');
+    const checkAndConvertAdvisor = async (advisorId) => {
+      if (!advisorId) return;
+      // Don't demote if they are still an advisor for this very class (just shifted 1 to 2)
+      if (advisorId === advisor1_id || advisorId === advisor2_id) return;
+      
+      const advisor = await userModel.getUserById(advisorId);
+      if (!advisor || advisor.role !== 'advisor') return;
+      
+      const currentClasses = await classModel.getAllClasses();
+      const hasOtherActiveClass = currentClasses.some(c => 
+        c.is_active && c.id !== req.params.id && 
+        (c.advisor1_id === advisorId || c.advisor2_id === advisorId)
+      );
+      
+      if (!hasOtherActiveClass) {
+        await userModel.updateUserRole(advisorId, 'faculty');
+      }
+    };
+    
+    await checkAndConvertAdvisor(old_value.advisor1);
+    await checkAndConvertAdvisor(old_value.advisor2);
     
     res.json({ message: 'Advisors assigned successfully' });
   } catch (err) {

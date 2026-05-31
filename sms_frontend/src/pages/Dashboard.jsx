@@ -270,6 +270,7 @@ function Dashboard() {
           <DashCard to="/hod/batch-progression" icon="📈" label="Batch Progression" description="Request promotions and deactivation" />
           <DashCard to="/hod/courses" icon="📚" label="Manage Courses" description="Department course catalog" />
           <DashCard to="/hod/internals" icon="📊" label="Dept Internals" description="View all class internal marks" />
+          <DashCard to="/advisor/attendance/overrides" icon="🔓" label="Override Requests" description="Faculty attendance overrides" />
         </DashSection>
       )}
 

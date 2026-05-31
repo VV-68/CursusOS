@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { timetableAPI, classAPI, semesterAPI } from '../../services/api';
+import { timetableAPI, classAPI } from '../../services/api';
 import { downloadTimetablePdf } from '../../utils/timetablePdf';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -9,23 +9,15 @@ const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 export default function ClassTimetableView() {
   const { classId } = useParams();
   const [classInfo, setClassInfo] = useState(null);
-  const [semesters, setSemesters] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState('');
   const [timetable, setTimetable] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const [classes, semData] = await Promise.all([
-          classAPI.getAll(),
-          semesterAPI.getAll()
-        ]);
+        const classes = await classAPI.getAll();
         const cls = classes.find(c => c.id === classId);
         setClassInfo(cls);
-        setSemesters(semData);
-        const active = semData.find(s => s.is_active);
-        if (active) setSelectedSemester(active.id);
       } catch (err) {
         alert(err.message);
       } finally {
@@ -35,25 +27,24 @@ export default function ClassTimetableView() {
   }, [classId]);
 
   useEffect(() => {
-    if (!selectedSemester || !classId) return;
+    if (!classId) return;
     (async () => {
       try {
-        const data = await timetableAPI.get(classId, selectedSemester);
+        const data = await timetableAPI.get(classId);
         setTimetable(data);
       } catch (err) {
         alert(err.message);
       }
     })();
-  }, [classId, selectedSemester]);
+  }, [classId]);
 
   const getSlot = (day, period) =>
     timetable.find(t => t.day_of_week === day && t.period_no === period);
 
   const handlePdf = () => {
-    const sem = semesters.find(s => s.id === selectedSemester);
     downloadTimetablePdf({
       title: `Timetable — ${classInfo?.name || ''} ${classInfo?.section || ''}`,
-      subtitle: `${sem?.name || ''} | Year ${classInfo?.year}`,
+      subtitle: `Year ${classInfo?.year} | Term ${classInfo?.current_semester_number || 1}`,
       timetable
     });
   };
@@ -75,9 +66,9 @@ export default function ClassTimetableView() {
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'center' }}>
-        {selectedSemester && (
+        {classInfo && (
           <div style={{ padding: '0.5rem 1rem', background: '#f3f4f6', borderRadius: 6, border: '1px solid #d1d5db', color: '#374151', fontSize: '0.95rem' }}>
-            <strong>Term:</strong> {semesters.find(s => s.id === selectedSemester)?.name} {semesters.find(s => s.id === selectedSemester)?.is_active ? '(Active)' : ''}
+            <strong>Term:</strong> {classInfo.current_semester_number || 1}
           </div>
         )}
         <button
@@ -93,7 +84,7 @@ export default function ClassTimetableView() {
         </button>
       </div>
 
-      {selectedSemester && (
+      {classInfo && (
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
           <thead>
             <tr style={{ background: '#f1f5f9' }}>

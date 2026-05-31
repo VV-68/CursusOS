@@ -362,10 +362,18 @@ html.dark-mode .btn-edit {
 html.dark-mode .modal-content,
 html.dark-mode .modal-overlay .modal-content,
 html.dark-mode .json-upload-modal {
-  background: rgba(11, 17, 32, 0.95) !important;
+  background: var(--dm-surface) !important;
   border-color: var(--dm-card-border) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
   color: var(--dm-text);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.dark-mode .json-upload-overlay {
+  background: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 html.dark-mode .json-upload-modal__header {

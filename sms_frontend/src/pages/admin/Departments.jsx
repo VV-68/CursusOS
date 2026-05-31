@@ -70,7 +70,7 @@ function Departments() {
   const btnStyle = (bg) => ({
     padding: '0.3rem 0.8rem', background: bg, color: '#fff',
     border: 'none', borderRadius: '3px', cursor: 'pointer',
-    fontSize: '.8rem', fontWeight: 500
+    fontSize: '.8rem', fontWeight: 500, whiteSpace: 'nowrap'
   });
 
   return (
@@ -167,15 +167,15 @@ function Departments() {
                     <td style={{ padding: '0.75rem' }}>{d.hod_name || <span style={{ color: '#999' }}>Not Assigned</span>}</td>
                     <td style={{ padding: '0.75rem' }}>{d.created_at ? new Date(d.created_at).toLocaleDateString() : '—'}</td>
                     <td style={{ padding: '0.75rem' }}>
-                      <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'nowrap' }}>
                         <Link to={`/admin/departments/${d.id}/assign-hod`}>
                           <button style={btnStyle('#17a2b8')}>Assign HOD</button>
                         </Link>
                         <Link to={`/admin/departments/${d.id}/edit`}>
                           <button style={btnStyle('#007bff')}>✏️ Edit</button>
                         </Link>
-                        <Link to={`/admin/departments/${d.id}/students`}>
-                          <button style={btnStyle('#10b981')}>🧑‍🎓 View Students</button>
+                        <Link to={`/admin/departments/${d.id}/batches`}>
+                          <button style={btnStyle('#10b981')}>🧑‍🎓 View Batches</button>
                         </Link>
                         <button
                           style={btnStyle(deleting === d.id ? '#999' : '#dc3545')}

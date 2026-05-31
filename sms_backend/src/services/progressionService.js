@@ -3,7 +3,6 @@ const {
   deriveYearFromSemester,
   getBatchCurrentState,
   getStudentActiveAcademicState,
-  resolveSemesterIdForNumber,
 } = require('./academicStateService');
 const { notifyUser, notifyHODs } = require('./notificationService');
 
@@ -20,19 +19,6 @@ const ensureEvenSemesterForRequest = (semester) => {
   }
 };
 
-const copyCourseAssignmentsToNewSemester = async (client, classId, currentSemesterId, targetSemesterId) => {
-  if (!targetSemesterId) return 0;
-  const res = await client.query(
-    `INSERT INTO course_assignments (faculty1_id, faculty2_id, course_id, class_id, semester_id)
-     SELECT ca.faculty1_id, ca.faculty2_id, ca.course_id, ca.class_id, $2
-     FROM course_assignments ca
-     WHERE ca.class_id = $1 AND ca.semester_id = $3
-     ON CONFLICT DO NOTHING
-     RETURNING id`,
-    [classId, targetSemesterId, currentSemesterId]
-  );
-  return res.rowCount;
-};
 
 const createBatchPromotionRequest = async ({ batchId, requestedBy, remarks }) => {
   const batch = await getBatchCurrentState(batchId);
@@ -59,7 +45,10 @@ const createBatchPromotionRequest = async ({ batchId, requestedBy, remarks }) =>
     [batchId, requestedBy, batch.current_semester_number, targetSemester, batch.current_year_number, targetYear, remarks || null]
   );
 
-  const admins = await pool.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+  const admins = await pool.query(
+    `SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1`,
+    [batch.institution_id]
+  );
   for (const admin of admins.rows) {
     await notifyUser(requestedBy, admin.id, `Promotion request pending for batch ${batch.name} (${batch.current_semester_number} -> ${targetSemester}).`);
   }
@@ -112,16 +101,16 @@ const applyPromotion = async (requestId, reviewerId, approve, remarks) => {
       `SELECT user_id FROM student_profiles WHERE class_id = $1`,
       [req.batch_id]
     );
+
     for (const student of studentRes.rows) {
       await client.query(
         `INSERT INTO student_academic_history (
           student_id, class_id, semester_id, current_year, current_semester,
           advisor1_id, advisor2_id, promoted_at, is_active, remarks
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, now(), true, $8)`,
+        ) VALUES ($1, $2, null, $3, $4, $5, $6, now(), true, $7)`,
         [
           student.user_id,
           req.batch_id,
-          targetSemesterId,
           req.target_year,
           req.target_semester,
           advisors.advisor1,
@@ -136,14 +125,13 @@ const applyPromotion = async (requestId, reviewerId, approve, remarks) => {
        SET current_semester_number = $1,
            current_year_number = $2,
            year = year + 1,
-           semester_id = COALESCE($3, semester_id),
            is_active = true,
            deactivation_requested = false
-       WHERE id = $4`,
-      [req.target_semester, req.target_year, targetSemesterId, req.batch_id]
+       WHERE id = $3`,
+      [req.target_semester, req.target_year, req.batch_id]
     );
 
-    await copyCourseAssignmentsToNewSemester(client, req.batch_id, batch.semester_id, targetSemesterId);
+
 
     const approved = await client.query(
       `UPDATE batch_promotion_requests
@@ -185,8 +173,6 @@ const directPromoteOddToEven = async (batchId, actorId) => {
     
     // Lock batch
     await client.query(`SELECT id FROM classes WHERE id = $1 FOR UPDATE`, [batchId]);
-
-    const targetSemesterId = await resolveSemesterIdForNumber(targetSemester);
     const advisors = {
       advisor1: batch.advisor1_id || null,
       advisor2: batch.advisor2_id || null,
@@ -212,7 +198,7 @@ const directPromoteOddToEven = async (batchId, actorId) => {
         [
           student.user_id,
           batchId,
-          targetSemesterId,
+          null,
           targetYear,
           targetSemester,
           advisors.advisor1,
@@ -226,14 +212,11 @@ const directPromoteOddToEven = async (batchId, actorId) => {
       `UPDATE classes
        SET current_semester_number = $1,
            current_year_number = $2,
-           semester_id = COALESCE($3, semester_id),
            is_active = true,
            deactivation_requested = false
-       WHERE id = $4`,
-      [targetSemester, targetYear, targetSemesterId, batchId]
+       WHERE id = $3`,
+      [targetSemester, targetYear, batchId]
     );
-
-    await copyCourseAssignmentsToNewSemester(client, batchId, batch.semester_id, targetSemesterId);
 
     await client.query('COMMIT');
     return { success: true, targetSemester, targetYear };
@@ -270,7 +253,10 @@ const createBatchDeactivationRequest = async ({ batchId, requestedBy, reason }) 
     [batchId, requestedBy, reason || null]
   );
 
-  const admins = await pool.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+  const admins = await pool.query(
+    `SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1`,
+    [batch.institution_id]
+  );
   for (const admin of admins.rows) {
     await notifyUser(requestedBy, admin.id, `Deactivation request pending for batch ${batch.name}.`);
   }
@@ -299,6 +285,10 @@ const reviewBatchDeactivationRequest = async ({ requestId, reviewerId, approve }
     );
 
     if (approve) {
+      // Fetch advisors before clearing them
+      const batchRes = await client.query(`SELECT advisor1_id, advisor2_id FROM classes WHERE id = $1 FOR UPDATE`, [req.batch_id]);
+      const deactivatedBatch = batchRes.rows[0];
+
       await client.query(
         `UPDATE classes
          SET is_active = false,
@@ -306,7 +296,9 @@ const reviewBatchDeactivationRequest = async ({ requestId, reviewerId, approve }
              is_graduated = true,
              deactivated_at = now(),
              deactivation_approved_by = $2,
-             deactivation_requested = false
+             deactivation_requested = false,
+             advisor1_id = null,
+             advisor2_id = null
          WHERE id = $1`,
         [req.batch_id, reviewerId]
       );
@@ -317,6 +309,33 @@ const reviewBatchDeactivationRequest = async ({ requestId, reviewerId, approve }
          WHERE sp.class_id = $1 AND sp.user_id = u.id AND u.role = 'student'`,
         [req.batch_id]
       );
+
+      // Check if old advisors should be demoted to faculty
+      if (deactivatedBatch) {
+        const checkAndConvertAdvisor = async (advisorId) => {
+          if (!advisorId) return;
+          const userRes = await client.query(`SELECT id, role FROM users WHERE id = $1`, [advisorId]);
+          const advisor = userRes.rows[0];
+          
+          if (!advisor || advisor.role !== 'advisor') return;
+          
+          const otherClassesRes = await client.query(
+            `SELECT id FROM classes 
+             WHERE is_active = true 
+             AND id != $1 
+             AND (advisor1_id = $2 OR advisor2_id = $2)
+             LIMIT 1`,
+            [req.batch_id, advisorId]
+          );
+
+          if (otherClassesRes.rows.length === 0) {
+            await client.query(`UPDATE users SET role = 'faculty', updated_at = now() WHERE id = $1`, [advisorId]);
+          }
+        };
+
+        await checkAndConvertAdvisor(deactivatedBatch.advisor1_id);
+        await checkAndConvertAdvisor(deactivatedBatch.advisor2_id);
+      }
     } else {
       await client.query(
         `UPDATE classes
@@ -348,8 +367,10 @@ const promoteStudent = async (studentId, newSemesterId, newYear, newSemesterNumb
 const promoteClass = async (classId, _newSemesterId, newYear, newSemesterNumber, _newAdvisor1, _newAdvisor2, remarks = 'Batch Promoted', actorId = null) => {
   let requesterId = actorId;
   if (!requesterId) {
+    const batch = await getBatchCurrentState(classId);
     const fallbackUser = await pool.query(
-      `SELECT id FROM users WHERE role IN ('admin', 'hod') AND is_active = true ORDER BY created_at ASC NULLS LAST LIMIT 1`
+      `SELECT id FROM users WHERE role IN ('admin', 'hod') AND is_active = true AND institution_id = $1 ORDER BY created_at ASC NULLS LAST LIMIT 1`,
+      [batch?.institution_id]
     );
     requesterId = fallbackUser.rows[0]?.id;
   }
@@ -363,32 +384,50 @@ const promoteClass = async (classId, _newSemesterId, newYear, newSemesterNumber,
   return applyPromotion(req.id, requesterId, true, remarks);
 };
 
-const listPromotionRequests = async (status = null) => {
+const listPromotionRequests = async (status = null, deptId = null, institutionId = null) => {
   const params = [];
-  let q = `SELECT bpr.*, c.name as batch_name FROM batch_promotion_requests bpr JOIN classes c ON c.id = bpr.batch_id WHERE 1=1`;
+  let q = `SELECT bpr.*, c.name as batch_name FROM batch_promotion_requests bpr JOIN classes c ON c.id = bpr.batch_id JOIN departments d ON c.dept_id = d.id WHERE 1=1`;
   if (status) {
     params.push(status);
     q += ` AND bpr.status = $${params.length}`;
+  }
+  if (deptId) {
+    params.push(deptId);
+    q += ` AND c.dept_id = $${params.length}`;
+  }
+  if (institutionId) {
+    params.push(institutionId);
+    q += ` AND d.institution_id = $${params.length}`;
   }
   q += ` ORDER BY bpr.requested_at DESC`;
   const { rows } = await pool.query(q, params);
   return rows;
 };
 
-const listDeactivationRequests = async (statusFilter = null) => {
+const listDeactivationRequests = async (statusFilter = null, deptId = null, institutionId = null) => {
   let query = `
     SELECT r.*, c.name as batch_name, c.dept_id,
            u_req.full_name as requested_by_name,
            u_rev.full_name as reviewed_by_name
     FROM batch_deactivation_requests r
     JOIN classes c ON r.batch_id = c.id
+    JOIN departments d ON c.dept_id = d.id
     LEFT JOIN users u_req ON r.requested_by = u_req.id
     LEFT JOIN users u_rev ON r.reviewed_by = u_rev.id
+    WHERE 1=1
   `;
   const params = [];
   if (statusFilter) {
-    query += ` WHERE r.status = $1`;
     params.push(statusFilter);
+    query += ` AND r.status = $${params.length}`;
+  }
+  if (deptId) {
+    params.push(deptId);
+    query += ` AND c.dept_id = $${params.length}`;
+  }
+  if (institutionId) {
+    params.push(institutionId);
+    query += ` AND d.institution_id = $${params.length}`;
   }
   query += ` ORDER BY r.requested_at DESC`;
   const { rows } = await pool.query(query, params);
@@ -413,7 +452,10 @@ const createBatchReactivationRequest = async ({ batchId, requestedBy, reason }) 
     [batchId, requestedBy, reason || null]
   );
 
-  const admins = await pool.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+  const admins = await pool.query(
+    `SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1`,
+    [batch.institution_id]
+  );
   for (const admin of admins.rows) {
     await notifyUser(requestedBy, admin.id, `Reactivation request pending for batch ${batch.name}.`);
   }
@@ -481,20 +523,30 @@ const reviewBatchReactivationRequest = async ({ requestId, reviewerId, approve }
   }
 };
 
-const listReactivationRequests = async (statusFilter = null) => {
+const listReactivationRequests = async (statusFilter = null, deptId = null, institutionId = null) => {
   let query = `
     SELECT r.*, c.name as batch_name, c.dept_id,
            u_req.full_name as requested_by_name,
            u_rev.full_name as reviewed_by_name
     FROM batch_reactivation_requests r
     JOIN classes c ON r.batch_id = c.id
+    JOIN departments d ON c.dept_id = d.id
     LEFT JOIN users u_req ON r.requested_by = u_req.id
     LEFT JOIN users u_rev ON r.reviewed_by = u_rev.id
+    WHERE 1=1
   `;
   const params = [];
   if (statusFilter) {
-    query += ` WHERE r.status = $1`;
     params.push(statusFilter);
+    query += ` AND r.status = $${params.length}`;
+  }
+  if (deptId) {
+    params.push(deptId);
+    query += ` AND c.dept_id = $${params.length}`;
+  }
+  if (institutionId) {
+    params.push(institutionId);
+    query += ` AND d.institution_id = $${params.length}`;
   }
   query += ` ORDER BY r.requested_at DESC`;
   const { rows } = await pool.query(query, params);

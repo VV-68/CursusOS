@@ -149,16 +149,19 @@ const uploadCourses = async (req, res) => {
       return res.status(400).json({ error: 'Invalid JSON file' });
     }
 
-    const { semester_id, courses } = payload;
-    if (!semester_id || !Array.isArray(courses) || courses.length === 0) {
-      return res.status(400).json({ error: 'semester_id and courses array are required' });
-    }
+    // Accept semester_number (new) or semester_id (legacy compat)
+    const { semester_number, semester_id: legacySemesterId, courses } = payload;
+    const effectiveSemesterNumber = semester_number || null;
 
-    // Validate semester exists
-    const { rows: semRows } = await pool.query(
-      'SELECT id FROM semesters WHERE id = $1', [semester_id]
-    );
-    if (!semRows.length) return res.status(400).json({ error: 'Semester not found' });
+    // Resolve a semester_id for DB compatibility: use legacy if provided, otherwise try to find one
+    let semester_id = legacySemesterId || null;
+
+    if (!semester_id && !effectiveSemesterNumber) {
+      return res.status(400).json({ error: 'semester_number (or legacy semester_id) and courses array are required' });
+    }
+    if (!Array.isArray(courses) || courses.length === 0) {
+      return res.status(400).json({ error: 'courses array is required and must not be empty' });
+    }
 
     const dept_id = req.user.dept_id;
     const results = [];
@@ -179,29 +182,33 @@ const uploadCourses = async (req, res) => {
       );
       const savedCourse = courseRows[0];
 
-      // Link course to dept+semester
-      await pool.query(
-        `INSERT INTO department_semester_courses (dept_id, semester_id, course_id, added_by)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (dept_id, semester_id, course_id) DO UPDATE SET is_active = TRUE`,
-        [dept_id, semester_id, savedCourse.id, req.user.id]
-      );
+      // Link course to dept+semester (semester_id kept for compatibility)
+      if (semester_id) {
+        await pool.query(
+          `INSERT INTO department_semester_courses (dept_id, semester_id, course_id, added_by)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (dept_id, semester_id, course_id) DO UPDATE SET is_active = TRUE`,
+          [dept_id, semester_id, savedCourse.id, req.user.id]
+        );
+      }
 
       results.push(savedCourse);
     }
 
     // Deactivate any old courses for this dept+sem not in the new upload
-    const uploadedIds = results.map(r => r.id);
-    await pool.query(
-      `UPDATE department_semester_courses
-       SET is_active = FALSE
-       WHERE dept_id = $1 AND semester_id = $2
-         AND course_id != ALL($3::uuid[])`,
-      [dept_id, semester_id, uploadedIds]
-    );
+    if (semester_id) {
+      const uploadedIds = results.map(r => r.id);
+      await pool.query(
+        `UPDATE department_semester_courses
+         SET is_active = FALSE
+         WHERE dept_id = $1 AND semester_id = $2
+           AND course_id != ALL($3::uuid[])`,
+        [dept_id, semester_id, uploadedIds]
+      );
+    }
 
     await logAudit(req.user.id, 'COURSES_UPLOADED', 'department', dept_id, null,
-      { semester_id, count: results.length }
+      { semester_number: effectiveSemesterNumber, semester_id, count: results.length }
     );
 
     res.status(200).json({ message: `${results.length} courses synced`, courses: results });
@@ -213,9 +220,24 @@ const uploadCourses = async (req, res) => {
 
 const getDeptCourses = async (req, res) => {
   try {
-    const { semester_id } = req.query;
-    if (!semester_id) return res.status(400).json({ error: 'semester_id query param required' });
+    const { semester_id, semester_number } = req.query;
 
+    // Prefer semester_number (batch-based); fall back to legacy semester_id
+    if (semester_number) {
+      // Resolve courses via department_courses by period_number
+      const { rows } = await pool.query(
+        `SELECT dc.id, dc.course_name AS name, dc.course_code AS code, dc.credits
+         FROM department_courses dc
+         WHERE dc.dept_id = $1 AND dc.period_number = $2
+         ORDER BY dc.course_code ASC`,
+        [req.params.id, semester_number]
+      );
+      return res.json(rows);
+    }
+
+    if (!semester_id) return res.status(400).json({ error: 'semester_number or semester_id query param required' });
+
+    // Legacy path: use department_semester_courses
     const { rows } = await pool.query(
       `SELECT c.id, c.name, c.code, c.credits
        FROM department_semester_courses dsc

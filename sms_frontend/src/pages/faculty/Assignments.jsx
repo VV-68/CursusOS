@@ -38,6 +38,7 @@ function Assignments() {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
   const [selectedCA, setSelectedCA] = useState(initial_ca || '');
+  const [selectedCAObj, setSelectedCAObj] = useState(null);
   const [form, setForm] = useState({
     title: '', description: '', due_date: '', max_marks: 100, allow_late_submission: false,
   });
@@ -111,10 +112,20 @@ function Assignments() {
           <button style={s.backBtn} onClick={() => navigate('/dashboard?tab=teaching')}>← Back</button>
           <h1 style={s.title}>Assignments</h1>
         </div>
-        {selectedCA && <button style={s.newBtn} onClick={() => setShowModal(true)}>+ New Assignment</button>}
+        {selectedCA && <button style={s.newBtn} onClick={() => {
+          if (selectedCAObj && selectedCAObj.course_completed) {
+            window.alert('Batch completed the course');
+            return;
+          }
+          if (selectedCAObj && selectedCAObj.is_active_batch === false) {
+            window.alert('Batch deactivated');
+            return;
+          }
+          setShowModal(true);
+        }}>+ New Assignment</button>}
       </div>
 
-      <CourseSemesterSelector onSelect={setSelectedCA} initialValue={initial_ca} />
+      <CourseSemesterSelector onSelect={(id, obj) => { setSelectedCA(id); setSelectedCAObj(obj); }} initialValue={initial_ca} />
       
       {loading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading assignments...</div>}
       {error && <div style={s.error}>{error}</div>}

@@ -186,9 +186,8 @@ exports.getMyCourses = async (req, res) => {
        LEFT JOIN faculty_codes fc1 ON fc1.user_id = u1.id
        LEFT JOIN users u2     ON u2.id  = ca.faculty2_id
        LEFT JOIN faculty_codes fc2 ON fc2.user_id = u2.id
-       JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id AND sah.student_id = $1
+       JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.is_active = TRUE AND sah.student_id = $1
        JOIN student_profiles sp ON sp.user_id = sah.student_id
-       JOIN semesters s ON s.id = ca.semester_id
        ORDER BY c.code`,
       params
     );

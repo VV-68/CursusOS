@@ -12,8 +12,7 @@ function AssignCourse() {
     faculty1_id: '',
     faculty2_id: '',
     course_id: '',
-    class_id: '',
-    semester_id: '' // Actually needs to be an active semester ID ideally, prompt implies providing it
+    class_id: ''
   });
 
   useEffect(() => {
@@ -74,8 +73,6 @@ function AssignCourse() {
           {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
         </select>
 
-        {/* Temporary hardcoded input for semester_id until Semesters feature is built */}
-        <input name="semester_id" placeholder="Semester ID (UUID)" value={formData.semester_id} onChange={handleChange} required />
 
         <button type="submit">Complete Assignment</button>
       </form>

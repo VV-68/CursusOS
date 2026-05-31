@@ -10,7 +10,7 @@ import ChangePassword from './pages/shared/ChangePassword';
 import Users from './pages/admin/Users';
 import CreateUser from './pages/admin/CreateUser';
 import Departments from './pages/admin/Departments';
-import AdminDepartmentStudents from './pages/admin/AdminDepartmentStudents';
+import AdminDepartmentBatches from './pages/admin/AdminDepartmentBatches';
 import AssignHOD from './pages/admin/AssignHOD';
 import CreateDepartment from './pages/admin/CreateDepartment';
 import BatchLifecycleApprovals from './pages/admin/BatchLifecycleApprovals';
@@ -112,9 +112,9 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/admin/departments/:id/students" element={
+          <Route path="/admin/departments/:id/batches" element={
             <ProtectedRoute roles={['admin']}>
-              <AdminDepartmentStudents />
+              <AdminDepartmentBatches />
             </ProtectedRoute>
           } />
 

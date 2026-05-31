@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { classAPI, departmentAPI, getMe, semesterAPI, progressionAPI } from '../../services/api';
+import { classAPI, departmentAPI, getMe, progressionAPI } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,13 +9,14 @@ function Classes() {
   const [loading, setLoading] = useState(true);
   const [deptId, setDeptId] = useState(null);
   const [departments, setDepartments] = useState([]);
-  const [semesters, setSemesters] = useState([]);
+
   const [deleting, setDeleting] = useState(null);
   const [userRole, setUserRole] = useState('');
+  const [filterActive, setFilterActive] = useState(true);
 
   // Create form
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', year: '', section: '', dept_id: '', semester_id: '' });
+  const [formData, setFormData] = useState({ name: '', year: '', section: '', dept_id: '' });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -25,15 +26,13 @@ function Classes() {
 
   const init = async () => {
     try {
-      const [user, depts, sems] = await Promise.all([
+      const [user, depts] = await Promise.all([
         getMe(),
-        departmentAPI.getAll(),
-        semesterAPI.getAll().catch(() => [])
+        departmentAPI.getAll()
       ]);
       setUserRole(user.role);
       setDeptId(user.dept_id);
       setDepartments(depts);
-      setSemesters(sems);
 
       // Pre-fill dept_id for HOD
       if (user.role === 'hod' && user.dept_id) {
@@ -73,10 +72,9 @@ function Classes() {
         name: formData.name.trim(),
         year: parseInt(formData.year),
         section: formData.section.trim().toUpperCase(),
-        dept_id: formData.dept_id,
-        semester_id: formData.semester_id || null
+        dept_id: formData.dept_id
       });
-      setFormData(f => ({ name: '', year: '', section: '', dept_id: deptId || '', semester_id: '' }));
+      setFormData(f => ({ name: '', year: '', section: '', dept_id: deptId || '' }));
       setShowForm(false);
       await fetchClasses();
     } catch (err) {
@@ -143,7 +141,15 @@ function Classes() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=dept')}>← Back</button>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.75rem' }}>
         <h2>📚 Batch List</h2>
-        <div style={{ display: 'flex', gap: '.5rem' }}>
+        <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', marginRight: '1rem', fontSize: '0.85rem' }}>
+            <input 
+              type="checkbox" 
+              checked={filterActive} 
+              onChange={(e) => setFilterActive(e.target.checked)} 
+            />
+            Active Batches Only
+          </label>
           <button
             onClick={() => navigate('/hod/batch-progression')}
             style={{
@@ -235,22 +241,7 @@ function Classes() {
                 ))}
               </select>
             </div>
-            {semesters.length > 0 && (
-              <div style={{ minWidth: '150px' }}>
-                <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '.88rem' }}>Semester</label>
-                <select
-                  value={formData.semester_id}
-                  onChange={e => setFormData(f => ({ ...f, semester_id: e.target.value }))}
-                  className="form-control"
-                  disabled={formLoading}
-                >
-                  <option value="">Select semester...</option>
-                  {semesters.map(s => (
-                    <option key={s.id} value={s.id}>{s.name || `Semester ${s.number}`}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+
             <button
               type="submit"
               disabled={formLoading}
@@ -289,7 +280,7 @@ function Classes() {
             </tr>
           </thead>
           <tbody>
-            {classes.map((c) => (
+            {classes.filter(c => c.is_active === filterActive).map((c) => (
               <tr key={c.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.75rem', fontWeight: 500 }}>{c.name}</td>
                 <td style={{ padding: '0.75rem' }}>{c.year}</td>
@@ -328,7 +319,7 @@ function Classes() {
                   ) : <span style={{ color: '#94a3b8' }}>—</span>}
                 </td>
                 <td style={{ padding: '0.75rem' }}>
-                  <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'nowrap' }}>
                     <Link to={`/hod/classes/${c.id}/assign-advisors`}>
                       <button style={btnStyle('#0ea5e9')}>👥 Advisors</button>
                     </Link>

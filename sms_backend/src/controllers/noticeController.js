@@ -45,7 +45,8 @@ const getNotices = async (req, res) => {
       userId: id,
       role,
       deptId,
-      classId
+      classId,
+      institutionId: req.user.institution_id
     });
     res.json(notices);
   } catch (err) {
@@ -139,17 +140,20 @@ const createNotice = async (req, res) => {
       const { notifyAllStudents, notifyFacultiesAndHODs, notifyHODs } = require('../services/notificationService');
       const noticeMsg = `📢 New notice: ${noticeRow.title}`;
       if (resolvedAudience.includes('student')) {
-        await notifyAllStudents(req.user.id, noticeMsg);
+        await notifyAllStudents(req.user.id, noticeMsg, req.user.institution_id);
       }
       if (resolvedAudience.includes('faculty') && resolvedAudience.includes('hod')) {
-        await notifyFacultiesAndHODs(req.user.id, noticeMsg);
+        await notifyFacultiesAndHODs(req.user.id, noticeMsg, req.user.institution_id);
       } else {
         if (resolvedAudience.includes('hod')) {
-          await notifyHODs(req.user.id, null, noticeMsg);
+          await notifyHODs(req.user.id, null, noticeMsg, req.user.institution_id);
         }
         if (resolvedAudience.includes('faculty')) {
           // Notify faculties and advisors
-          const { rows } = await pool.query(`SELECT id FROM users WHERE role IN ('faculty', 'advisor')`);
+          const { rows } = await pool.query(
+            `SELECT id FROM users WHERE role IN ('faculty', 'advisor') AND institution_id = $1`,
+            [req.user.institution_id]
+          );
           for (const row of rows) {
             await require('../services/notificationService').notifyUser(req.user.id, row.id, noticeMsg);
           }

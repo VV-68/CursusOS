@@ -22,7 +22,7 @@ const getCourses = async (req, res) => {
 
     // admin sees all or HOD sees their own dept
     const targetDeptId = role === 'hod' ? dept_id : null;
-    const courses = await courseModel.getAllCourses(targetDeptId);
+    const courses = await courseModel.getAllCourses(targetDeptId, req.user.institution_id);
     res.json(courses);
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
@@ -123,13 +123,15 @@ const getMine = async (req, res) => {
               cl.name AS class_name, cl.year, cl.section,
               d.name AS dept_name,
               dc.period_number,
-              s.name AS semester_name
+              COALESCE('Semester ' || dc.period_number, 'Active') AS semester_name,
+              (dc.period_number IS NULL OR dc.period_number = cl.current_semester_number) AS is_active_term,
+              cl.is_active AS is_active_batch,
+              cl.course_completed
        FROM course_assignments ca
        JOIN courses     c  ON c.id  = ca.course_id
        LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = c.dept_id
        JOIN classes     cl ON cl.id = ca.class_id
        JOIN departments d  ON d.id  = cl.dept_id
-       JOIN semesters   s  ON s.id  = ca.semester_id
        WHERE (ca.faculty1_id = $1 OR ca.faculty2_id = $1)
          AND ($2::uuid IS NULL OR ca.semester_id = $2)
        ORDER BY d.code, cl.name, c.code`,

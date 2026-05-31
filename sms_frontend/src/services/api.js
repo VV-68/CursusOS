@@ -127,7 +127,7 @@ export const departmentAPI = {
       body: formData,
     }).then(handleResponse);
   },
-  getCourses: (id, semester_id) => fetch(`${BASE_URL}/api/departments/${id}/courses?semester_id=${semester_id}`, { headers: getHeaders(true) }).then(handleResponse),
+  getCourses: (id) => fetch(`${BASE_URL}/api/departments/${id}/courses`, { headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Semesters ─────────────────────────────────────────────────
@@ -164,10 +164,7 @@ export const courseAPI = {
 // ─── Timetable ───────────────────────────────────────────────
 
 export const timetableAPI = {
-  get: (classId, semesterId) => {
-    const qs = semesterId ? `?semester_id=${semesterId}` : '';
-    return fetch(`${BASE_URL}/api/timetable/${classId}${qs}`, { headers: getHeaders(true) }).then(handleResponse);
-  },
+  get: (classId) => fetch(`${BASE_URL}/api/timetable/${classId}`, { headers: getHeaders(true) }).then(handleResponse),
   upload: (data) => fetch(`${BASE_URL}/api/timetable`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   getAvailableCourses: (classId, params = {}) => {
     const qs = new URLSearchParams(params).toString();

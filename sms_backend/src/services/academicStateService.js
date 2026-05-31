@@ -8,6 +8,7 @@ const getBatchCurrentState = async (batchId) => {
       c.id,
       c.name,
       c.dept_id,
+      d.institution_id,
       c.semester_id AS legacy_semester_id,
       COALESCE(c.current_semester_number, sah.current_semester, 1) AS current_semester_number,
       COALESCE(c.current_year_number, sah.current_year, 1) AS current_year_number,
@@ -18,6 +19,7 @@ const getBatchCurrentState = async (batchId) => {
       c.advisor1_id,
       c.advisor2_id
     FROM classes c
+    JOIN departments d ON c.dept_id = d.id
     LEFT JOIN LATERAL (
       SELECT current_semester, current_year
       FROM student_academic_history
@@ -72,23 +74,15 @@ const getStudentActiveAcademicState = async (studentId) => {
   return fallback.rows[0] || null;
 };
 
+/**
+ * Best-effort compatibility helper: resolves a semester number to a legacy semester_id.
+ * This is NOT used for any critical business logic. Academic state comes from
+ * classes.current_semester_number and student_academic_history.current_semester.
+ * Returns null if the semesters table is empty or unavailable.
+ */
 const resolveSemesterIdForNumber = async (semesterNumber) => {
-  if (!semesterNumber) return null;
-
-  const byNumber = await pool.query(
-    `SELECT id FROM semesters WHERE number = $1 ORDER BY created_at DESC NULLS LAST LIMIT 1`,
-    [semesterNumber]
-  ).catch(() => ({ rows: [] }));
-  if (byNumber.rows[0]) return byNumber.rows[0].id;
-
-  const byName = await pool.query(
-    `SELECT id FROM semesters
-     WHERE name ILIKE $1
-     ORDER BY created_at DESC NULLS LAST
-     LIMIT 1`,
-    [`%${semesterNumber}%`]
-  );
-  return byName.rows[0]?.id || null;
+  // Legacy function: returns null since we no longer query the semesters table for state resolution.
+  return null;
 };
 
 module.exports = {

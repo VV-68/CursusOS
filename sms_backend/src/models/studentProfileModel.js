@@ -17,9 +17,10 @@ const ADVISOR_SAFE_FIELDS = `
   c.name AS class_name, c.dept_id,
   sah.current_semester,
   sah.current_year,
-  sem.name AS current_semester_name,
+  ('Semester ' || sah.current_semester) AS current_semester_name,
   a1.full_name AS advisor1_name,
-  a2.full_name AS advisor2_name
+  a2.full_name AS advisor2_name,
+  u.is_active
 `;
 
 // Full fields including bank and sensitive data (student own view / admin)
@@ -36,7 +37,6 @@ const getFullProfile = async (user_id) => {
      JOIN users u ON u.id = sp.user_id
      JOIN classes c ON c.id = sp.class_id
      LEFT JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
-     LEFT JOIN semesters sem ON sem.id = sah.semester_id
      LEFT JOIN users a1 ON a1.id = sah.advisor1_id
      LEFT JOIN users a2 ON a2.id = sah.advisor2_id
      WHERE sp.user_id = $1`,
@@ -53,7 +53,6 @@ const getSafeProfile = async (user_id) => {
      JOIN users u ON u.id = sp.user_id
      JOIN classes c ON c.id = sp.class_id
      LEFT JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
-     LEFT JOIN semesters sem ON sem.id = sah.semester_id
      LEFT JOIN users a1 ON a1.id = sah.advisor1_id
      LEFT JOIN users a2 ON a2.id = sah.advisor2_id
      WHERE sp.user_id = $1`,
@@ -70,10 +69,9 @@ const getStudentsByClass = async (class_id) => {
      JOIN users u ON u.id = sp.user_id
      JOIN student_academic_history sah ON sah.student_id = u.id AND sah.is_active = true
      JOIN classes c ON c.id = sah.class_id
-     LEFT JOIN semesters sem ON sem.id = sah.semester_id
      LEFT JOIN users a1 ON a1.id = sah.advisor1_id
      LEFT JOIN users a2 ON a2.id = sah.advisor2_id
-     WHERE sah.class_id = $1 AND u.is_active = TRUE
+     WHERE sah.class_id = $1
      ORDER BY sp.roll_no ASC`,
     [class_id]
   );
@@ -83,12 +81,12 @@ const getStudentsByClass = async (class_id) => {
 const getPendingStudentsByClass = async (class_id) => {
   const { rows } = await pool.query(
     `SELECT sp.id, sp.user_id, sp.class_id, sp.roll_no,
-            u.full_name, u.email, u.phone, u.created_at,
+            u.full_name, u.email, u.phone, u.created_at, u.is_active,
             c.name AS class_name
      FROM student_profiles sp
      JOIN users u ON u.id = sp.user_id
      JOIN classes c ON c.id = sp.class_id
-     WHERE sp.class_id = $1 AND u.is_approved = FALSE AND u.is_active = TRUE
+     WHERE sp.class_id = $1 AND u.is_approved = FALSE
      ORDER BY sp.roll_no ASC`,
     [class_id]
   );

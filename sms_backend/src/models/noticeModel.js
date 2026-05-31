@@ -22,9 +22,9 @@ const createNotice = async ({ title, body, posted_by, audience, dept_id, is_pinn
 };
 
 /**
- * Notices visible to the current user (role-based + legacy scopes).
+ * Notices visible to the current user (role-based + legacy scopes) filtered by institution.
  */
-const getNoticesForUser = async ({ userId, role, deptId, classId }) => {
+const getNoticesForUser = async ({ userId, role, deptId, classId, institutionId }) => {
   const tags = role === 'faculty' || role === 'advisor'
     ? ['faculty']
     : role === 'hod'
@@ -38,17 +38,20 @@ const getNoticesForUser = async ({ userId, role, deptId, classId }) => {
      FROM notices n
      JOIN users u ON n.posted_by = u.id
      WHERE
-       n.posted_by = $1
-       OR n.scope = 'global'
-       OR (n.scope = 'dept' AND n.target_id = $2)
-       OR (n.scope = 'class' AND n.target_id = $3)
-       OR (
-         n.scope = 'role'
-         AND n.audience && $4::text[]
-         AND (n.dept_id IS NULL OR n.dept_id = $2)
+       (u.institution_id = $5 OR $5 IS NULL)
+       AND (
+         n.posted_by = $1
+         OR n.scope = 'global'
+         OR (n.scope = 'dept' AND n.target_id = $2)
+         OR (n.scope = 'class' AND n.target_id = $3)
+         OR (
+           n.scope = 'role'
+           AND n.audience && $4::text[]
+           AND (n.dept_id IS NULL OR n.dept_id = $2)
+         )
        )
      ORDER BY n.is_pinned DESC, n.created_at DESC`,
-    [userId, deptId || null, classId || null, tags]
+    [userId, deptId || null, classId || null, tags, institutionId]
   );
 
   return rows.map(n => ({

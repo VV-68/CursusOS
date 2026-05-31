@@ -35,9 +35,11 @@ const StudentModel = {
   },
 
   updateStudentProfile: async (user_id, profileData) => {
-    const { roll_no, class_id, dob, gender, blood_group, address,
-            guardian_name, guardian_phone, guardian_email,
-            bank_name, account_no, ifsc_code } = profileData;
+    const {
+      roll_no = null, class_id = null, dob = null, gender = null, blood_group = null, address = null,
+      guardian_name = null, guardian_phone = null, guardian_email = null,
+      bank_name = null, account_no = null, ifsc_code = null
+    } = profileData;
 
     const { rows } = await pool.query(
       `UPDATE student_profiles
@@ -80,13 +82,18 @@ const StudentModel = {
   },
 
   addToAcademicHistory: async (student_id, class_id) => {
-    const classData = await pool.query('SELECT semester_id, current_year_number, current_semester_number, advisor1_id, advisor2_id FROM classes WHERE id = $1', [class_id]);
+    const classData = await pool.query(
+      'SELECT current_year_number, current_semester_number, advisor1_id, advisor2_id, semester_id FROM classes WHERE id = $1',
+      [class_id]
+    );
     if (classData.rows.length > 0) {
        const cls = classData.rows[0];
+       // current_semester_number and current_year_number are the source of truth
+       // semester_id is kept for legacy compatibility only
        await pool.query(`
-         INSERT INTO student_academic_history (student_id, class_id, semester_id, current_year, current_semester, advisor1_id, advisor2_id, remarks)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'Initial Admission')
-       `, [student_id, class_id, cls.semester_id, cls.current_year_number, cls.current_semester_number, cls.advisor1_id, cls.advisor2_id]);
+         INSERT INTO student_academic_history (student_id, class_id, current_year, current_semester, advisor1_id, advisor2_id, remarks)
+         VALUES ($1, $2, $3, $4, $5, $6, 'Initial Admission')
+       `, [student_id, class_id, cls.current_year_number || 1, cls.current_semester_number || 1, cls.advisor1_id, cls.advisor2_id]);
     }
   }
 };

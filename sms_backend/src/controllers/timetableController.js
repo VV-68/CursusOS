@@ -8,13 +8,43 @@ const getTimetable = async (req, res) => {
     const { class_id } = req.params;
     let { semester_id } = req.query;
     
+    // If no semester_id provided, derive from the class's current state
     if (!semester_id) {
-      const { rows } = await pool.query(`SELECT id FROM semesters WHERE is_active = TRUE LIMIT 1`);
-      if (rows.length > 0) {
-        semester_id = rows[0].id;
+      const { rows } = await pool.query(
+        `SELECT semester_id FROM classes WHERE id = $1 LIMIT 1`,
+        [class_id]
+      );
+      if (rows.length > 0 && rows[0].semester_id) {
+        semester_id = rows[0].semester_id;
       }
     }
     
+    // Authorization check
+    const { rows: clsRows } = await pool.query(
+      `SELECT c.id, c.dept_id, d.institution_id
+       FROM classes c
+       JOIN departments d ON d.id = c.dept_id
+       WHERE c.id = $1`,
+      [class_id]
+    );
+
+    if (!clsRows.length) {
+      return res.status(404).json({ error: 'Class not found' });
+    }
+
+    const cls = clsRows[0];
+
+    // Basic institution boundary check
+    if (req.user.institution_id && cls.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'Forbidden. Not your institution.' });
+    }
+
+    // Role-based boundary checks
+    if (['hod', 'faculty', 'advisor'].includes(req.user.role) && req.user.dept_id && cls.dept_id !== req.user.dept_id) {
+      return res.status(403).json({ error: 'Forbidden. Not your department.' });
+    }
+    // Students might be restricted to their class, but usually timetables are public within an institution/department.
+
     const timetable = await timetableModel.getTimetable(class_id, semester_id || null);
     res.json(timetable);
   } catch (err) {
@@ -25,10 +55,9 @@ const getTimetable = async (req, res) => {
 
 const replaceTimetable = async (req, res) => {
   try {
-    const { class_id, semester_id, slots } = req.body;
-    if (!semester_id) {
-      return res.status(400).json({ error: 'semester_id is required' });
-    }
+    const { class_id, slots } = req.body;
+    
+    // We no longer require semester_id in Phase 4
 
     const classObj = (await classModel.getAllClasses()).find(c => c.id === class_id);
     if (!classObj) return res.status(404).json({ error: 'Class not found' });
@@ -38,7 +67,7 @@ const replaceTimetable = async (req, res) => {
     }
 
     try {
-      await timetableModel.replaceTimetable(class_id, semester_id, slots);
+      await timetableModel.replaceTimetable(class_id, null, slots);
     } catch (dbErr) {
       if (dbErr.code === '23505') {
         return res.status(400).json({ error: 'Timetable conflict on day and period' });
@@ -64,12 +93,13 @@ const getAvailableCourses = async (req, res) => {
        FROM classes c
        JOIN departments d ON d.id = c.dept_id
        WHERE c.id = $1
+         AND (d.institution_id = $5 OR $5 IS NULL)
          AND (
            c.advisor1_id = $2 OR c.advisor2_id = $2
            OR ($3 = 'hod' AND c.dept_id = $4)
            OR $3 = 'admin'
          )`,
-      [class_id, req.user.id, req.user.role, req.user.dept_id]
+      [class_id, req.user.id, req.user.role, req.user.dept_id, req.user.institution_id]
     );
     if (!clsRows.length) return res.status(403).json({ error: 'Not your class' });
 
@@ -95,11 +125,6 @@ const getAvailableCourses = async (req, res) => {
       });
     }
 
-    const semId = semester_id || cls.semester_id;
-    if (!semId) {
-      return res.status(400).json({ error: 'semester_id is required' });
-    }
-
     const { rows } = await pool.query(
       `SELECT
          dc.id AS department_course_id,
@@ -115,12 +140,12 @@ const getAvailableCourses = async (req, res) => {
        FROM department_courses dc
        LEFT JOIN courses c ON c.code = dc.course_code AND c.dept_id = dc.dept_id
        LEFT JOIN course_assignments ca
-         ON ca.course_id = c.id AND ca.class_id = $1 AND ca.semester_id = $2
+         ON ca.course_id = c.id AND ca.class_id = $1
        LEFT JOIN users u1 ON u1.id = ca.faculty1_id
        LEFT JOIN users u2 ON u2.id = ca.faculty2_id
-       WHERE dc.dept_id = $3 AND dc.period_number = $4
+       WHERE dc.dept_id = $2 AND dc.period_number = $3
        ORDER BY dc.course_code`,
-      [class_id, semId, cls.dept_id, targetPeriod]
+      [class_id, cls.dept_id, targetPeriod]
     );
 
     res.json({
@@ -133,7 +158,7 @@ const getAvailableCourses = async (req, res) => {
         period_label: periodLabel,
         applicable_periods: applicablePeriods
       },
-      semester_id: semId,
+      semester_id: cls.semester_id || null,
       courses: rows
     });
   } catch (err) {

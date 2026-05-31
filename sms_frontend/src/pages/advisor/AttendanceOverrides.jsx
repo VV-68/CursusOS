@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import { attendanceAPI } from '../../services/api';
 
 function AttendanceOverrides() {
@@ -36,9 +37,18 @@ function AttendanceOverrides() {
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading override requests...</div>;
 
+  const token = localStorage.getItem('token');
+  let role = '';
+  if (token) {
+    try {
+      role = jwtDecode(token).role;
+    } catch {}
+  }
+  const backTab = role === 'hod' ? 'dept' : role === 'admin' ? 'admin' : 'oversight';
+
   return (
     <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
-      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=oversight')}>← Back</button>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate(`/dashboard?tab=${backTab}`)}>← Back</button>
       <h2>Attendance Override Requests</h2>
       <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
         Faculty members requesting to mark attendance for slots not in their timetable need your approval.

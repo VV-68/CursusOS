@@ -60,7 +60,7 @@ const getAllUsers = async (deptId = null, roleFilter = null, institution_id = nu
     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
     LEFT JOIN student_profiles sp ON u.id = sp.user_id
     LEFT JOIN classes c ON sp.class_id = c.id
-    WHERE u.is_active = true
+    WHERE 1=1
   `;
   const params = [];
   

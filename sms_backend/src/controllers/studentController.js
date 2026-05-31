@@ -151,7 +151,15 @@ const StudentController = {
       }
 
       await StudentModel.updateStudentProfile(req.user.id, {
-        dob, gender, blood_group, address, guardian_name, guardian_phone, bank_name, account_no, ifsc_code
+        dob: dob || null,
+        gender: gender || null,
+        blood_group: blood_group || null,
+        address: address || null,
+        guardian_name: guardian_name || null,
+        guardian_phone: guardian_phone || null,
+        bank_name: bank_name || null,
+        account_no: account_no || null,
+        ifsc_code: ifsc_code || null
       });
 
       res.json({ message: "Profile completed successfully" });

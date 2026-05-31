@@ -70,7 +70,8 @@ const reviewBatchPromotion = async (req, res) => {
 const listBatchPromotionRequests = async (req, res) => {
   try {
     const { status } = req.query;
-    const result = await progressionService.listPromotionRequests(status || null);
+    const deptId = req.user.role === 'hod' ? req.user.dept_id : null;
+    const result = await progressionService.listPromotionRequests(status || null, deptId, req.user.institution_id);
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to list promotion requests' });
@@ -109,7 +110,8 @@ const reviewBatchDeactivation = async (req, res) => {
 const listBatchDeactivationRequests = async (req, res) => {
   try {
     const { status } = req.query;
-    const result = await progressionService.listDeactivationRequests(status || null);
+    const deptId = req.user.role === 'hod' ? req.user.dept_id : null;
+    const result = await progressionService.listDeactivationRequests(status || null, deptId, req.user.institution_id);
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to list deactivation requests' });
@@ -165,7 +167,8 @@ const reviewBatchReactivation = async (req, res) => {
 const listBatchReactivationRequests = async (req, res) => {
   try {
     const { status } = req.query;
-    const result = await progressionService.listReactivationRequests(status || null);
+    const deptId = req.user.role === 'hod' ? req.user.dept_id : null;
+    const result = await progressionService.listReactivationRequests(status || null, deptId, req.user.institution_id);
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to list reactivation requests' });

@@ -19,13 +19,16 @@ const notifyClassStudents = async (creator_id, class_id, message) => {
 };
 
 // Notify all faculties in a department (or all faculties if no dept)
-const notifyFaculties = async (creator_id, dept_id, message) => {
+const notifyFaculties = async (creator_id, dept_id, message, institution_id = null) => {
   let query = `SELECT id FROM users WHERE role = 'faculty'`;
   let params = [];
   
   if (dept_id) {
     query = `SELECT u.id FROM users u JOIN faculty_codes fc ON u.id = fc.user_id WHERE u.role = 'faculty' AND fc.dept_id = $1`;
     params.push(dept_id);
+  } else if (institution_id) {
+    params.push(institution_id);
+    query += ` AND institution_id = $${params.length}`;
   }
   
   const { rows } = await pool.query(query, params);
@@ -35,13 +38,16 @@ const notifyFaculties = async (creator_id, dept_id, message) => {
 };
 
 // Notify HODs (either all or specific dept)
-const notifyHODs = async (creator_id, dept_id, message) => {
+const notifyHODs = async (creator_id, dept_id, message, institution_id = null) => {
   let query = `SELECT id FROM users WHERE role = 'hod'`;
   let params = [];
   
   if (dept_id) {
     query = `SELECT u.id FROM users u JOIN departments d ON u.id = d.hod_id WHERE d.id = $1`;
     params.push(dept_id);
+  } else if (institution_id) {
+    params.push(institution_id);
+    query += ` AND institution_id = $${params.length}`;
   }
   
   const { rows } = await pool.query(query, params);
@@ -75,17 +81,29 @@ const notifyCourseFaculties = async (creator_id, course_assignment_id, message) 
 };
 
 // Notify all students in the institution
-const notifyAllStudents = async (creator_id, message) => {
-  const { rows } = await pool.query(`SELECT id FROM users WHERE role = 'student'`);
-  for (const row of rows) {
+const notifyAllStudents = async (creator_id, message, institution_id = null) => {
+  let inst_id = institution_id;
+  if (!inst_id) {
+    const { rows } = await pool.query(`SELECT institution_id FROM users WHERE id = $1`, [creator_id]);
+    inst_id = rows[0]?.institution_id;
+  }
+  if (!inst_id) return;
+  const { rows: users } = await pool.query(`SELECT id FROM users WHERE role = 'student' AND institution_id = $1`, [inst_id]);
+  for (const row of users) {
     await notifyUser(creator_id, row.id, message);
   }
 };
 
 // Notify HOD, Faculties, and Advisors for notice
-const notifyFacultiesAndHODs = async (creator_id, message) => {
-  const { rows } = await pool.query(`SELECT id FROM users WHERE role IN ('faculty', 'hod', 'advisor')`);
-  for (const row of rows) {
+const notifyFacultiesAndHODs = async (creator_id, message, institution_id = null) => {
+  let inst_id = institution_id;
+  if (!inst_id) {
+    const { rows } = await pool.query(`SELECT institution_id FROM users WHERE id = $1`, [creator_id]);
+    inst_id = rows[0]?.institution_id;
+  }
+  if (!inst_id) return;
+  const { rows: users } = await pool.query(`SELECT id FROM users WHERE role IN ('faculty', 'hod', 'advisor') AND institution_id = $1`, [inst_id]);
+  for (const row of users) {
     await notifyUser(creator_id, row.id, message);
   }
 };

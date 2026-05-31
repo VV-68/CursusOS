@@ -18,6 +18,7 @@ function Users() {
   const [filterRole, setFilterRole] = useState(searchParams.get('role') || '');
   const [filterStatus, setFilterStatus] = useState(searchParams.get('pending') === 'true' ? 'pending' : '');
   const [filterBatch, setFilterBatch] = useState(searchParams.get('batch') || '');
+  const [filterActive, setFilterActive] = useState(true);
   const [classes, setClasses] = useState([]);
 
   const token = localStorage.getItem('token');
@@ -31,7 +32,7 @@ function Users() {
 
   useEffect(() => {
     fetchUsers();
-  }, [filterDept, filterRole, filterStatus, filterBatch]);
+  }, [filterDept, filterRole, filterStatus, filterBatch, filterActive]);
 
   const fetchDepartments = async () => {
     try {
@@ -69,6 +70,8 @@ function Users() {
       if (filterBatch) {
         data = data.filter(u => u.class_id === filterBatch);
       }
+      
+      data = data.filter(u => u.is_active === filterActive);
       
       setUsers(data);
     } catch (err) {
@@ -184,6 +187,14 @@ function Users() {
             }
           </select>
         )}
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}>
+          <input 
+            type="checkbox" 
+            checked={filterActive} 
+            onChange={(e) => setFilterActive(e.target.checked)} 
+          />
+          Active Only
+        </label>
       </div>
 
       {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
@@ -230,10 +241,10 @@ function Users() {
                   <td style={{ padding: '0.75rem' }}>{u.email || '—'}</td>
                   <td style={{ padding: '0.75rem' }}>{u.phone || '—'}</td>
                   <td style={{ padding: '0.75rem' }}>
-                    {!u.is_approved && (
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'nowrap', alignItems: 'center' }}>
+                      {!u.is_approved && (
                       <span style={{ display: 'inline-block', marginBottom: '0.3rem', padding: '0.15rem 0.5rem', background: '#fff3cd', color: '#856404', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>Pending Approval</span>
                     )}
-                    <br/>
                     {((callerRole === 'admin') || (callerRole === 'hod' && u.role === 'student')) && !u.is_approved && (
                       <button
                         onClick={async () => {
@@ -244,21 +255,21 @@ function Users() {
                             } catch (err) { alert(err.message); }
                           }
                         }}
-                        style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                        style={{ padding: '0.3rem 0.6rem', background: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                       >
                         Approve
                       </button>
                     )}
                     <button
                       onClick={() => handleReset(u.id, u.full_name)}
-                      style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#ffc107', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                      style={{ padding: '0.3rem 0.6rem', background: '#ffc107', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                     >
                       Reset Password
                     </button>
                     {callerRole === 'admin' && u.role === 'hod' && (
                       <button
                         onClick={() => handleRemoveHOD(u)}
-                        style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#fd7e14', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                        style={{ padding: '0.3rem 0.6rem', background: '#fd7e14', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                       >
                         Remove HOD
                       </button>
@@ -266,17 +277,18 @@ function Users() {
                     {callerRole === 'hod' && (u.role === 'faculty' || u.role === 'advisor') && (
                       <button
                         onClick={() => handleToggleRole(u)}
-                        style={{ marginRight: '8px', padding: '0.3rem 0.6rem', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                        style={{ padding: '0.3rem 0.6rem', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                       >
                         Make {u.role === 'faculty' ? 'Advisor' : 'Faculty'}
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(u.id, u.full_name)}
-                      style={{ padding: '0.3rem 0.6rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem' }}
+                      style={{ padding: '0.3rem 0.6rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                     >
                       Deactivate
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))

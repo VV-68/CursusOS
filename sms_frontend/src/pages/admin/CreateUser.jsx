@@ -72,13 +72,14 @@ function CreateUser() {
   const inputStyle = { width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' };
 
   const roleOptions = isHOD
-    ? [{ value: 'faculty', label: 'Faculty' }, { value: 'advisor', label: 'Advisor' }]
+    ? [{ value: 'faculty', label: 'Faculty' }]
+      // { value: 'advisor', label: 'Advisor' }]
     : [
-        { value: 'admin', label: 'Admin' },
+        // { value: 'admin', label: 'Admin' },
         { value: 'hod', label: 'HOD' },
-        { value: 'advisor', label: 'Advisor' },
+        // { value: 'advisor', label: 'Advisor' },
         { value: 'faculty', label: 'Faculty' },
-      ];
+      ]; 
 
   return (
     <div style={{ padding: '2rem', maxWidth: '500px', margin: '0 auto' }}>

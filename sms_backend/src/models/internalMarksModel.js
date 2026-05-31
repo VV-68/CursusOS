@@ -5,7 +5,7 @@ const getInternalMarksSheet = async (course_assignment_id) => {
     SELECT u.id as student_id, u.full_name as student_name, p.roll_no,
            im.internal_type, im.marks_obtained, im.max_marks
     FROM course_assignments ca
-    JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.semester_id = ca.semester_id
+    JOIN student_academic_history sah ON sah.class_id = ca.class_id AND sah.is_active = TRUE
     JOIN student_profiles p ON p.user_id = sah.student_id
     JOIN users u ON p.user_id = u.id AND u.role = 'student'
     LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
@@ -51,11 +51,11 @@ const updateInternalMarks = async (course_assignment_id, marksData, entered_by) 
 const getInternalMarksByStudent = async (student_id) => {
   const { rows } = await pool.query(
     `SELECT im.id, im.course_assignment_id, im.internal_type, im.marks_obtained, im.max_marks,
-            c.name as course_name, c.code as course_code, sem.name as semester_name, sem.id as semester_id
+            c.name as course_name, c.code as course_code, 
+            COALESCE('Semester ' || dc.period_number, 'Active') as semester_name, ca.semester_id
      FROM internal_marks im
      JOIN course_assignments ca ON im.course_assignment_id = ca.id
      JOIN courses c ON ca.course_id = c.id
-     JOIN semesters sem ON ca.semester_id = sem.id
      JOIN classes cls ON ca.class_id = cls.id
      JOIN departments d ON d.id = cls.dept_id
      LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = cls.dept_id
@@ -64,7 +64,7 @@ const getInternalMarksByStudent = async (student_id) => {
        d.department_type != 'semester_wise' 
        OR dc.period_number = cls.current_semester_number
      )
-     ORDER BY sem.start_date DESC, c.name ASC, im.internal_type ASC`,
+     ORDER BY dc.period_number DESC NULLS LAST, c.name ASC, im.internal_type ASC`,
     [student_id]
   );
   return rows;
@@ -79,7 +79,7 @@ const getInternalMarksByClass = async (class_id) => {
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      JOIN classes cls ON p.class_id = cls.id
      JOIN course_assignments ca ON ca.class_id = cls.id
-     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.semester_id = ca.semester_id
+     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.is_active = TRUE
      JOIN courses c ON ca.course_id = c.id
      LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
      WHERE cls.id = $1
@@ -91,19 +91,19 @@ const getInternalMarksByClass = async (class_id) => {
 
 const getInternalMarksByDepartment = async (dept_id) => {
   const { rows } = await pool.query(
-    `SELECT u.id as student_id, u.full_name as student_name, p.roll_no, cls.name as class_name, sem.name as semester_name,
+    `SELECT u.id as student_id, u.full_name as student_name, p.roll_no, cls.name as class_name, 
+            COALESCE('Semester ' || sah.current_semester, 'Active') as semester_name,
             im.course_assignment_id, c.name as course_name, c.code as course_code,
             im.internal_type, im.marks_obtained, im.max_marks
      FROM student_profiles p
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      JOIN classes cls ON p.class_id = cls.id
      JOIN course_assignments ca ON ca.class_id = cls.id
-     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.semester_id = ca.semester_id
+     JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.is_active = TRUE
      JOIN courses c ON ca.course_id = c.id
-     JOIN semesters sem ON ca.semester_id = sem.id
      LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
      WHERE cls.dept_id = $1
-     ORDER BY sem.start_date DESC, cls.name ASC, p.roll_no ASC, c.name ASC, im.internal_type ASC`,
+     ORDER BY sah.current_year DESC NULLS LAST, sah.current_semester DESC NULLS LAST, cls.name ASC, p.roll_no ASC, c.name ASC, im.internal_type ASC`,
     [dept_id]
   );
   return rows;

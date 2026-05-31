@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { timetableAPI, classAPI, semesterAPI } from '../../services/api';
+import { timetableAPI, classAPI } from '../../services/api';
 import { downloadTimetablePdf } from '../../utils/timetablePdf';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -60,9 +60,7 @@ function Timetable() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('view'); // 'view' | 'edit'
   const [classes, setClasses] = useState([]);
-  const [semesters, setSemesters] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [classInfo, setClassInfo] = useState(null);
   const [periodOptions, setPeriodOptions] = useState([]);
@@ -73,12 +71,10 @@ function Timetable() {
   useEffect(() => {
     (async () => {
       try {
-        const [clData, semData] = await Promise.all([classAPI.getAll(), semesterAPI.getAll()]);
-        setClasses(clData);
-        setSemesters(semData);
-        const active = semData.find(s => s.is_active);
-        if (active) setSelectedSemester(active.id);
-        if (clData.length) setSelectedClass(clData[0].id);
+        const clData = await classAPI.getAll();
+        const activeClasses = clData.filter(c => c.is_active !== false);
+        setClasses(activeClasses);
+        if (activeClasses.length) setSelectedClass(activeClasses[0].id);
       } catch (err) {
         alert(err.message);
       }
@@ -86,13 +82,12 @@ function Timetable() {
   }, []);
 
   useEffect(() => {
-    if (selectedClass && selectedSemester) fetchClassData();
-  }, [selectedClass, selectedSemester, selectedPeriod]);
+    if (selectedClass) fetchClassData();
+  }, [selectedClass, selectedPeriod]);
 
   const fetchClassData = async () => {
     try {
       const bootstrap = await timetableAPI.getAvailableCourses(selectedClass, {
-        semester_id: selectedSemester,
         ...(selectedPeriod ? { period_number: selectedPeriod } : {})
       });
 
@@ -108,8 +103,8 @@ function Timetable() {
       if (!period) return;
 
       const [timetable, courseData] = await Promise.all([
-        timetableAPI.get(selectedClass, selectedSemester),
-        timetableAPI.getAvailableCourses(selectedClass, { semester_id: selectedSemester, period_number: period })
+        timetableAPI.get(selectedClass),
+        timetableAPI.getAvailableCourses(selectedClass, { period_number: period })
       ]);
 
       setAvailableCourses(courseData.courses || []);
@@ -145,7 +140,7 @@ function Timetable() {
       payloadSlots.push(slot);
     });
     try {
-      await timetableAPI.upload({ class_id: selectedClass, semester_id: selectedSemester, slots: payloadSlots });
+      await timetableAPI.upload({ class_id: selectedClass, slots: payloadSlots });
       alert('Timetable saved successfully');
       fetchClassData();
       setTab('view');
@@ -156,16 +151,15 @@ function Timetable() {
 
   const handleDownloadPdf = () => {
     const cls = classes.find(c => c.id === selectedClass);
-    const sem = semesters.find(s => s.id === selectedSemester);
     downloadTimetablePdf({
       title: `Timetable — ${cls?.name || 'Class'} ${cls?.section || ''}`,
-      subtitle: `${sem?.name || ''} | ${classInfo?.period_label || 'Semester'} ${selectedPeriod}`,
+      subtitle: `${classInfo?.period_label || 'Semester'} ${selectedPeriod}`,
       timetable: timetableRows
     });
   };
 
   const periodLabel = classInfo?.period_label || 'Semester';
-  const hasData = selectedClass && selectedSemester && (selectedPeriod || periodOptions.length > 0);
+  const hasData = selectedClass && (selectedPeriod || periodOptions.length > 0);
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>

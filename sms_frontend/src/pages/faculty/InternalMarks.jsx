@@ -56,8 +56,9 @@ function InternalMarks() {
   const fetchAssignments = async () => {
     try {
       const data = await courseAssignmentAPI.getMine();
-      setAllAssignments(data);
-      const batches = [...new Set(data.map(c => c.class_name))];
+      const activeAssignments = data.filter(c => c.is_active_term && c.is_active_batch !== false);
+      setAllAssignments(activeAssignments);
+      const batches = [...new Set(activeAssignments.map(c => c.class_name))];
       setUniqueBatches(batches);
 
       // Get department active term

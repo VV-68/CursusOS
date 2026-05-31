@@ -8,7 +8,8 @@ const getAllClasses = async () => {
     fc1.unique_code as advisor1_code,
     u2.full_name as advisor2_name,
     fc2.unique_code as advisor2_code,
-    d.code as dept_code
+    d.code as dept_code,
+    d.institution_id
     FROM classes c
     JOIN departments d ON c.dept_id = d.id
     LEFT JOIN users u1 ON c.advisor1_id = u1.id

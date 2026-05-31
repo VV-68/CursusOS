@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  departmentCreationAPI, getMe, userAPI, classAPI, semesterAPI, courseAPI
+  departmentCreationAPI, getMe, userAPI, classAPI, courseAPI
 } from '../../services/api';
 import { periodLabel } from '../../utils/periodUtils';
 import '../admin/CreateDepartment.css';
@@ -28,10 +28,8 @@ function Courses() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [semesters, setSemesters] = useState([]);
   const [classes, setClasses] = useState([]);
   const [faculty, setFaculty] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
 
   const [assignModal, setAssignModal] = useState(null);
@@ -43,17 +41,12 @@ function Courses() {
       try {
         const user = await getMe();
         setDeptId(user.dept_id);
-        const [semData, classData, userData] = await Promise.all([
-          semesterAPI.getAll().catch(() => []),
+        const [classData, userData] = await Promise.all([
           classAPI.getAll(),
           userAPI.getAll()
         ]);
-        setSemesters(semData);
-        setClasses(classData);
+        setClasses(classData.filter(c => c.is_active !== false));
         setFaculty(userData.filter(u => u.role === 'faculty' || u.role === 'advisor' || u.role === 'hod'));
-        const active = semData.find(s => s.is_active);
-        if (active) setSelectedSemester(active.id);
-        else if (semData.length) setSelectedSemester(semData[0].id);
       } catch (err) {
         setError(err.message);
       }
@@ -61,7 +54,7 @@ function Courses() {
   }, []);
 
   const loadCourses = useCallback(async () => {
-    if (!deptId || !selectedClass || !selectedSemester) {
+    if (!deptId || !selectedClass) {
       setCourses([]);
       return;
     }
@@ -69,8 +62,7 @@ function Courses() {
     setError('');
     try {
       const data = await departmentCreationAPI.getManageCourses(deptId, {
-        class_id: selectedClass,
-        semester_id: selectedSemester
+        class_id: selectedClass
       });
       setDeptType(data.department?.department_type || 'semester_wise');
       setPeriodLabelText(data.period_label || periodLabel(data.department?.department_type));
@@ -83,7 +75,7 @@ function Courses() {
     } finally {
       setLoading(false);
     }
-  }, [deptId, selectedClass, selectedSemester]);
+  }, [deptId, selectedClass]);
 
   useEffect(() => {
     loadCourses();
@@ -100,15 +92,14 @@ function Courses() {
 
   const handleAssign = async (e) => {
     e.preventDefault();
-    if (!assignModal || !selectedClass || !selectedSemester) return;
+    if (!assignModal || !selectedClass) return;
     setAssigning(true);
     try {
       await departmentCreationAPI.assignFaculty(deptId, {
         department_course_id: assignModal.id,
         faculty1_id: assignForm.faculty1_id,
         faculty2_id: assignForm.faculty2_id,
-        class_id: selectedClass,
-        semester_id: selectedSemester
+        class_id: selectedClass
       });
       setAssignModal(null);
       loadCourses();
@@ -131,7 +122,7 @@ function Courses() {
 
   const coursesByPeriod = groupCoursesByPeriod(courses, applicablePeriods);
 
-  const canShowCourses = selectedClass && selectedSemester;
+  const canShowCourses = !!selectedClass;
 
   return (
     <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
@@ -172,21 +163,7 @@ function Courses() {
               ))}
             </select>
           </div>
-          {/* <div className="dept-field">
-            <label>Academic Semester *</label>
-            <select
-              value={selectedSemester}
-              onChange={e => setSelectedSemester(e.target.value)}
-              style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}
-            >
-              <option value="">Select semester…</option>
-              {semesters.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.name} {s.is_active ? '(Active)' : ''}
-                </option>
-              ))}
-            </select>
-          </div> */}
+
         </div>
         {canShowCourses && applicablePeriods.length > 0 && (
           <div className="dept-alert dept-alert--info" style={{ marginTop: '1rem' }}>
@@ -199,7 +176,7 @@ function Courses() {
         )}
         {!canShowCourses && (
           <p style={{ fontSize: '.82rem', color: '#64748b', margin: '1rem 0 0' }}>
-            Select a class and academic semester to view courses for that class year.
+            Select a class to view courses for that class year.
           </p>
         )}
       </div>

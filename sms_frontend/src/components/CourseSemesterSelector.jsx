@@ -7,6 +7,8 @@ const CourseSemesterSelector = ({ onSelect, initialValue }) => {
   
   const [selectedBatch, setSelectedBatch] = useState('All');
   const [selectedTerm, setSelectedTerm] = useState('current');
+  const [activeOnly, setActiveOnly] = useState(true);
+  const [activeBatchesOnly, setActiveBatchesOnly] = useState(true);
   const [selectedCA, setSelectedCA] = useState(initialValue || '');
   const [uniqueBatches, setUniqueBatches] = useState([]);
 
@@ -53,6 +55,16 @@ const CourseSemesterSelector = ({ onSelect, initialValue }) => {
   useEffect(() => {
     let filtered = allCourses;
     
+    if (activeOnly) {
+      filtered = filtered.filter(c => c.is_active_term);
+    }
+    
+    if (activeBatchesOnly) {
+      filtered = filtered.filter(c => c.is_active_batch !== false);
+    } else {
+      filtered = filtered.filter(c => c.is_active_batch === false);
+    }
+    
     if (selectedBatch !== 'All') {
       filtered = filtered.filter(c => c.class_name === selectedBatch);
     }
@@ -73,11 +85,12 @@ const CourseSemesterSelector = ({ onSelect, initialValue }) => {
     if (selectedCA && !filtered.find(c => (c.course_assignment_id || c.id) === selectedCA)) {
       setSelectedCA('');
     }
-  }, [selectedBatch, selectedTerm, allCourses]);
+  }, [selectedBatch, selectedTerm, activeOnly, activeBatchesOnly, allCourses]);
 
   useEffect(() => {
-    onSelect(selectedCA || null);
-  }, [selectedCA, onSelect]);
+    const obj = selectedCA ? allCourses.find(c => (c.course_assignment_id || c.id) === selectedCA) : null;
+    onSelect(selectedCA || null, obj);
+  }, [selectedCA, onSelect, allCourses]);
 
   const selectStyle = {
     padding: '0.8rem 1rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#1e293b',
@@ -108,6 +121,27 @@ const CourseSemesterSelector = ({ onSelect, initialValue }) => {
             <option value="odd">Odd Semester</option>
             <option value="even">Even Semester</option>
           </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', marginTop: '1.25rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', ...labelStyle, marginBottom: 0, textTransform: 'none', letterSpacing: 'normal', fontSize: '0.9rem', color: '#1e293b' }}>
+            <input 
+              type="checkbox" 
+              checked={activeOnly} 
+              onChange={e => setActiveOnly(e.target.checked)} 
+              style={{ width: '1.2rem', height: '1.2rem', accentColor: '#007bff', cursor: 'pointer' }} 
+            />
+            Active Term Only
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', ...labelStyle, marginBottom: 0, textTransform: 'none', letterSpacing: 'normal', fontSize: '0.9rem', color: '#1e293b', marginLeft: '1rem' }}>
+            <input 
+              type="checkbox" 
+              checked={activeBatchesOnly} 
+              onChange={e => setActiveBatchesOnly(e.target.checked)} 
+              style={{ width: '1.2rem', height: '1.2rem', accentColor: '#007bff', cursor: 'pointer' }} 
+            />
+            Active Batches Only
+          </label>
         </div>
 
         {selectedCA && (

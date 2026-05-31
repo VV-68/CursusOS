@@ -23,10 +23,6 @@ const getTimetable = async (class_id, semester_id = null) => {
       )
   `;
   const params = [class_id];
-  if (semester_id) {
-    params.push(semester_id);
-    query += ` AND ts.semester_id = $${params.length}`;
-  }
   query += ' ORDER BY ts.day_of_week, ts.period_no';
   const { rows } = await pool.query(query, params);
   return rows;
@@ -61,11 +57,6 @@ const replaceTimetable = async (class_id, semester_id, slots) => {
     `;
     const deleteParams = [class_id];
 
-    if (semester_id) {
-      deleteParams.push(semester_id);
-      deleteQuery += ` AND ts.semester_id = $${deleteParams.length}`;
-    }
-
     if (dept_type === 'semester_wise') {
       deleteQuery += `
         AND EXISTS (
@@ -90,12 +81,11 @@ const replaceTimetable = async (class_id, semester_id, slots) => {
       for (const slot of slots) {
         await client.query(
           `INSERT INTO timetable_slots (
-             class_id, semester_id, course_assignment_id, department_course_id,
+             class_id, course_assignment_id, department_course_id,
              day_of_week, period_no, start_time, end_time
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
           [
             class_id,
-            semester_id || slot.semester_id || null,
             slot.course_assignment_id || null,
             slot.department_course_id || null,
             slot.day_of_week,

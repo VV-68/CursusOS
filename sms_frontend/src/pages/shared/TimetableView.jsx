@@ -31,7 +31,9 @@ function TimetableView() {
       if (classId) setSelectedClass(classId);
     } else {
       // Faculty / advisor / hod / admin: load all classes
-      classAPI.getAllUnrestricted().then(setClasses).catch(err => alert(err.message));
+      classAPI.getAllUnrestricted().then(data => {
+        setClasses(data.filter(c => c.is_active !== false));
+      }).catch(err => alert(err.message));
     }
   }, []);
 
