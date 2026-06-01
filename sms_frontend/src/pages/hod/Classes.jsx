@@ -329,13 +329,15 @@ function Classes() {
                     <Link to={`/hod/classes/${c.id}/students`}>
                       <button style={btnStyle('#10b981')}>🧑‍🎓 Students</button>
                     </Link>
-                    <button
-                      style={btnStyle(deleting === c.id ? '#94a3b8' : '#ef4444')}
-                      onClick={() => handleDelete(c)}
-                      disabled={deleting === c.id}
-                    >
-                      {deleting === c.id ? '...' : '🗑️ Delete'}
-                    </button>
+                    <span title={userRole === 'hod' && Number(c.student_count) > 0 ? "Cannot delete batch with students" : ""} style={{ cursor: (userRole === 'hod' && Number(c.student_count) > 0) ? 'not-allowed' : 'auto' }}>
+                      <button
+                        style={{ ...btnStyle(deleting === c.id || (userRole === 'hod' && Number(c.student_count) > 0) ? '#94a3b8' : '#ef4444'), pointerEvents: (userRole === 'hod' && Number(c.student_count) > 0) ? 'none' : 'auto' }}
+                        onClick={() => handleDelete(c)}
+                        disabled={deleting === c.id || (userRole === 'hod' && Number(c.student_count) > 0)}
+                      >
+                        {deleting === c.id ? '...' : '🗑️ Delete'}
+                      </button>
+                    </span>
                   </div>
                 </td>
               </tr>

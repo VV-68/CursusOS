@@ -238,6 +238,15 @@ const getFullDepartment = async (req, res) => {
  */
 const deleteDepartment = async (req, res) => {
   try {
+    const pool = require('../db/connection');
+    const { rows } = await pool.query(
+      `SELECT COUNT(*) FROM student_profiles sp JOIN classes c ON sp.class_id = c.id WHERE c.dept_id = $1`,
+      [req.params.id]
+    );
+    if (Number(rows[0].count) > 0) {
+      return res.status(403).json({ error: 'Cannot delete a department that has students.' });
+    }
+
     const deleted = await deptCreationModel.deleteDepartment(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Department not found' });
     res.json({ message: 'Department deleted' });

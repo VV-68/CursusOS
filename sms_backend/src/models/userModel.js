@@ -55,7 +55,7 @@ const createUser = async ({ username, full_name, role, dept_id, email, phone, pa
 
 const getAllUsers = async (deptId = null, roleFilter = null, institution_id = null) => {
   let query = `
-    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.is_approved, u.created_at, fc.unique_code as faculty_code, fc.designation, sp.class_id, c.name as class_name
+    SELECT u.id, u.username, u.full_name, u.role, u.dept_id, u.institution_id, u.email, u.phone, u.is_active, u.is_approved, u.created_at, fc.unique_code as faculty_code, fc.designation, sp.class_id, c.name as class_name, c.is_active as class_is_active
     FROM users u
     LEFT JOIN faculty_codes fc ON u.id = fc.user_id
     LEFT JOIN student_profiles sp ON u.id = sp.user_id
@@ -135,6 +135,24 @@ const deactivateUser = async (id) => {
   return rows[0];
 };
 
+const reactivateUser = async (id) => {
+  const { rows } = await pool.query(
+    `UPDATE users SET is_active = TRUE, is_approved = TRUE, updated_at = NOW()
+     WHERE id = $1 RETURNING id`,
+    [id]
+  );
+  return rows[0];
+};
+
+const reactivateUserPending = async (id) => {
+  const { rows } = await pool.query(
+    `UPDATE users SET is_active = TRUE, is_approved = FALSE, updated_at = NOW()
+     WHERE id = $1 RETURNING id`,
+    [id]
+  );
+  return rows[0];
+};
+
 const updateUserRole = async (id, role) => {
   const { rows } = await pool.query(
     `UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2 RETURNING id, username, role, dept_id`,
@@ -171,6 +189,8 @@ module.exports = {
   resetUserPassword,
   changePassword,
   deactivateUser,
+  reactivateUser,
+  reactivateUserPending,
   updateUserRole,
   updateMyProfile,
   updateDesignation

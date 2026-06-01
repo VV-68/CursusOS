@@ -15,8 +15,8 @@ function AssignHOD() {
   const fetchFaculty = async () => {
     try {
       const users = await userAPI.getAll();
-      // Filter faculty format
-      const validFaculty = users.filter(u => u.dept_id === id && (u.role === 'faculty' || u.role === 'hod'));
+      // Filter active faculty format
+      const validFaculty = users.filter(u => u.dept_id === id && (u.role === 'faculty' || u.role === 'hod') && u.is_active);
       setFaculty(validFaculty);
     } catch (err) {
       alert(err.message);

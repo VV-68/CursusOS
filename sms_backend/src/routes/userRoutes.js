@@ -16,6 +16,9 @@ router.patch('/:id/reset-password', authMiddleware, roleGuard('admin'), userCont
 // DELETE /api/users/:id → soft delete (admin only)
 router.delete('/:id', authMiddleware, roleGuard('admin'), userController.deleteUser);
 
+// PATCH /api/users/:id/reactivate → reactivate user
+router.patch('/:id/reactivate', authMiddleware, roleGuard('admin', 'hod'), userController.reactivateUser);
+
 // PATCH /api/users/:id/role → hod or admin changes role
 router.patch('/:id/role', authMiddleware, roleGuard('admin', 'hod'), userController.updateRole);
 
@@ -27,5 +30,8 @@ router.patch('/:id/approve', authMiddleware, roleGuard('admin', 'hod'), userCont
 
 // PATCH /api/users/:id/designation → hod or admin updates designation
 router.patch('/:id/designation', authMiddleware, roleGuard('admin', 'hod'), userController.updateDesignation);
+
+// PATCH /api/users/:id/department → admin assigns department
+router.patch('/:id/department', authMiddleware, roleGuard('admin'), userController.updateDepartment);
 
 module.exports = router;

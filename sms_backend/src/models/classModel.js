@@ -9,7 +9,8 @@ const getAllClasses = async () => {
     u2.full_name as advisor2_name,
     fc2.unique_code as advisor2_code,
     d.code as dept_code,
-    d.institution_id
+    d.institution_id,
+    (SELECT COUNT(*) FROM student_profiles sp WHERE sp.class_id = c.id) as student_count
     FROM classes c
     JOIN departments d ON c.dept_id = d.id
     LEFT JOIN users u1 ON c.advisor1_id = u1.id

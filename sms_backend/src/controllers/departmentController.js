@@ -52,11 +52,25 @@ const assignHOD = async (req, res) => {
     const { id } = req.params;
     if (!hod_id) return res.status(400).json({ error: 'hod_id is required' });
 
+    // Validate hod_id is active
+    const pool = require('../db/connection');
+    const { rows: userRows } = await pool.query('SELECT is_active FROM users WHERE id = $1', [hod_id]);
+    if (userRows.length === 0 || !userRows[0].is_active) {
+      return res.status(400).json({ error: 'Cannot assign a deactivated user as HOD' });
+    }
+
     const existing = await departmentModel.getDepartmentById(id);
     if (!existing) return res.status(404).json({ error: 'Department not found' });
 
-    // If an HOD exists, request permission
-    if (existing.hod_id) {
+    if (req.user.role !== 'admin' && existing.id !== req.user.dept_id) {
+      return res.status(403).json({ error: 'You can only manage your own department' });
+    }
+
+    // If an HOD exists and requester is not the current HOD, request permission
+    if (existing.hod_id && existing.hod_id !== req.user.id) {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Only admins can request HOD changes' });
+      }
       await departmentModel.requestHODChange(id, hod_id);
 
       // Notify current HOD about pending transfer
@@ -79,6 +93,21 @@ const assignHOD = async (req, res) => {
       { hod_id: oldHodId },
       { hod_id }
     );
+
+    // Notify admins if this was a voluntary transfer by the HOD
+    if (req.user.role === 'hod') {
+      try {
+        const { notifyUser } = require('../services/notificationService');
+        const { rows: admins } = await pool.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1", [req.user.institution_id]);
+        const { rows: newHodRows } = await pool.query('SELECT full_name FROM users WHERE id = $1', [hod_id]);
+        const newHodName = newHodRows[0]?.full_name || 'a new faculty member';
+        for (let admin of admins) {
+          await notifyUser(req.user.id, admin.id, `HOD transfer occurred in department ${existing.name}. New HOD is ${newHodName}.`);
+        }
+      } catch (notifErr) {
+        console.error('[department] HOD transfer notification to admin failed', notifErr.message);
+      }
+    }
 
     res.json({ message: 'HOD assigned successfully' });
   } catch (err) {
@@ -103,6 +132,18 @@ const approveHODChange = async (req, res) => {
     const oldHodId = await departmentModel.assignHOD(id, pendingHodId);
     
     await logAudit(req.user.id, 'HOD_ASSIGNED', 'department', id, { hod_id: oldHodId }, { hod_id: pendingHodId });
+    
+    // Notify admins of approval
+    try {
+      const { notifyUser } = require('../services/notificationService');
+      const { rows: admins } = await pool.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1", [req.user.institution_id]);
+      for (let admin of admins) {
+        await notifyUser(req.user.id, admin.id, `HOD of ${existing.name} has approved the HOD transfer request.`);
+      }
+    } catch (e) {
+      console.error('Failed to notify admin of HOD approval', e);
+    }
+    
     res.json({ message: 'HOD change approved successfully' });
   } catch (err) {
     console.error(err);
@@ -121,6 +162,18 @@ const rejectHODChange = async (req, res) => {
     }
 
     await departmentModel.requestHODChange(id, null);
+    
+    // Notify admins of rejection
+    try {
+      const { notifyUser } = require('../services/notificationService');
+      const { rows: admins } = await pool.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1", [req.user.institution_id]);
+      for (let admin of admins) {
+        await notifyUser(req.user.id, admin.id, `HOD of ${existing.name} has rejected the HOD transfer request.`);
+      }
+    } catch (e) {
+      console.error('Failed to notify admin of HOD rejection', e);
+    }
+    
     res.json({ message: 'HOD change rejected' });
   } catch (err) {
     console.error(err);

@@ -20,6 +20,7 @@ function Users() {
   const [filterBatch, setFilterBatch] = useState(searchParams.get('batch') || '');
   const [filterActive, setFilterActive] = useState(true);
   const [classes, setClasses] = useState([]);
+  const [assignDeptUser, setAssignDeptUser] = useState(null);
 
   const token = localStorage.getItem('token');
   let callerRole = '';
@@ -101,6 +102,25 @@ function Users() {
     }
   };
 
+  const handleReactivate = async (u) => {
+    if (u.role === 'student' && u.class_is_active === false) {
+      alert("student deactivated due to course completion. cant reactivate");
+      return;
+    }
+    if (!window.confirm(`Reactivate user "${u.full_name}"?`)) return;
+    try {
+      const res = await userAPI.reactivate(u.id);
+      alert(res.message || (callerRole === 'admin' ? 'User reactivated successfully' : 'Reactivation request sent to admin for approval'));
+      fetchUsers();
+    } catch (err) {
+      if (err.message && err.message.toLowerCase().includes('course completion')) {
+        alert("student deactivated due to course completion. cant reactivate");
+      } else {
+        alert(err.message);
+      }
+    }
+  };
+
   const handleRemoveHOD = async (user) => {
     if (!window.confirm(`Are you sure you want to remove ${user.full_name} from the HOD position? They will become standard Faculty.`)) return;
     try {
@@ -122,11 +142,33 @@ function Users() {
     }
   };
 
+  const handleMakeHOD = async (user) => {
+    if (!window.confirm(`Are you sure you want to transfer your HOD role to ${user.full_name}? You will become a standard Faculty member and will be logged out to apply changes.`)) return;
+    try {
+      await departmentAPI.assignHOD(user.dept_id, { hod_id: user.id });
+      alert('HOD role transferred successfully. You will now be logged out.');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleEditDesignation = async (user) => {
     const newDesignation = window.prompt(`Enter new designation for ${user.full_name}:`, user.designation || 'Faculty');
     if (newDesignation === null) return;
     try {
       await userAPI.updateDesignation(user.id, newDesignation);
+      fetchUsers();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleAssignDepartment = async (user, deptId) => {
+    if (!deptId) return;
+    try {
+      await userAPI.updateDepartment(user.id, deptId);
       fetchUsers();
     } catch (err) {
       alert(err.message);
@@ -266,28 +308,55 @@ function Users() {
                     >
                       Reset Password
                     </button>
-                    {callerRole === 'admin' && u.role === 'hod' && (
+                    {/* {callerRole === 'admin' && u.role === 'hod' && (
                       <button
                         onClick={() => handleRemoveHOD(u)}
                         style={{ padding: '0.3rem 0.6rem', background: '#fd7e14', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                       >
                         Remove HOD
                       </button>
+                    )} */}
+                    {callerRole === 'hod' && u.is_active && (u.role === 'faculty' || u.role === 'advisor') && (
+                      <>
+                        <button
+                          onClick={() => handleToggleRole(u)}
+                          style={{ padding: '0.3rem 0.6rem', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        >
+                          Make {u.role === 'faculty' ? 'Advisor' : 'Faculty'}
+                        </button>
+                        <button
+                          onClick={() => handleMakeHOD(u)}
+                          style={{ padding: '0.3rem 0.6rem', background: '#6f42c1', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        >
+                          Transfer HOD Role
+                        </button>
+                      </>
                     )}
-                    {callerRole === 'hod' && (u.role === 'faculty' || u.role === 'advisor') && (
+                    {u.is_active ? (
+                      callerRole === 'admin' && (
+                        <button
+                          onClick={() => handleDelete(u.id, u.full_name)}
+                          style={{ padding: '0.3rem 0.6rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        >
+                          Deactivate
+                        </button>
+                      )
+                    ) : (
                       <button
-                        onClick={() => handleToggleRole(u)}
-                        style={{ padding: '0.3rem 0.6rem', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        onClick={() => handleReactivate(u)}
+                        style={{ padding: '0.3rem 0.6rem', background: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                       >
-                        Make {u.role === 'faculty' ? 'Advisor' : 'Faculty'}
+                        Reactivate
                       </button>
                     )}
-                    <button
-                      onClick={() => handleDelete(u.id, u.full_name)}
-                      style={{ padding: '0.3rem 0.6rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-                    >
-                      Deactivate
-                    </button>
+                    {callerRole === 'admin' && !u.dept_id && ['faculty', 'advisor', 'hod'].includes(u.role) && (
+                      <button 
+                        onClick={() => setAssignDeptUser(u)}
+                        style={{ padding: '0.3rem 0.6rem', background: '#ffc107', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                      >
+                        Assign Dept
+                      </button>
+                    )}
                     </div>
                   </td>
                 </tr>
@@ -295,6 +364,34 @@ function Users() {
             )}
           </tbody>
         </table>
+      )}
+
+      {assignDeptUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: '2rem', borderRadius: '8px', minWidth: '300px', textAlign: 'center' }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>Assign Department</h3>
+            <p style={{ marginBottom: '1.5rem', color: '#555' }}>Select a department for <strong>{assignDeptUser.full_name}</strong>.</p>
+            <select 
+              autoFocus
+              onChange={(e) => { 
+                handleAssignDepartment(assignDeptUser, e.target.value); 
+                setAssignDeptUser(null); 
+              }}
+              style={{ padding: '0.5rem', width: '100%', borderRadius: '4px', border: '1px solid #ccc', marginBottom: '1.5rem', fontSize: '1rem' }}
+            >
+              <option value="">Select Dept...</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+            <div>
+              <button 
+                onClick={() => setAssignDeptUser(null)}
+                style={{ padding: '0.5rem 1rem', background: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

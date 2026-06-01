@@ -162,7 +162,14 @@ function Departments() {
               ) : (
                 departments.map((d) => (
                   <tr key={d.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '0.75rem' }}>{d.name}</td>
+                    <td style={{ padding: '0.75rem' }}>
+                      {d.name}
+                      {d.pending_hod_id && (
+                        <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#ffc107', color: '#000', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                          HOD Transfer Request sent
+                        </span>
+                      )}
+                    </td>
                     <td style={{ padding: '0.75rem' }}><code>{d.code}</code></td>
                     <td style={{ padding: '0.75rem' }}>{d.hod_name || <span style={{ color: '#999' }}>Not Assigned</span>}</td>
                     <td style={{ padding: '0.75rem' }}>{d.created_at ? new Date(d.created_at).toLocaleDateString() : '—'}</td>
@@ -177,13 +184,15 @@ function Departments() {
                         <Link to={`/admin/departments/${d.id}/batches`}>
                           <button style={btnStyle('#10b981')}>🧑‍🎓 View Batches</button>
                         </Link>
-                        <button
-                          style={btnStyle(deleting === d.id ? '#999' : '#dc3545')}
-                          onClick={() => handleDelete(d)}
-                          disabled={deleting === d.id}
-                        >
-                          {deleting === d.id ? '...' : '🗑️ Delete'}
-                        </button>
+                        <span title={Number(d.student_count) > 0 ? "Cannot delete department with students" : ""} style={{ cursor: Number(d.student_count) > 0 ? 'not-allowed' : 'auto' }}>
+                          <button
+                            style={{ ...btnStyle(deleting === d.id || Number(d.student_count) > 0 ? '#999' : '#dc3545'), pointerEvents: Number(d.student_count) > 0 ? 'none' : 'auto' }}
+                            onClick={() => handleDelete(d)}
+                            disabled={deleting === d.id || Number(d.student_count) > 0}
+                          >
+                            {deleting === d.id ? '...' : '🗑️ Delete'}
+                          </button>
+                        </span>
                       </div>
                     </td>
                   </tr>

@@ -11,7 +11,8 @@ const getAllDepartments = async (institution_id) => {
       u.full_name AS hod_name,
       u.id        AS hod_id,
       d.pending_hod_id,
-      d.institution_id
+      d.institution_id,
+      (SELECT COUNT(*) FROM student_profiles sp JOIN classes c ON sp.class_id = c.id WHERE c.dept_id = d.id) AS student_count
     FROM departments d
     LEFT JOIN users u ON u.id = d.hod_id
   `;

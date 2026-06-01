@@ -13,8 +13,8 @@ router.post('/', authMiddleware, roleGuard('admin'), departmentController.create
 // PATCH /api/departments/:id → admin
 
 
-// PATCH /api/departments/:id/hod → admin
-router.patch('/:id/hod', authMiddleware, roleGuard('admin'), departmentController.assignHOD);
+// PATCH /api/departments/:id/hod → admin, hod
+router.patch('/:id/hod', authMiddleware, roleGuard('admin', 'hod'), departmentController.assignHOD);
 
 // PATCH /api/departments/:id/hod/approve → hod
 router.patch('/:id/hod/approve', authMiddleware, roleGuard('hod'), departmentController.approveHODChange);

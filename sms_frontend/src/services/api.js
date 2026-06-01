@@ -94,10 +94,12 @@ export const userAPI = {
   create: (data) => fetch(`${BASE_URL}/api/users`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   resetPassword: (id) => fetch(`${BASE_URL}/api/users/${id}/reset-password`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   delete: (id) => fetch(`${BASE_URL}/api/users/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
+  reactivate: (id) => fetch(`${BASE_URL}/api/users/${id}/reactivate`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
   updateRole: (id, role) => fetch(`${BASE_URL}/api/users/${id}/role`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ role }) }).then(handleResponse),
   updateProfile: (data) => fetch(`${BASE_URL}/api/users/me`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   updateDesignation: (id, designation) => fetch(`${BASE_URL}/api/users/${id}/designation`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ designation }) }).then(handleResponse),
   approveUser: (id) => fetch(`${BASE_URL}/api/users/${id}/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
+  updateDepartment: (id, dept_id) => fetch(`${BASE_URL}/api/users/${id}/department`, { method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ dept_id }) }).then(handleResponse),
 };
 
 // ─── Institutions ──────────────────────────────────────────────

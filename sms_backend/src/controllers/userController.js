@@ -119,12 +119,70 @@ const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     if (id === req.user.id) return res.status(400).json({ error: 'Cannot deactivate yourself' });
+    
+    const targetUser = await userModel.getUserById(id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    if (req.user.institution_id && targetUser.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'User is not in your institution' });
+    }
+
+    if (targetUser.role === 'hod' && req.user.role === 'admin') {
+      await pool.query("UPDATE departments SET hod_id = NULL WHERE hod_id = $1", [id]);
+      await pool.query("UPDATE users SET role = 'faculty' WHERE id = $1", [id]);
+    } else if (targetUser.role === 'advisor' && req.user.role === 'admin') {
+      await pool.query("UPDATE classes SET advisor1_id = NULL WHERE advisor1_id = $1", [id]);
+      await pool.query("UPDATE classes SET advisor2_id = NULL WHERE advisor2_id = $1", [id]);
+      await pool.query("UPDATE users SET role = 'faculty' WHERE id = $1", [id]);
+    }
+
     const updated = await userModel.deactivateUser(id);
     if (!updated) return res.status(404).json({ error: 'User not found' });
 
     await logAudit(req.user.id, 'USER_DEACTIVATED', 'user', id, null, null);
 
     res.json({ message: 'User deactivated' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const reactivateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const targetUser = await userModel.getUserById(id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    if (req.user.institution_id && targetUser.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'User is not in your institution' });
+    }
+
+    // "when admin or hod tries to reactivate a student and the batch is deactivayed, then popup a message, student deactivated due to course completion. cant reactivate"
+    // Wait, targetUser has role but doesn't have class info. We need to check class_is_active.
+    // Instead of querying student profile here, we can do it:
+    if (targetUser.role === 'student') {
+      const spRows = await pool.query(
+        `SELECT c.is_active FROM student_profiles sp JOIN classes c ON sp.class_id = c.id WHERE sp.user_id = $1`,
+        [id]
+      );
+      if (spRows.rows.length > 0 && spRows.rows[0].is_active === false) {
+        return res.status(400).json({ error: 'student deactivated due to course completion. cant reactivate' });
+      }
+    }
+
+    if (req.user.role === 'admin') {
+      await userModel.reactivateUser(id);
+      await logAudit(req.user.id, 'USER_REACTIVATED', 'user', id, null, null);
+      return res.json({ message: 'User reactivated successfully' });
+    } else if (req.user.role === 'hod') {
+      if (targetUser.dept_id !== req.user.dept_id) {
+        return res.status(403).json({ error: 'User not in your department' });
+      }
+      await userModel.reactivateUserPending(id);
+      await logAudit(req.user.id, 'USER_REACTIVATION_REQUESTED', 'user', id, null, null);
+      return res.json({ message: 'Reactivation request sent to admin for approval' });
+    } else {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -150,6 +208,9 @@ const updateRole = async (req, res) => {
     if (!targetUser) {
       console.log('[updateRole] Target user not found:', id);
       return res.status(404).json({ error: 'User not found' });
+    }
+    if (req.user.institution_id && targetUser.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'User is not in your institution' });
     }
     console.log('[updateRole] Target user found:', { id: targetUser.id, currentRole: targetUser.role, dept_id: targetUser.dept_id });
 
@@ -221,6 +282,10 @@ const updateDesignation = async (req, res) => {
     const targetUser = await userModel.getUserById(id);
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
+    if (req.user.institution_id && targetUser.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'User is not in your institution' });
+    }
+
     if (req.user.role === 'hod' && targetUser.dept_id !== req.user.dept_id) {
       return res.status(403).json({ error: 'User is not in your department' });
     }
@@ -240,6 +305,10 @@ const approveUser = async (req, res) => {
     // Fetch the target user to check role and dept
     const targetUser = await userModel.getUserById(id);
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    
+    if (req.user.institution_id && targetUser.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'User is not in your institution' });
+    }
     
     if (req.user.role === 'hod') {
       if (targetUser.role !== 'student') {
@@ -308,4 +377,76 @@ const approveUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, createUser, resetPassword, deleteUser, updateRole, updateMyProfile, updateDesignation, approveUser };
+const updateDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { dept_id } = req.body;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const targetUser = await userModel.getUserById(id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    
+    if (req.user.institution_id && targetUser.institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'User is not in your institution' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      const { rows } = await client.query(
+        `UPDATE users SET dept_id = $1, updated_at = NOW() WHERE id = $2 RETURNING id, username, dept_id`,
+        [dept_id || null, id]
+      );
+      if (rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (dept_id) {
+        // Generate new faculty code
+        const deptRes = await client.query('SELECT code FROM departments WHERE id = $1', [dept_id]);
+        if (deptRes.rows.length > 0) {
+          const deptCode = deptRes.rows[0].code.toUpperCase();
+          const seqRes = await client.query(
+            `SELECT unique_code FROM faculty_codes 
+             WHERE unique_code LIKE $1 
+             ORDER BY LENGTH(unique_code) DESC, unique_code DESC LIMIT 1`,
+            [`${deptCode}%`]
+          );
+          
+          let nextSeq = 101;
+          if (seqRes.rows.length > 0) {
+            const lastCode = seqRes.rows[0].unique_code;
+            const match = lastCode.match(/\d+$/);
+            if (match) nextSeq = parseInt(match[0], 10) + 1;
+          }
+          const faculty_code = `${deptCode}${nextSeq}`;
+          
+          // Delete old code if exists, then insert new one
+          await client.query('DELETE FROM faculty_codes WHERE user_id = $1', [id]);
+          await client.query('INSERT INTO faculty_codes (user_id, unique_code) VALUES ($1, $2)', [id, faculty_code]);
+        }
+      }
+
+      await client.query('COMMIT');
+      
+      await logAudit(req.user.id, 'USER_DEPARTMENT_UPDATED', 'user', id, null, { dept_id });
+
+      res.json({ message: 'Department assigned successfully', user: rows[0] });
+    } catch (dbErr) {
+      await client.query('ROLLBACK');
+      throw dbErr;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllUsers, createUser, resetPassword, deleteUser, reactivateUser, updateRole, updateMyProfile, updateDesignation, approveUser, updateDepartment };

@@ -179,6 +179,11 @@ const deleteClass = async (req, res) => {
       return res.status(403).json({ error: 'Forbidden. Not your department.' });
     }
 
+    const students = await classModel.getStudentsInClass(id);
+    if (req.user.role === 'hod' && students.length > 0) {
+      return res.status(403).json({ error: 'Cannot delete a batch that has students in it.' });
+    }
+
     await classModel.deleteClass(id);
     res.json({ message: 'Class deleted successfully' });
   } catch (err) {

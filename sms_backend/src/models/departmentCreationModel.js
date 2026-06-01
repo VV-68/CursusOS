@@ -177,9 +177,10 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
  */
 const getFullDepartment = async (deptId) => {
   const { rows: deptRows } = await pool.query(
-    `SELECT d.*, u.full_name AS hod_name
+    `SELECT d.*, u.full_name AS hod_name, pu.full_name AS pending_hod_name
      FROM departments d
      LEFT JOIN users u ON u.id = d.hod_id
+     LEFT JOIN users pu ON pu.id = d.pending_hod_id
      WHERE d.id = $1`,
     [deptId]
   );
@@ -465,11 +466,33 @@ const resolveClassPeriod = (departmentType, classYear) => {
  * Delete a department and all its courses (cascade)
  */
 const deleteDepartment = async (deptId) => {
-  const { rows } = await pool.query(
-    `DELETE FROM departments WHERE id = $1 RETURNING *`,
-    [deptId]
-  );
-  return rows[0];
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // Change HOD to faculty
+    await client.query(`UPDATE users SET role = 'faculty' WHERE dept_id = $1 AND role = 'hod'`, [deptId]);
+    
+    // Clear faculty code for all users in this department
+    await client.query(`DELETE FROM faculty_codes WHERE user_id IN (SELECT id FROM users WHERE dept_id = $1)`, [deptId]);
+    
+    // Nullify dept_id for all users in this department
+    await client.query(`UPDATE users SET dept_id = NULL WHERE dept_id = $1`, [deptId]);
+    
+    // Delete the department
+    const { rows } = await client.query(
+      `DELETE FROM departments WHERE id = $1 RETURNING *`,
+      [deptId]
+    );
+    
+    await client.query('COMMIT');
+    return rows[0];
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 module.exports = {
