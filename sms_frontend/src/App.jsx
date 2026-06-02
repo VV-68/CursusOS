@@ -54,6 +54,8 @@ import DepartmentInternals from './pages/hod/DepartmentInternals';
 import CompleteProfile from './pages/student/CompleteProfile';
 import AttendanceOverrides from './pages/advisor/AttendanceOverrides';
 import MyTimetable from './pages/faculty/MyTimetable';
+import DailyAttendance from './pages/shared/DailyAttendance';
+import HolidaysManager from './pages/shared/HolidaysManager';
 
 import { ThemeProvider } from './context/ThemeContext';
 import './styles/dark-mode.css';
@@ -85,6 +87,12 @@ function App() {
           <Route path="/change-password" element={
             <ProtectedRoute roles={['admin','hod','advisor','faculty','student']}>
               <ChangePassword />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/holidays" element={
+            <ProtectedRoute roles={['admin', 'hod']}>
+              <HolidaysManager />
             </ProtectedRoute>
           } />
 
@@ -233,6 +241,12 @@ function App() {
           <Route path="/student/attendance" element={
             <ProtectedRoute roles={['student']}>
               <AttendanceSummary />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/:studentId/daily-attendance" element={
+            <ProtectedRoute roles={['student', 'advisor', 'hod', 'admin']}>
+              <DailyAttendance />
             </ProtectedRoute>
           } />
 

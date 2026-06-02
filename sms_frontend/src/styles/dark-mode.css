@@ -279,8 +279,8 @@ html.dark-mode .student-table {
 }
 
 html.dark-mode .student-table th,
-html.dark-mode table th,
-html.dark-mode thead,
+html.dark-mode table:not(.daily-table) th,
+html.dark-mode table:not(.daily-table) thead,
 html.dark-mode .json-preview-table th {
   background: var(--dm-table-head) !important;
   color: var(--dm-text-sub) !important;
@@ -288,14 +288,14 @@ html.dark-mode .json-preview-table th {
 }
 
 html.dark-mode .student-table td,
-html.dark-mode table td,
+html.dark-mode table:not(.daily-table) td,
 html.dark-mode .json-preview-table td {
   border-bottom-color: var(--dm-table-border) !important;
   color: var(--dm-text) !important;
 }
 
 html.dark-mode .student-table tr:hover td,
-html.dark-mode table tr:hover td,
+html.dark-mode table:not(.daily-table) tr:hover td,
 html.dark-mode .json-preview-table tbody tr:hover {
   background: var(--dm-table-hover) !important;
 }

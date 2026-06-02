@@ -182,6 +182,7 @@ export const attendanceAPI = {
   getSheet: (qs) => fetch(`${BASE_URL}/api/attendance/sheet?${qs}`, { headers: getHeaders(true) }).then(handleResponse),
   mark: (data) => fetch(`${BASE_URL}/api/attendance/mark`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   getSummary: (studentId) => fetch(`${BASE_URL}/api/attendance/summary/${studentId}`, { headers: getHeaders(true) }).then(handleResponse),
+  getDaily: (studentId, qs) => fetch(`${BASE_URL}/api/attendance/daily/${studentId}?${qs}`, { headers: getHeaders(true) }).then(handleResponse),
   getLow: (qs) => fetch(`${BASE_URL}/api/attendance/low?${qs}`, { headers: getHeaders(true) }).then(handleResponse),
   requestOverride: (data) => fetch(`${BASE_URL}/api/attendance/override-request`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   listOverrides: () => fetch(`${BASE_URL}/api/attendance/overrides`, { headers: getHeaders(true) }).then(handleResponse),
@@ -211,6 +212,17 @@ export const noticeAPI = {
   getAll: () => fetch(`${BASE_URL}/api/notices`, { headers: getHeaders(true) }).then(handleResponse),
   create: (data) => fetch(`${BASE_URL}/api/notices`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
   remove: (id) => fetch(`${BASE_URL}/api/notices/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
+};
+
+// ─── Holidays ────────────────────────────────────────────────
+export const holidaysAPI = {
+  getHolidays: (month, year, deptId = null) => {
+    let url = `${BASE_URL}/api/holidays?month=${month}&year=${year}`;
+    if (deptId) url += `&dept_id=${deptId}`;
+    return fetch(url, { headers: getHeaders(true) }).then(handleResponse);
+  },
+  create: (data) => fetch(`${BASE_URL}/api/holidays`, { method: 'POST', headers: getHeaders(true), body: JSON.stringify(data) }).then(handleResponse),
+  remove: (id) => fetch(`${BASE_URL}/api/holidays/${id}`, { method: 'DELETE', headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Students (legacy) ──────────────────────────────────────

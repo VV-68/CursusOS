@@ -1,0 +1,222 @@
+.daily-attendance-container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  --na-bg: #cbd5e1;
+  --na-text: #0f172a;
+}
+html.dark-mode .daily-attendance-container {
+  --na-bg: #333333; /* Light black for N/A in dark mode */
+  --na-text: #e2e8f0;
+}
+
+.daily-attendance-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.daily-back-btn {
+  background: var(--btn-bg, #fff);
+  border: 1px solid var(--btn-border, #e2e8f0);
+  color: var(--btn-text, #64748b);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.daily-back-btn:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+html.dark-mode .daily-back-btn {
+  background: var(--dm-panel-bg);
+  border-color: var(--dm-input-border);
+  color: var(--dm-text);
+}
+html.dark-mode .daily-back-btn:hover {
+  background: var(--dm-input-bg);
+}
+
+.daily-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--title-color, #1e293b);
+  margin: 0;
+}
+html.dark-mode .daily-title {
+  color: #fff;
+}
+
+.daily-filters {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.daily-filter-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.daily-filter-group select {
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.95rem;
+  color: #1e293b;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1em;
+}
+
+html.dark-mode .daily-filter-group select {
+  background-color: var(--dm-input-bg);
+  border-color: var(--dm-input-border);
+  color: #fff;
+}
+
+.daily-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.legend-item {
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(0,0,0,0.1);
+  min-width: 80px;
+  text-align: center;
+}
+
+.daily-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+html.dark-mode .daily-table-wrapper {
+  border-color: var(--dm-card-border);
+  box-shadow: var(--dm-card-shadow);
+}
+
+.daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+html.dark-mode .daily-table {
+  background: var(--dm-panel-bg);
+}
+
+.daily-table th {
+  background: #ffffff;
+  color: #1e293b;
+  padding: 1rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}
+
+html.dark-mode .daily-table th {
+  background: var(--dm-accent-light); /* Matches the bright blue in the logo */
+  border-color: var(--dm-table-border);
+  color: #fff;
+}
+
+.daily-table td {
+  border: 1px solid #e2e8f0;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  height: 60px;
+}
+
+html.dark-mode .daily-table td {
+  border-color: var(--dm-input-border);
+}
+
+.daily-date-cell {
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-right: 4px solid #e2e8f0 !important;
+  width: 80px;
+}
+
+html.dark-mode .daily-date-cell {
+  background: var(--dm-accent-light); /* Matches the bright blue in the logo */
+  border-right: 1px solid var(--dm-table-border) !important;
+  color: #fff;
+}
+
+.daily-date-cell.date-leave-applied {
+  background: #facc15 !important;
+  color: #713f12 !important;
+}
+
+html.dark-mode .daily-date-cell.date-leave-applied {
+  background: #facc15 !important;
+  color: #713f12 !important;
+}
+
+.daily-date-cell sup {
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.daily-period-cell {
+  background: var(--na-bg); /* Default N/A background */
+  width: 150px;
+  transition: filter 0.2s;
+}
+
+.daily-cell-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.course-code {
+  display: block;
+}
+
+.course-name {
+  display: block;
+}
+
+.daily-loading {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+html.dark-mode .daily-loading {
+  color: #94a3b8;
+}

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { departmentCreationAPI, departmentAPI, logout, getMe, noticeAPI } from '../services/api';
 
 const ROLE_LABELS = {
@@ -19,10 +19,13 @@ const ROLE_COLORS = {
   student: { bg: '#f3f4f8', accent: '#23364d', text: '#23364d' },
 };
 
+const CARD_COLORS = ['#40b1a6', '#9b278a', '#e63861', '#21a5d8', '#f5a623', '#dc6b22'];
+
 // ── Reusable card-link ──────────────────────────────────────────────────────
-function DashCard({ to, icon, label, description, variant = 'primary' }) {
+function DashCard({ to, icon, label, description, variant = 'primary', cardColor }) {
+  // In light mode, apply the background color via CSS variable.
   return (
-    <Link to={to} className={`dash-card dash-card--${variant}`}>
+    <Link to={to} className={`dash-card dash-card--${variant} ${cardColor ? 'dash-card--colored' : ''}`} style={cardColor ? { '--card-accent': cardColor } : {}}>
       <span className="dash-card-icon">{icon}</span>
       <span className="dash-card-label">{label}</span>
       {/* {description && <span className="dash-card-desc">{description}</span>} */}
@@ -32,13 +35,35 @@ function DashCard({ to, icon, label, description, variant = 'primary' }) {
 
 // ── Section with anchor id ──────────────────────────────────────────────────
 function DashSection({ id, title, icon, children }) {
+  // Flatten children including Fragments
+  const flatten = (nodes) => {
+    return React.Children.toArray(nodes).reduce((acc, node) => {
+      if (node && node.type === React.Fragment) {
+        return acc.concat(flatten(node.props.children));
+      }
+      return acc.concat(node);
+    }, []);
+  };
+  
+  const flatChildren = flatten(children).filter(Boolean);
+  
+  // Inject colors into DashCards cyclically
+  const coloredChildren = flatChildren.map((child, index) => {
+    if (child && child.type === DashCard) {
+      return React.cloneElement(child, {
+        cardColor: CARD_COLORS[index % CARD_COLORS.length]
+      });
+    }
+    return child;
+  });
+
   return (
     <div id={id} className="dash-section" style={{ scrollMarginTop: '80px' }}>
       <h3 className="dash-section-title">
         <span className="dash-section-icon">{icon}</span>
         {title}
       </h3>
-      <div className="dash-section-grid">{children}</div>
+      <div className="dash-section-grid">{coloredChildren}</div>
     </div>
   );
 }
@@ -271,6 +296,7 @@ function Dashboard() {
           <DashCard to="/hod/courses" icon="📚" label="Manage Courses" description="Department course catalog" />
           <DashCard to="/hod/internals" icon="📊" label="Dept Internals" description="View all class internal marks" />
           <DashCard to="/advisor/attendance/overrides" icon="🔓" label="Override Requests" description="Faculty attendance overrides" />
+          <DashCard to="/holidays" icon="🌴" label="Manage Holidays" description="Department holidays" />
         </DashSection>
       )}
 
@@ -283,6 +309,7 @@ function Dashboard() {
           <DashCard to="/admin/departments" icon="🏛️" label="Manage Departments" description="Add or edit departments" />
           <DashCard to="/admin/batch-lifecycle" icon="✅" label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
           <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />
+          <DashCard to="/holidays" icon="🌴" label="Manage Holidays" description="Institution holidays" />
         </DashSection>
       )}
 

@@ -397,6 +397,29 @@
   border-color: rgba(0, 123, 255, 0.3);
 }
 
+.dash-card.dash-card--colored {
+  background: var(--card-accent);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dash-card.dash-card--colored:hover {
+  background: var(--card-accent);
+  filter: brightness(1.1);
+  border: none;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dash-card.dash-card--colored .dash-card-icon,
+.dash-card.dash-card--colored .dash-card-label {
+  color: #ffffff;
+}
+
+.dash-card.dash-card--colored .dash-card-desc {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .dash-card-icon {
   font-size: 1.5rem;
   margin-bottom: 0.15rem;

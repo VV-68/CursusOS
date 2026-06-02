@@ -1,6 +1,7 @@
 const attendanceModel = require('../models/attendanceModel');
 const courseModel = require('../models/courseModel');
 const overrideModel = require('../models/attendanceOverrideModel');
+const holidaysModel = require('../models/holidaysModel');
 const logAudit = require('../utils/auditLogger');
 const pool = require('../db/connection');
 const { getFacultyAssignment, isAdvisorOfStudent } = require('../utils/authorizationHelpers');
@@ -9,6 +10,16 @@ const { getFacultyAssignment, isAdvisorOfStudent } = require('../utils/authoriza
 const getDayName = (dateStr) => {
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   return dayNames[new Date(dateStr + 'T00:00:00').getDay()];
+};
+
+const checkIsHoliday = async (date, course_assignment_id, institution_id) => {
+  const { rows } = await pool.query(
+    'SELECT cl.dept_id FROM course_assignments ca JOIN classes cl ON ca.class_id = cl.id WHERE ca.id = $1',
+    [course_assignment_id]
+  );
+  if (rows.length === 0) return false;
+  const holiday = await holidaysModel.getHolidayByDate(institution_id, rows[0].dept_id, date);
+  return holiday ? holiday.description : false;
 };
 
 // ───────────────── Validate Slot ──────────────────────────────────────────────
@@ -23,6 +34,11 @@ const validateSlot = async (req, res) => {
       return res.status(400).json({
           error: 'No timetable slots exist on Sunday'
       });
+    }
+
+    const holidayDesc = await checkIsHoliday(date, course_assignment_id, req.user.institution_id);
+    if (holidayDesc) {
+      return res.status(400).json({ error: `Cannot mark attendance. Today is a holiday: ${holidayDesc}` });
     }
 
     // Advisors, HODs, admins bypass timetable check
@@ -71,6 +87,11 @@ const getAttendanceSheet = async (req, res) => {
       });
     }
 
+    const holidayDesc = await checkIsHoliday(date, course_assignment_id, req.user.institution_id);
+    if (holidayDesc) {
+      return res.status(400).json({ error: `Cannot view attendance sheet. Today is a holiday: ${holidayDesc}` });
+    }
+
     if (req.user.role === 'faculty') {
       const assignment = await getFacultyAssignment(req.user.id, course_assignment_id);
       if (!assignment) return res.status(403).json({ error: 'You are not assigned to this course' });
@@ -111,6 +132,11 @@ const markAttendance = async (req, res) => {
       return res.status(400).json({
           error: 'No timetable slots exist on Sunday'
       });
+    }
+
+    const holidayDesc = await checkIsHoliday(date, course_assignment_id, req.user.institution_id);
+    if (holidayDesc) {
+      return res.status(400).json({ error: `Cannot mark attendance. Today is a holiday: ${holidayDesc}` });
     }
 
     // 1. Course ownership check
@@ -356,6 +382,37 @@ const getLowAttendance = async (req, res) => {
   }
 };
 
+// ───────────────── Get Daily Attendance ─────────────────────────────────────────
+const getDailyAttendance = async (req, res) => {
+  try {
+    const { student_id } = req.params;
+    const { month, year } = req.query;
+
+    if (!month || !year) return res.status(400).json({ error: 'Missing month or year' });
+
+    if (req.user.role === 'student') {
+      if (req.user.id !== student_id) return res.status(403).json({ error: 'You can only view your own attendance' });
+    } else if (req.user.role === 'advisor') {
+      const isAdv = await isAdvisorOfStudent(req.user.id, student_id);
+      if (!isAdv) return res.status(403).json({ error: 'This student is not in your class' });
+    } else if (req.user.role === 'hod') {
+      const { rows } = await pool.query(
+        'SELECT 1 FROM student_profiles sp JOIN classes cl ON cl.id = sp.class_id WHERE sp.user_id = $1 AND cl.dept_id = $2',
+        [student_id, req.user.dept_id]
+      );
+      if (rows.length === 0) return res.status(403).json({ error: 'Student is not in your department' });
+    } else if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const data = await attendanceModel.getDailyAttendance(student_id, month, year);
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   validateSlot,
   getAttendanceSheet,
@@ -364,5 +421,6 @@ module.exports = {
   listOverrides,
   reviewOverride,
   getSummary,
-  getLowAttendance
+  getLowAttendance,
+  getDailyAttendance
 };

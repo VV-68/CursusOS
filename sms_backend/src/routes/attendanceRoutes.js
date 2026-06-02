@@ -25,6 +25,9 @@ router.patch('/overrides/:id', authMiddleware, roleGuard('advisor', 'hod', 'admi
 // GET /api/attendance/summary/:student_id
 router.get('/summary/:student_id', authMiddleware, attendanceController.getSummary);
 
+// GET /api/attendance/daily/:student_id
+router.get('/daily/:student_id', authMiddleware, attendanceController.getDailyAttendance);
+
 // GET /api/attendance/low
 router.get('/low', authMiddleware, roleGuard('advisor', 'hod', 'admin'), attendanceController.getLowAttendance);
 

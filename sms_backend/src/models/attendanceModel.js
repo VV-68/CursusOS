@@ -103,9 +103,47 @@ const getLowAttendance = async (dept_id, class_id) => {
   return rows;
 };
 
+const getDailyAttendance = async (student_id, month, year) => {
+  const attQuery = `
+    SELECT 
+      cs.date, 
+      cs.period_no, 
+      c.code as course_code, 
+      c.name as course_name, 
+      ar.status
+    FROM attendance_records ar
+    JOIN course_sessions cs ON ar.session_id = cs.id
+    JOIN course_assignments ca ON cs.course_assignment_id = ca.id
+    JOIN courses c ON ca.course_id = c.id
+    WHERE ar.student_id = $1
+      AND EXTRACT(MONTH FROM cs.date) = $2
+      AND EXTRACT(YEAR FROM cs.date) = $3
+    ORDER BY cs.date ASC, cs.period_no ASC
+  `;
+
+  const leaveQuery = `
+    SELECT from_date, to_date, status, type
+    FROM leave_requests
+    WHERE student_id = $1
+      AND from_date <= (MAKE_DATE($3::int, $2::int, 1) + interval '1 month' - interval '1 day')::date
+      AND to_date >= MAKE_DATE($3::int, $2::int, 1)
+  `;
+
+  const [attRes, leaveRes] = await Promise.all([
+    pool.query(attQuery, [student_id, month, year]),
+    pool.query(leaveQuery, [student_id, month, year])
+  ]);
+
+  return {
+    attendance: attRes.rows,
+    leaves: leaveRes.rows
+  };
+};
+
 module.exports = {
   getAttendanceSheet,
   markAttendance,
   getSummary,
-  getLowAttendance
+  getLowAttendance,
+  getDailyAttendance
 };

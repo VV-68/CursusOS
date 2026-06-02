@@ -72,7 +72,7 @@ const internalMarksRoutes = require("./routes/internalMarksRoutes");
 const institutionRoutes = require("./routes/institutionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const progressionRoutes = require("./routes/progressionRoutes");
-
+const holidaysRoutes = require("./routes/holidaysRoutes");
 
 
 app.use("/api/users", userRoutes);
@@ -95,6 +95,7 @@ app.use("/api/internal-marks", internalMarksRoutes);
 app.use("/api/institutions", institutionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/progression", progressionRoutes);
+app.use("/api/holidays", holidaysRoutes);
 
 
 // Global Error Handler
