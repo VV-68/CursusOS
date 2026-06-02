@@ -44,9 +44,9 @@ function DashSection({ id, title, icon, children }) {
       return acc.concat(node);
     }, []);
   };
-  
+
   const flatChildren = flatten(children).filter(Boolean);
-  
+
   // Inject colors into DashCards cyclically
   const coloredChildren = flatChildren.map((child, index) => {
     if (child && child.type === DashCard) {
@@ -202,11 +202,11 @@ function Dashboard() {
           <h1 className="dash-greeting">
             Welcome back{userInfo?.full_name ? `, ${userInfo.full_name}` : ''}
           </h1>
-          <p className="dash-role-label" style={{ color: colors.text }}>
+          <p className={`dash-role-label dash-role-label--${role}`}>
             {ROLE_LABELS[role] || role.toUpperCase()}
           </p>
         </div>
-        <span className="dash-role-badge" style={{ background: colors.bg, color: colors.text }}>
+        <span className={`dash-role-badge dash-role-badge--${role}`}>
           {role.toUpperCase()}
         </span>
       </div>
