@@ -135,8 +135,8 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
             if (!course.course_name || !course.course_name.trim() || !course.course_code || !course.course_code.trim()) continue;
 
             const { rows: courseRows } = await client.query(
-              `INSERT INTO department_courses (dept_id, period_number, course_name, course_code, credits, is_elective)
-               VALUES ($1, $2, $3, $4, $5, $6)
+              `INSERT INTO department_courses (dept_id, period_number, course_name, course_code, credits, is_elective, is_approved)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
                RETURNING *`,
               [
                 deptId,
@@ -144,7 +144,8 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
                 course.course_name.trim(),
                 course.course_code.trim().toUpperCase(),
                 course.credits || 0,
-                course.is_elective || false
+                course.is_elective || false,
+                role === 'admin'
               ]
             );
             insertedCourses.push(courseRows[0]);
@@ -299,7 +300,7 @@ const getManageCourses = async (deptId, filters = {}) => {
   }
 
   let courseQuery = `
-    SELECT dc.id, dc.period_number, dc.course_name, dc.course_code, dc.credits, dc.is_elective
+    SELECT dc.id, dc.period_number, dc.course_name, dc.course_code, dc.credits, dc.is_elective, dc.is_approved
     FROM department_courses dc
     WHERE dc.dept_id = $1
   `;

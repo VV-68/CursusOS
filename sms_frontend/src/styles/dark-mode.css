@@ -120,6 +120,7 @@ html.dark-mode .dashboard-page::after {
    ═══════════════════════════════════════════════════════════════════════════ */
 html.dark-mode .auth-card,
 html.dark-mode .dept-card,
+html.dark-mode .dept-preview,
 html.dark-mode .dept-wizard__header,
 html.dark-mode .student-form,
 html.dark-mode .empty-state,
@@ -696,4 +697,36 @@ html.dark-mode a:hover {
 html.dark-mode .navbar a,
 html.dark-mode .navbar-links a {
   color: #e2e8f0;
+}
+
+/* ── dept-preview dark mode overrides ── */
+html.dark-mode .dept-preview h2,
+html.dark-mode .dept-preview__item span,
+html.dark-mode .dept-preview__course-name,
+html.dark-mode .dept-preview__total-item span {
+  color: #f8fafc;
+}
+
+html.dark-mode .dept-preview__item label,
+html.dark-mode .dept-preview__course-meta,
+html.dark-mode .dept-preview__total-item label {
+  color: #94a3b8;
+}
+
+html.dark-mode .dept-preview__period {
+  background: var(--dm-input-bg);
+  border-color: var(--dm-input-border);
+}
+
+html.dark-mode .dept-preview__period h4 {
+  color: #cbd5e1;
+}
+
+html.dark-mode .dept-preview__course {
+  border-bottom-color: var(--dm-input-border);
+}
+
+html.dark-mode .dept-preview__total {
+  background: var(--dm-panel-bg);
+  border: 1px solid var(--dm-input-border);
 }

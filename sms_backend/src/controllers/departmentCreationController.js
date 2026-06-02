@@ -201,6 +201,21 @@ const updateFullDepartment = async (req, res) => {
       courses_count: result.summary.total_courses
     });
 
+    if (req.user.role === 'hod') {
+      try {
+        const pool = require('../db/connection');
+        const { notifyUser } = require('../services/notificationService');
+        const { rows: admins } = await pool.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1", [req.user.institution_id]);
+        const deptRes = await pool.query("SELECT name FROM departments WHERE id = $1", [id]);
+        const deptName = deptRes.rows[0]?.name || 'a department';
+        for (let admin of admins) {
+          await notifyUser(req.user.id, admin.id, `HOD of ${deptName} has uploaded/updated courses that require your approval.`);
+        }
+      } catch (e) {
+        console.error('Failed to notify admin of courses upload', e);
+      }
+    }
+
     res.json(result);
   } catch (err) {
     if (err.message === 'FORBIDDEN') {

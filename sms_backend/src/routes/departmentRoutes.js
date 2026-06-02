@@ -32,6 +32,12 @@ router.post('/:id/courses/upload',
   departmentController.uploadCourses
 );
 
+// PATCH /api/departments/:id/courses/approve → admin
+router.patch('/:id/courses/approve',
+  authMiddleware, roleGuard('admin'),
+  departmentController.approveCourses
+);
+
 // GET /api/departments/:id/courses
 router.get('/:id/courses',
   authMiddleware,

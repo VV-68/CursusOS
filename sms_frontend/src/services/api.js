@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const getToken = () => localStorage.getItem('token');
 
@@ -130,6 +130,7 @@ export const departmentAPI = {
     }).then(handleResponse);
   },
   getCourses: (id) => fetch(`${BASE_URL}/api/departments/${id}/courses`, { headers: getHeaders(true) }).then(handleResponse),
+  approveCourses: (id) => fetch(`${BASE_URL}/api/departments/${id}/courses/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Semesters ─────────────────────────────────────────────────

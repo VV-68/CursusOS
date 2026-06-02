@@ -226,11 +226,11 @@ const uploadCourses = async (req, res) => {
 
       // Upsert course into courses table
       const { rows: courseRows } = await pool.query(
-        `INSERT INTO courses (name, code, credits, dept_id)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO courses (name, code, credits, dept_id, is_approved)
+         VALUES ($1, $2, $3, $4, false)
          ON CONFLICT (code)
-         DO UPDATE SET name = EXCLUDED.name, credits = EXCLUDED.credits
-         RETURNING id, name, code, credits`,
+         DO UPDATE SET name = EXCLUDED.name, credits = EXCLUDED.credits, is_approved = false
+         RETURNING id, name, code, credits, is_approved`,
         [course.name.trim(), course.code.trim().toUpperCase(), course.credits, dept_id]
       );
       const savedCourse = courseRows[0];
@@ -263,6 +263,19 @@ const uploadCourses = async (req, res) => {
     await logAudit(req.user.id, 'COURSES_UPLOADED', 'department', dept_id, null,
       { semester_number: effectiveSemesterNumber, semester_id, count: results.length }
     );
+    
+    // Notify admins of pending courses
+    try {
+      const { notifyUser } = require('../services/notificationService');
+      const { rows: admins } = await pool.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true AND institution_id = $1", [req.user.institution_id]);
+      const deptRes = await pool.query("SELECT name FROM departments WHERE id = $1", [dept_id]);
+      const deptName = deptRes.rows[0]?.name || 'a department';
+      for (let admin of admins) {
+        await notifyUser(req.user.id, admin.id, `HOD of ${deptName} has uploaded/updated courses that require your approval.`);
+      }
+    } catch (e) {
+      console.error('Failed to notify admin of courses upload', e);
+    }
 
     res.status(200).json({ message: `${results.length} courses synced`, courses: results });
   } catch (err) {
@@ -279,7 +292,7 @@ const getDeptCourses = async (req, res) => {
     if (semester_number) {
       // Resolve courses via department_courses by period_number
       const { rows } = await pool.query(
-        `SELECT dc.id, dc.course_name AS name, dc.course_code AS code, dc.credits
+        `SELECT dc.id, dc.course_name AS name, dc.course_code AS code, dc.credits, true as is_approved
          FROM department_courses dc
          WHERE dc.dept_id = $1 AND dc.period_number = $2
          ORDER BY dc.course_code ASC`,
@@ -292,7 +305,7 @@ const getDeptCourses = async (req, res) => {
 
     // Legacy path: use department_semester_courses
     const { rows } = await pool.query(
-      `SELECT c.id, c.name, c.code, c.credits
+      `SELECT c.id, c.name, c.code, c.credits, c.is_approved
        FROM department_semester_courses dsc
        JOIN courses c ON c.id = dsc.course_id
        WHERE dsc.dept_id = $1 AND dsc.semester_id = $2 AND dsc.is_active = TRUE
@@ -306,6 +319,42 @@ const getDeptCourses = async (req, res) => {
   }
 };
 
+const approveCourses = async (req, res) => {
+  try {
+    const { id: dept_id } = req.params;
+    
+    // Admin checking institution match
+    const deptRes = await pool.query("SELECT institution_id, hod_id FROM departments WHERE id = $1", [dept_id]);
+    if (deptRes.rows.length === 0) return res.status(404).json({ error: 'Department not found' });
+    
+    if (req.user.institution_id && deptRes.rows[0].institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'Department not in your institution' });
+    }
 
+    const { rows } = await pool.query(
+      `UPDATE department_courses SET is_approved = true WHERE dept_id = $1 AND is_approved = false RETURNING id`,
+      [dept_id]
+    );
 
-module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange };
+    // Also update legacy courses table if needed
+    await pool.query(`UPDATE courses SET is_approved = true WHERE dept_id = $1 AND is_approved = false`, [dept_id]);
+
+    await logAudit(req.user.id, 'COURSES_APPROVED', 'department', dept_id, null, { count: rows.length });
+    
+    if (deptRes.rows[0].hod_id) {
+      try {
+        const { notifyUser } = require('../services/notificationService');
+        await notifyUser(req.user.id, deptRes.rows[0].hod_id, `Your uploaded courses have been approved by the admin.`);
+      } catch (e) {
+        console.error('Failed to notify HOD of courses approval', e);
+      }
+    }
+
+    res.json({ message: `${rows.length} courses approved successfully` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange, approveCourses };

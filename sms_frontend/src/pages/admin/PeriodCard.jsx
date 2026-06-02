@@ -98,6 +98,9 @@ export default function PeriodCard({ period, periodIndex, label, onUpdate, onCop
                 <span className="course-toggle__label">
                   {course.is_elective ? 'Elective' : 'Compulsory'}
                 </span>
+                {course.is_approved === false && (
+                  <span title="Pending admin approval" style={{ marginLeft: '8px', fontSize: '1rem', cursor: 'help' }}>⏳</span>
+                )}
               </div>
               <button
                 className="course-remove"

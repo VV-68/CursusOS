@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { departmentCreationAPI, getMe } from '../../services/api';
+import { departmentCreationAPI, departmentAPI, getMe } from '../../services/api';
 import PeriodCard from '../admin/PeriodCard';
 import PreviewPanel from '../admin/PreviewPanel';
 import '../admin/CreateDepartment.css';
@@ -54,7 +54,8 @@ function normalizePeriods(dept) {
       course_name: c.course_name || '',
       course_code: c.course_code || '',
       credits: c.credits ?? '',
-      is_elective: !!c.is_elective
+      is_elective: !!c.is_elective,
+      is_approved: c.is_approved
     }))
   }));
   const periods = [];
@@ -67,7 +68,8 @@ function normalizePeriods(dept) {
             course_name: c.course_name || '',
             course_code: c.course_code || '',
             credits: c.credits ?? '',
-            is_elective: !!c.is_elective
+            is_elective: !!c.is_elective,
+            is_approved: c.is_approved
           }))
         : [{ ...EMPTY_COURSE }]
     } : { period_number: i, courses: [{ ...EMPTY_COURSE }] });
@@ -501,7 +503,25 @@ export default function EditDepartment() {
       {/* Header */}
       <div className="dept-wizard__header">
         <h1>{role === 'admin' ? '🏛️ Edit Department' : '📚 Edit Department Courses'}</h1>
-        <div className="dept-wizard__header-actions">
+        <div className="dept-wizard__header-actions" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {role === 'admin' && form.periods.some(p => p.courses?.some(c => c.is_approved === false)) && (
+            <button 
+              className="dept-btn" 
+              style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}
+              onClick={async () => {
+                if (!window.confirm('Approve all pending courses for this department?')) return;
+                try {
+                  await departmentAPI.approveCourses(deptId);
+                  alert('Courses approved successfully');
+                  window.location.reload();
+                } catch (e) {
+                  alert('Error approving courses: ' + e.message);
+                }
+              }}
+            >
+              ✅ Approve Pending Courses
+            </button>
+          )}
           <button className="dept-btn dept-btn--outline" onClick={() => navigate(role === 'admin' ? '/admin/departments' : '/dashboard')}>
             ← Back
           </button>

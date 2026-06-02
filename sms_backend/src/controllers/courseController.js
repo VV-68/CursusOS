@@ -70,6 +70,10 @@ const createCourseAssignment = async (req, res) => {
       return res.status(404).json({ error: 'Course or class not found' });
     }
 
+    if (!course.is_approved) {
+      return res.status(400).json({ error: 'Cannot assign an unapproved course. Please wait for admin approval.' });
+    }
+
     if (course.dept_id !== req.user.dept_id || classObj.dept_id !== req.user.dept_id) {
       return res.status(400).json({ error: 'Mismatch in department IDs' });
     }
