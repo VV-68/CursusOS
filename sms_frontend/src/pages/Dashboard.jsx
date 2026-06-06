@@ -1,5 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import {
+  Link as LinkIcon, User, Calendar, Megaphone, Clock, CalendarDays, 
+  Mail, GraduationCap, CheckCircle, FileText, Paperclip, BookOpen, 
+  BarChart, AlertTriangle, ClipboardList, Unlock, Building, 
+  UserPlus, Users, CheckSquare, School, TrendingUp, Library,
+  Palmtree, Shield 
+} from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { departmentCreationAPI, departmentAPI, logout, getMe, noticeAPI } from '../services/api';
 
@@ -19,7 +26,7 @@ const ROLE_COLORS = {
   student: { bg: '#f3f4f8', accent: '#23364d', text: '#23364d' },
 };
 
-const CARD_COLORS = ['#40b1a6', '#9b278a', '#e63861', '#21a5d8', '#f5a623', '#dc6b22'];
+const CARD_COLORS = ['#3393fbff'];
 
 // ── Reusable card-link ──────────────────────────────────────────────────────
 function DashCard({ to, icon, label, description, variant = 'primary', cardColor }) {
@@ -83,7 +90,7 @@ function InlineNotices() {
     <div style={{ marginBottom: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
         <h3 className="dash-section-title" style={{ margin: 0 }}>
-          <span className="dash-section-icon">📢</span> Notice Board
+          <span className="dash-section-icon"><Megaphone size="1em" /></span> Notice Board
         </h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
 
@@ -144,7 +151,8 @@ function Dashboard() {
   const [userInfo, setUserInfo] = useState(null);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const initialTab = searchParams.get('tab') || 'general';
+  const defaultTab = role === 'admin' ? 'admin' : 'general';
+  const initialTab = searchParams.get('tab') || defaultTab;
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -184,7 +192,7 @@ function Dashboard() {
 
   // Build tabs based on role
   const tabs = [];
-  /*if (!(role === 'admin'))*/ tabs.push({ id: 'general', label: '📌 General' });
+  if (role !== 'admin') tabs.push({ id: 'general', label: '📌 General' });
   if (['faculty', 'advisor', 'hod'].includes(role)) tabs.push({ id: 'teaching', label: '🎓 Teaching' });
   if (role === 'advisor') tabs.push({ id: 'oversight', label: '📊 My Class' });
   if (role === 'hod') tabs.push({ id: 'dept', label: '🏛️ Department' });
@@ -243,22 +251,22 @@ function Dashboard() {
         <>
           <InlineNotices />
 
-          <DashSection id="general-links" title="Quick Links" icon="🔗">
+          <DashSection id="general-links" title="Quick Links" icon={<LinkIcon size="1em" />}>
             {['faculty', 'advisor', 'hod'].includes(role) && (
               <>
-                <DashCard to="/faculty/profile" icon="👤" label="Edit Profile" description="Update your contact info" />
-                <DashCard to="/faculty/my-timetable" icon="📅" label="My Timetable" description="Your courses per day" />
+                <DashCard to="/faculty/profile" icon={<User size="1em" />} label="Edit Profile" description="Update your contact info" />
+                <DashCard to="/faculty/my-timetable" icon={<Calendar size="1em" />} label="My Timetable" description="Your courses per day" />
               </>
             )}
             {canPost && (
-              <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />
+              <DashCard to="/notices/post" icon={<Megaphone size="1em" />} label="Post Notice" description="Publish announcements" />
             )}
-            {role !== 'admin' && <DashCard to="/timetable" icon="🕐" label="View Timetable" description="Class schedules" variant="secondary" />}
+            {role !== 'admin' && <DashCard to="/timetable" icon={<Clock size="1em" />} label="View Timetable" description="Class schedules" variant="secondary" />}
             {['student', 'faculty', 'advisor', 'hod'].includes(role) && (
-              <DashCard to="/leave" icon="🗓️" label="My Leaves" description="Apply for or view leaves" variant="secondary" />
+              <DashCard to="/leave" icon={<CalendarDays size="1em" />} label="My Leaves" description="Apply for or view leaves" variant="secondary" />
             )}
             {['advisor', 'hod'].includes(role) && (
-              <DashCard to="/approvals/leave" icon="📩" label="Pending Leaves" description="Review leave applications" variant="secondary" />
+              <DashCard to="/approvals/leave" icon={<Mail size="1em" />} label="Pending Leaves" description="Review leave applications" variant="secondary" />
             )}
           </DashSection>
         </>
@@ -266,60 +274,60 @@ function Dashboard() {
 
       {/* ── TEACHING (faculty, advisor, hod) ── */}
       {activeTab === 'teaching' && ['faculty', 'advisor', 'hod'].includes(role) && (
-        <DashSection id="teaching" title="Teaching" icon="🎓">
-          <DashCard to="/faculty/attendance/mark" icon="✅" label="Mark Attendance" description="Record student attendance" />
-          <DashCard to="/faculty/internals" icon="📝" label="Faculty Internals" description="Manage your course internals" />
-          <DashCard to="/faculty/assignments" icon="📎" label="Assignments" description="Create and manage assignments" />
-          <DashCard to="/faculty/materials" icon="📖" label="Study Materials" description="Upload learning resources" />
+        <DashSection id="teaching" title="Teaching" icon={<GraduationCap size="1em" />}>
+          <DashCard to="/faculty/attendance/mark" icon={<CheckCircle size="1em" />} label="Mark Attendance" description="Record student attendance" />
+          <DashCard to="/faculty/internals" icon={<FileText size="1em" />} label="Faculty Internals" description="Manage your course internals" />
+          <DashCard to="/faculty/assignments" icon={<Paperclip size="1em" />} label="Assignments" description="Create and manage assignments" />
+          <DashCard to="/faculty/materials" icon={<BookOpen size="1em" />} label="Study Materials" description="Upload learning resources" />
         </DashSection>
       )}
 
       {/* ── OVERSIGHT (advisor) ── */}
       {activeTab === 'oversight' && role === 'advisor' && (
-        <DashSection id="oversight" title="My Batch" icon="📊">
-          <DashCard to="/advisor/timetable" icon="📅" label="Manage Timetable" description="Upload class timetable" />
-          <DashCard to="/advisor/attendance/low" icon="⚠️" label="Low Attendance" description="Students below threshold" variant="secondary" />
-          <DashCard to="/advisor/students" icon="🎓" label="My Students" description="View student details" />
-          <DashCard to="/advisor/internals" icon="📋" label="Class Internals" description="View class-wise internals" />
-          <DashCard to="/advisor/attendance/overrides" icon="🔓" label="Override Requests" description="Faculty attendance overrides" />
+        <DashSection id="oversight" title="My Batch" icon={<BarChart size="1em" />}>
+          <DashCard to="/advisor/timetable" icon={<Calendar size="1em" />} label="Manage Timetable" description="Upload class timetable" />
+          <DashCard to="/advisor/attendance/low" icon={<AlertTriangle size="1em" />} label="Low Attendance" description="Students below threshold" variant="secondary" />
+          <DashCard to="/advisor/students" icon={<GraduationCap size="1em" />} label="My Students" description="View student details" />
+          <DashCard to="/advisor/internals" icon={<ClipboardList size="1em" />} label="Class Internals" description="View class-wise internals" />
+          <DashCard to="/advisor/attendance/overrides" icon={<Unlock size="1em" />} label="Override Requests" description="Faculty attendance overrides" />
         </DashSection>
       )}
 
       {/* ── DEPARTMENT (hod) ── */}
       {activeTab === 'dept' && role === 'hod' && (
-        <DashSection id="dept" title="Department Management" icon="🏛️">
-          <DashCard to="/admin/users/create" icon="➕" label="Add Faculty / Advisor" description="Register new staff" />
-          <DashCard to="/admin/users" icon="👥" label="View Dept Users" description="Manage department users" />
-          <DashCard to="/admin/users?role=student&pending=true" icon="✔️" label="Student Verification" description="Verify unverified students" />
-          <DashCard to="/hod/classes" icon="🏫" label="Manage Batches" description="Create and progress batches" />
-          <DashCard to="/hod/batch-progression" icon="📈" label="Batch Progression" description="Request promotions and deactivation" />
-          <DashCard to="/hod/courses" icon="📚" label="Manage Courses" description="Department course catalog" />
-          <DashCard to="/hod/internals" icon="📊" label="Dept Internals" description="View all class internal marks" />
-          <DashCard to="/advisor/attendance/overrides" icon="🔓" label="Override Requests" description="Faculty attendance overrides" />
-          <DashCard to="/holidays" icon="🌴" label="Manage Holidays" description="Department holidays" />
+        <DashSection id="dept" title="Department Management" icon={<Building size="1em" />}>
+          <DashCard to="/admin/users/create" icon={<UserPlus size="1em" />} label="Add Faculty / Advisor" description="Register new staff" />
+          <DashCard to="/admin/users" icon={<Users size="1em" />} label="View Dept Users" description="Manage department users" />
+          <DashCard to="/admin/users?role=student&pending=true" icon={<CheckSquare size="1em" />} label="Student Verification" description="Verify unverified students" />
+          <DashCard to="/hod/classes" icon={<School size="1em" />} label="Manage Batches" description="Create and progress batches" />
+          <DashCard to="/hod/batch-progression" icon={<TrendingUp size="1em" />} label="Batch Progression" description="Request promotions and deactivation" />
+          <DashCard to="/hod/courses" icon={<Library size="1em" />} label="Manage Courses" description="Department course catalog" />
+          <DashCard to="/hod/internals" icon={<BarChart size="1em" />} label="Dept Internals" description="View all class internal marks" />
+          <DashCard to="/advisor/attendance/overrides" icon={<Unlock size="1em" />} label="Override Requests" description="Faculty attendance overrides" />
+          <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Department holidays" />
         </DashSection>
       )}
 
       {/* ── ADMIN ── */}
       {activeTab === 'admin' && role === 'admin' && (
-        <DashSection id="admin" title="Administration" icon="🛡️">
-          <DashCard to="/admin/institution" icon="🏫" label="Institution Settings" description="Update institution details" />
-          <DashCard to="/admin/users" icon="👥" label="Manage Users" description="Create, edit, manage all users" />
-          <DashCard to="/admin/users?role=faculty&pending=true" icon="✔️" label="Faculty Verification" description="Verify unverified faculties" />
-          <DashCard to="/admin/departments" icon="🏛️" label="Manage Departments" description="Add or edit departments" />
-          <DashCard to="/admin/batch-lifecycle" icon="✅" label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
-          <DashCard to="/notices/post" icon="📢" label="Post Notice" description="Publish announcements" />
-          <DashCard to="/holidays" icon="🌴" label="Manage Holidays" description="Institution holidays" />
+        <DashSection id="admin" title="Administration" icon={<Shield size="1em" />}>
+          <DashCard to="/admin/institution" icon={<School size="1em" />} label="Institution Settings" description="Update institution details" />
+          <DashCard to="/admin/users" icon={<Users size="1em" />} label="Manage Users" description="Create, edit, manage all users" />
+          <DashCard to="/admin/users?role=faculty&pending=true" icon={<CheckSquare size="1em" />} label="Faculty Verification" description="Verify unverified faculties" />
+          <DashCard to="/admin/departments" icon={<Building size="1em" />} label="Manage Departments" description="Add or edit departments" />
+          <DashCard to="/admin/batch-lifecycle" icon={<CheckCircle size="1em" />} label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
+          <DashCard to="/notices/post" icon={<Megaphone size="1em" />} label="Post Notice" description="Publish announcements" />
+          <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Institution holidays" />
         </DashSection>
       )}
 
       {/* ── ACADEMICS (student) ── */}
       {activeTab === 'academics' && role === 'student' && (
-        <DashSection id="academics" title="Academics" icon="📚">
-          <DashCard to="/student/attendance" icon="📊" label="My Attendance" description="View attendance summary" />
-          <DashCard to="/student/internals" icon="📝" label="My Internals" description="Internal assessment scores" />
-          <DashCard to="/student/assignments" icon="📎" label="My Assignments" description="View and submit assignments" />
-          <DashCard to="/student/materials" icon="📖" label="Study Materials" description="Access course materials" />
+        <DashSection id="academics" title="Academics" icon={<Library size="1em" />}>
+          <DashCard to="/student/attendance" icon={<BarChart size="1em" />} label="My Attendance" description="View attendance summary" />
+          <DashCard to="/student/internals" icon={<FileText size="1em" />} label="My Internals" description="Internal assessment scores" />
+          <DashCard to="/student/assignments" icon={<Paperclip size="1em" />} label="My Assignments" description="View and submit assignments" />
+          <DashCard to="/student/materials" icon={<BookOpen size="1em" />} label="Study Materials" description="Access course materials" />
         </DashSection>
       )}
 

@@ -111,13 +111,13 @@ html.dark-mode .dash-card--secondary:hover {
 }
 
 html.dark-mode .dash-card.dash-card--colored {
-  background: var(--card-accent);
+  background: #0b59adff !important;
   border: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 html.dark-mode .dash-card.dash-card--colored:hover {
-  background: var(--card-accent);
+  background: #0b59adff !important;
   filter: brightness(1.15);
   border: none;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
@@ -267,6 +267,15 @@ html.dark-mode .form-group textarea {
   background: var(--dm-form-bg) !important;
   border-color: var(--dm-form-border) !important;
   color: var(--dm-text) !important;
+}
+
+html.dark-mode input:-webkit-autofill,
+html.dark-mode input:-webkit-autofill:hover,
+html.dark-mode input:-webkit-autofill:focus,
+html.dark-mode input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--dm-form-bg) inset !important;
+  -webkit-text-fill-color: var(--dm-text) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
 }
 
 html.dark-mode input:focus,
