@@ -134,7 +134,7 @@ function SyllabusManager() {
   return (
     <div className="dept-wizard" style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }}
-        onClick={() => navigate('/dashboard?tab=dept')}>← Back</button>
+        onClick={() => navigate('/dashboard?tab=hod_courses_syl')}>← Back</button>
 
       <div className="dept-wizard__header">
         <h1>📑 Syllabus Management</h1>

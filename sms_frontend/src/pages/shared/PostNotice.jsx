@@ -74,7 +74,7 @@ function PostNotice() {
         audience,
         is_pinned: form.is_pinned
       });
-      navigate(role === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=general');
+      navigate(role === 'admin' ? '/dashboard?tab=admin_inst_dept' : '/dashboard?tab=general');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -95,7 +95,7 @@ function PostNotice() {
     <div className="dept-wizard" style={{ maxWidth: '640px', margin: '0 auto', padding: '1.5rem' }}>
       <div className="dept-wizard__header">
         <h1>📢 Post Notice</h1>
-        <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=general')}>← Back</button>
+        <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin_inst_dept' : '/dashboard?tab=general')}>← Back</button>
       </div>
 
       {error && (
@@ -174,7 +174,7 @@ function PostNotice() {
         </label>
 
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-          <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin' : '/dashboard?tab=general')}>
+          <button type="button" className="dept-btn dept-btn--secondary" onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin_inst_dept' : '/dashboard?tab=general')}>
             Cancel
           </button>
           <button type="submit" className="dept-btn dept-btn--primary" disabled={submitting}>

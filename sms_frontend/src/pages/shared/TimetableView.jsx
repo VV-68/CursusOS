@@ -12,6 +12,7 @@ function TimetableView() {
   const [selectedClass, setSelectedClass] = useState('');
   const [timetable, setTimetable] = useState([]);
   const [isStudent, setIsStudent] = useState(false);
+  const [role, setRole] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -21,6 +22,7 @@ function TimetableView() {
       try {
         const decoded = jwtDecode(token);
         role = decoded.role;
+        setRole(role);
         classId = decoded.class_id || '';
       } catch {}
     }
@@ -56,7 +58,7 @@ function TimetableView() {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=general')}>← Back</button>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate(role === 'hod' ? '/dashboard?tab=dept' : '/dashboard?tab=general')}>← Back</button>
       <h2>View Timetable</h2>
 
       {!isStudent && (

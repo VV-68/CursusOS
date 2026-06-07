@@ -6,6 +6,8 @@ function MyInternals() {
   const navigate = useNavigate();
   const [internals, setInternals] = useState({});
   const [loading, setLoading] = useState(false);
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   useEffect(() => {
     fetchMyInternals();
@@ -18,9 +20,11 @@ function MyInternals() {
       
       // Group by semester and then course
       const grouped = {};
+      const sems = [];
       data.forEach(row => {
         if (!grouped[row.semester_name]) {
-          grouped[row.semester_name] = { semester_id: row.semester_id, courses: {} };
+          grouped[row.semester_name] = { semester_id: row.semester_id, period_number: row.period_number, courses: {} };
+          sems.push({ name: row.semester_name, period_number: row.period_number });
         }
         
         const sem = grouped[row.semester_name].courses;
@@ -40,6 +44,9 @@ function MyInternals() {
         }
       });
       
+      sems.sort((a, b) => (b.period_number || 0) - (a.period_number || 0));
+      setSemesters(sems);
+      if (sems.length > 0) setSelectedSemester(sems[0].name);
       setInternals(grouped);
     } catch (err) {
       alert(err.message || 'Failed to fetch your internals');
@@ -58,11 +65,18 @@ function MyInternals() {
       ) : (
         Object.keys(internals).length > 0 ? (
           <div>
-            {Object.entries(internals).map(([semName, semData]) => (
-              <div key={semName} style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ccc', borderRadius: '8px', background: '#fff' }}>
-                {/* <h3 style={{ marginTop: 0, color: '#0d6efd', borderBottom: '2px solid #0d6efd', paddingBottom: '0.5rem' }}>{semName}</h3> */}
-                
-                {Object.keys(semData.courses).length > 0 ? (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ fontWeight: 600, marginRight: '0.5rem' }}>Semester:</label>
+              <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}
+                style={{ padding: '0.5rem 1rem', borderRadius: 6, border: '1px solid #d1d5db', minWidth: 200 }}>
+                {semesters.map(s => (
+                  <option key={s.name} value={s.name}>{s.name} {s.period_number === semesters[0].period_number ? '(Current)' : ''}</option>
+                ))}
+              </select>
+            </div>
+            {selectedSemester && internals[selectedSemester] && (
+              <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ccc', borderRadius: '8px', background: '#fff' }}>
+                {Object.keys(internals[selectedSemester].courses).length > 0 ? (
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
                     <thead>
                       <tr style={{ background: '#f8f9fa' }}>
@@ -76,7 +90,7 @@ function MyInternals() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.values(semData.courses).map(course => {
+                      {Object.values(internals[selectedSemester].courses).map(course => {
                         const s1 = course.marks['series1'];
                         const s2 = course.marks['series2'];
                         const a1 = course.marks['assignment1'];
@@ -108,7 +122,7 @@ function MyInternals() {
                   <p>No marks recorded for this semester.</p>
                 )}
               </div>
-            ))}
+            )}
           </div>
         ) : (
           <p>No internal marks found.</p>

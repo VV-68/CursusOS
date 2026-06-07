@@ -151,7 +151,10 @@ function Dashboard() {
   const [userInfo, setUserInfo] = useState(null);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const defaultTab = role === 'admin' ? 'admin' : 'general';
+  let defaultTab = 'general';
+  if (role === 'admin') defaultTab = 'admin_inst_dept';
+  else if (role === 'hod') defaultTab = 'dept';
+  else if (role === 'student') defaultTab = 'academics';
   const initialTab = searchParams.get('tab') || defaultTab;
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -192,14 +195,26 @@ function Dashboard() {
 
   // Build tabs based on role
   const tabs = [];
-  if (role !== 'admin') tabs.push({ id: 'general', label: '📌 General' });
-  if (['faculty', 'advisor', 'hod'].includes(role)) tabs.push({ id: 'teaching', label: '🎓 Teaching' });
-  if (role === 'advisor') tabs.push({ id: 'oversight', label: '📊 My Class' });
-  if (role === 'hod') tabs.push({ id: 'dept', label: '🏛️ Department' });
-  if (role === 'admin') tabs.push({ id: 'admin', label: '🛡️ Admin' });
-  if (role === 'student') {
+  if (role === 'admin') {
+    tabs.push({ id: 'admin_inst_dept', label: '🏛️ Inst & Dept' });
+    tabs.push({ id: 'admin_batches_syl', label: '📚 Batches & Syllabus' });
+    tabs.push({ id: 'admin_users', label: '👥 Users' });
+  } else if (role === 'student') {
+    tabs.push({ id: 'general', label: '📌 General' });
     tabs.push({ id: 'academics', label: '📚 Academics' });
     tabs.push({ id: 'profile', label: '👤 My Profile', to: '/student/profile' });
+  } else {
+    // faculty, advisor, hod
+    if (role !== 'hod') tabs.push({ id: 'general', label: '📌 General' });
+    if (role === 'hod') tabs.push({ id: 'dept', label: '🏛️ Department' });
+    tabs.push({ id: 'teaching', label: '🎓 Teaching' });
+    if (role === 'advisor') tabs.push({ id: 'oversight', label: '📊 My Class' });
+    if (role === 'hod') {
+      tabs.push({ id: 'hod_batches', label: '🎓 Batches' });
+      tabs.push({ id: 'hod_courses_syl', label: '📚 Courses & Syllabus' });
+      tabs.push({ id: 'hod_users', label: '👥 Users' });
+    }
+    tabs.push({ id: 'profile', label: '👤 Profile' });
   }
 
   return (
@@ -246,27 +261,24 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* ── GENERAL (all roles) ── */}
-      {activeTab === 'general' && (
+      {/* ── GENERAL / DEPT ── */}
+      {(activeTab === 'general' || (activeTab === 'dept' && role === 'hod')) && (
         <>
           <InlineNotices />
 
           <DashSection id="general-links" title="Quick Links" icon={<LinkIcon size="1em" />}>
-            {['faculty', 'advisor', 'hod'].includes(role) && (
-              <>
-                <DashCard to="/faculty/profile" icon={<User size="1em" />} label="Edit Profile" description="Update your contact info" />
-                <DashCard to="/faculty/my-timetable" icon={<Calendar size="1em" />} label="My Timetable" description="Your courses per day" />
-              </>
-            )}
             {canPost && (
               <DashCard to="/notices/post" icon={<Megaphone size="1em" />} label="Post Notice" description="Publish announcements" />
             )}
             {role !== 'admin' && <DashCard to="/timetable" icon={<Clock size="1em" />} label="View Timetable" description="Class schedules" variant="secondary" />}
-            {['student', 'faculty', 'advisor', 'hod'].includes(role) && (
+            {role === 'student' && (
               <DashCard to="/leave" icon={<CalendarDays size="1em" />} label="My Leaves" description="Apply for or view leaves" variant="secondary" />
             )}
             {['advisor', 'hod'].includes(role) && (
               <DashCard to="/approvals/leave" icon={<Mail size="1em" />} label="Pending Leaves" description="Review leave applications" variant="secondary" />
+            )}
+            {role === 'hod' && (
+              <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Department holidays" />
             )}
           </DashSection>
         </>
@@ -279,6 +291,15 @@ function Dashboard() {
           <DashCard to="/faculty/internals" icon={<FileText size="1em" />} label="Faculty Internals" description="Manage your course internals" />
           <DashCard to="/faculty/assignments" icon={<Paperclip size="1em" />} label="Assignments" description="Create and manage assignments" />
           <DashCard to="/faculty/materials" icon={<BookOpen size="1em" />} label="Study Materials" description="Upload learning resources" />
+          <DashCard to="/faculty/my-timetable" icon={<Calendar size="1em" />} label="My Timetable" description="Your courses per day" />
+        </DashSection>
+      )}
+
+      {/* ── PROFILE (faculty, advisor, hod) ── */}
+      {activeTab === 'profile' && ['faculty', 'advisor', 'hod'].includes(role) && (
+        <DashSection id="profile" title="Profile & Leaves" icon={<User size="1em" />}>
+          <DashCard to="/faculty/profile" icon={<User size="1em" />} label="Edit Profile" description="Update your contact info" />
+          <DashCard to="/leave" icon={<CalendarDays size="1em" />} label="My Leaves" description="Apply for or view leaves" />
         </DashSection>
       )}
 
@@ -293,33 +314,57 @@ function Dashboard() {
         </DashSection>
       )}
 
-      {/* ── DEPARTMENT (hod) ── */}
-      {activeTab === 'dept' && role === 'hod' && (
-        <DashSection id="dept" title="Department Management" icon={<Building size="1em" />}>
-          <DashCard to="/admin/users/create" icon={<UserPlus size="1em" />} label="Add Faculty / Advisor" description="Register new staff" />
-          <DashCard to="/admin/users" icon={<Users size="1em" />} label="View Dept Users" description="Manage department users" />
-          <DashCard to="/admin/users?role=student&pending=true" icon={<CheckSquare size="1em" />} label="Student Verification" description="Verify unverified students" />
+      {/* ── HOD: Batches ── */}
+      {activeTab === 'hod_batches' && role === 'hod' && (
+        <DashSection id="hod-batches" title="Manage Batches" icon={<School size="1em" />}>
           <DashCard to="/hod/classes" icon={<School size="1em" />} label="Manage Batches" description="Create and progress batches" />
           <DashCard to="/hod/batch-progression" icon={<TrendingUp size="1em" />} label="Batch Progression" description="Request promotions and deactivation" />
-          <DashCard to="/hod/courses" icon={<Library size="1em" />} label="Manage Courses" description="Department course catalog" />
-          <DashCard to="/hod/syllabuses" icon={<BookCopy size="1em" />} label="Manage Syllabuses" description="Create & assign syllabuses" />
           <DashCard to="/hod/internals" icon={<BarChart size="1em" />} label="Dept Internals" description="View all class internal marks" />
           <DashCard to="/advisor/attendance/overrides" icon={<Unlock size="1em" />} label="Override Requests" description="Faculty attendance overrides" />
-          <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Department holidays" />
         </DashSection>
       )}
 
-      {/* ── ADMIN ── */}
-      {activeTab === 'admin' && role === 'admin' && (
-        <DashSection id="admin" title="Administration" icon={<Shield size="1em" />}>
+      {/* ── HOD: Courses & Syllabus ── */}
+      {activeTab === 'hod_courses_syl' && role === 'hod' && (
+        <DashSection id="hod-courses" title="Courses & Syllabus" icon={<Library size="1em" />}>
+          <DashCard to="/hod/courses" icon={<Library size="1em" />} label="Manage Courses" description="Department course catalog" />
+          <DashCard to="/hod/syllabuses" icon={<BookCopy size="1em" />} label="Manage Syllabuses" description="Create & assign syllabuses" />
+        </DashSection>
+      )}
+
+      {/* ── HOD: Users ── */}
+      {activeTab === 'hod_users' && role === 'hod' && (
+        <DashSection id="hod-users" title="User Management" icon={<Users size="1em" />}>
+          <DashCard to="/admin/users/create" icon={<UserPlus size="1em" />} label="Add Faculty / Advisor" description="Register new staff" />
+          <DashCard to="/admin/users?role=student&pending=true" icon={<CheckSquare size="1em" />} label="Student Verification" description="Verify unverified students" />
+          <DashCard to="/admin/users" icon={<Users size="1em" />} label="View Dept Users" description="Manage department users" />
+        </DashSection>
+      )}
+
+      {/* ── ADMIN: Institution & Departments ── */}
+      {activeTab === 'admin_inst_dept' && role === 'admin' && (
+        <DashSection id="admin-inst-dept" title="Institution & Departments" icon={<Building size="1em" />}>
           <DashCard to="/admin/institution" icon={<School size="1em" />} label="Institution Settings" description="Update institution details" />
-          <DashCard to="/admin/users" icon={<Users size="1em" />} label="Manage Users" description="Create, edit, manage all users" />
-          <DashCard to="/admin/users?role=faculty&pending=true" icon={<CheckSquare size="1em" />} label="Faculty Verification" description="Verify unverified faculties" />
           <DashCard to="/admin/departments" icon={<Building size="1em" />} label="Manage Departments" description="Add or edit departments" />
+          <DashCard to="/notices/post" icon={<Megaphone size="1em" />} label="Post Notice" description="Publish announcements" />
+          <DashCard to="/notices" icon={<ClipboardList size="1em" />} label="Notice Board" description="View all notices" />
+          <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Institution holidays" />
+        </DashSection>
+      )}
+
+      {/* ── ADMIN: Batches & Syllabus ── */}
+      {activeTab === 'admin_batches_syl' && role === 'admin' && (
+        <DashSection id="admin-batches-syl" title="Batches & Syllabus" icon={<BookCopy size="1em" />}>
           <DashCard to="/admin/batch-lifecycle" icon={<CheckCircle size="1em" />} label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
           <DashCard to="/admin/syllabus-approvals" icon={<BookCopy size="1em" />} label="Syllabus Approvals" description="Review syllabus assignments" />
-          <DashCard to="/notices/post" icon={<Megaphone size="1em" />} label="Post Notice" description="Publish announcements" />
-          <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Institution holidays" />
+        </DashSection>
+      )}
+
+      {/* ── ADMIN: Users ── */}
+      {activeTab === 'admin_users' && role === 'admin' && (
+        <DashSection id="admin-users" title="User Management" icon={<Users size="1em" />}>
+          <DashCard to="/admin/users" icon={<Users size="1em" />} label="Manage Users" description="Create, edit, manage all users" />
+          <DashCard to="/admin/users?role=faculty&pending=true" icon={<CheckSquare size="1em" />} label="Faculty Verification" description="Verify unverified faculties" />
         </DashSection>
       )}
 

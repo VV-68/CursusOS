@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { holidaysAPI, departmentAPI } from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
 
 export default function HolidaysManager() {
+  const navigate = useNavigate();
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -89,6 +91,7 @@ export default function HolidaysManager() {
 
   return (
     <div className="holidays-manager" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate(role === 'admin' ? '/dashboard?tab=admin_inst_dept' : '/dashboard?tab=dept')}>← Back</button>
       <h2>Manage Holidays</h2>
       <p style={{ color: '#64748b', marginBottom: '2rem' }}>
         {role === 'admin' 

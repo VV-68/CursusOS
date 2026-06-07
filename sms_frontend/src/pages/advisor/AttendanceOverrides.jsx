@@ -44,7 +44,7 @@ function AttendanceOverrides() {
       role = jwtDecode(token).role;
     } catch {}
   }
-  const backTab = role === 'hod' ? 'dept' : role === 'admin' ? 'admin' : 'oversight';
+  const backTab = role === 'hod' ? 'hod_batches' : role === 'admin' ? 'admin' : 'oversight';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>

@@ -57,7 +57,7 @@ function InstitutionSettings() {
       <div className="dept-wizard__header">
         <h1>🏫 Institution Settings</h1>
         <div className="dept-wizard__header-actions">
-          <Link to="/dashboard" className="dept-btn dept-btn--secondary">← Dashboard</Link>
+          <Link to="/dashboard?tab=admin_inst_dept" className="dept-btn dept-btn--secondary">← Dashboard</Link>
         </div>
       </div>
 

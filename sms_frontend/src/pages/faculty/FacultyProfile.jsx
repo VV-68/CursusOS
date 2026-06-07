@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { userAPI, getMe } from '../../services/api';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function FacultyProfile() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState({ email: '', phone: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -49,7 +50,7 @@ function FacultyProfile() {
           fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', 
           display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' 
         }} 
-        onClick={() => window.history.back()}
+        onClick={() => navigate('/dashboard?tab=profile')}
       >
         ← Back
       </button>
@@ -57,7 +58,7 @@ function FacultyProfile() {
       <div className="dept-wizard__header">
         <h1>👤 Edit Profile</h1>
         <div className="dept-wizard__header-actions">
-          <Link to="/dashboard" className="dept-btn dept-btn--secondary">← Dashboard</Link>
+          <Link to="/dashboard?tab=profile" className="dept-btn dept-btn--secondary">← Dashboard</Link>
         </div>
       </div>
 

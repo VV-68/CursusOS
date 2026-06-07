@@ -10,6 +10,8 @@ function DepartmentInternals() {
   const [internals, setInternals] = useState({});
   const [loading, setLoading] = useState(false);
   const [deptId, setDeptId] = useState('');
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,9 +45,16 @@ function DepartmentInternals() {
     try {
       const data = await internalMarksAPI.getClassInternals(selectedClass);
 
-      // Group by student
-      const studentMap = {};
+      // Group by semester, then by student
+      const groupedBySem = {};
+      const sems = [];
       data.forEach(row => {
+        if (!groupedBySem[row.semester_name]) {
+          groupedBySem[row.semester_name] = { period_number: row.period_number, students: {} };
+          sems.push({ name: row.semester_name, period_number: row.period_number });
+        }
+        
+        const studentMap = groupedBySem[row.semester_name].students;
         if (!studentMap[row.student_id]) {
           studentMap[row.student_id] = {
             student_id: row.student_id,
@@ -71,7 +80,18 @@ function DepartmentInternals() {
           }
         }
       });
-      setInternals(studentMap);
+      
+      Object.keys(groupedBySem).forEach(sem => {
+        groupedBySem[sem].studentsArray = Object.values(groupedBySem[sem].students).sort((a, b) => a.roll_no?.localeCompare(b.roll_no));
+      });
+      
+      const uniqueSems = Array.from(new Map(sems.map(item => [item.name, item])).values());
+      uniqueSems.sort((a, b) => (b.period_number || 0) - (a.period_number || 0));
+      setSemesters(uniqueSems);
+      if (uniqueSems.length > 0) setSelectedSemester(uniqueSems[0].name);
+      else setSelectedSemester('');
+      
+      setInternals(groupedBySem);
     } catch (err) {
       alert(err.message || 'Failed to fetch internals');
     } finally {
@@ -79,22 +99,36 @@ function DepartmentInternals() {
     }
   };
 
-  const students = Object.values(internals).sort((a, b) => a.roll_no?.localeCompare(b.roll_no));
+  const students = selectedSemester && internals[selectedSemester] ? internals[selectedSemester].studentsArray : [];
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
-      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=dept')}>← Back</button>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=hod_batches')}>← Back</button>
       <h2>Department Internal Marks</h2>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label style={{ fontWeight: 600, marginRight: '0.5rem' }}>Select Class:</label>
-        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
-          style={{ padding: '0.5rem 1rem', borderRadius: 6, border: '1px solid #d1d5db', minWidth: 220 }}>
-          <option value="">— Choose a class —</option>
-          {classes.map(c => (
-            <option key={c.id} value={c.id}>{c.name} — {c.section} {c.year ? `(Year ${c.year})` : ''}</option>
-          ))}
-        </select>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <div>
+          <label style={{ fontWeight: 600, marginRight: '0.5rem', display: 'block', marginBottom: '0.5rem' }}>Select Class:</label>
+          <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
+            style={{ padding: '0.5rem 1rem', borderRadius: 6, border: '1px solid #d1d5db', minWidth: 220 }}>
+            <option value="">— Choose a class —</option>
+            {classes.map(c => (
+              <option key={c.id} value={c.id}>{c.name} — {c.section} {c.year ? `(Year ${c.year})` : ''}</option>
+            ))}
+          </select>
+        </div>
+
+        {semesters.length > 0 && (
+          <div>
+            <label style={{ fontWeight: 600, marginRight: '0.5rem', display: 'block', marginBottom: '0.5rem' }}>Select Semester:</label>
+            <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}
+              style={{ padding: '0.5rem 1rem', borderRadius: 6, border: '1px solid #d1d5db', minWidth: 220 }}>
+              {semesters.map(s => (
+                <option key={s.name} value={s.name}>{s.name} {s.period_number === semesters[0].period_number ? '(Current)' : ''}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {!selectedClass && (

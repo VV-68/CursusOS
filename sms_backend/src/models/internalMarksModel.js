@@ -52,7 +52,7 @@ const getInternalMarksByStudent = async (student_id) => {
   const { rows } = await pool.query(
     `SELECT im.id, im.course_assignment_id, im.internal_type, im.marks_obtained, im.max_marks,
             c.name as course_name, c.code as course_code, 
-            COALESCE('Semester ' || dc.period_number, 'Active') as semester_name, ca.semester_id
+            COALESCE('Semester ' || dc.period_number, 'Active') as semester_name, ca.semester_id, dc.period_number
      FROM internal_marks im
      JOIN course_assignments ca ON im.course_assignment_id = ca.id
      JOIN courses c ON ca.course_id = c.id
@@ -62,7 +62,8 @@ const getInternalMarksByStudent = async (student_id) => {
      WHERE im.student_id = $1
      AND (
        d.department_type != 'semester_wise' 
-       OR dc.period_number = cls.current_semester_number
+       OR cls.current_semester_number IS NULL
+       OR dc.period_number <= cls.current_semester_number
      )
      ORDER BY dc.period_number DESC NULLS LAST, c.name ASC, im.internal_type ASC`,
     [student_id]
@@ -74,16 +75,19 @@ const getInternalMarksByClass = async (class_id) => {
   const { rows } = await pool.query(
     `SELECT u.id as student_id, u.full_name as student_name, p.roll_no,
             im.course_assignment_id, c.name as course_name, c.code as course_code,
-            im.internal_type, im.marks_obtained, im.max_marks
+            im.internal_type, im.marks_obtained, im.max_marks,
+            dc.period_number, COALESCE('Semester ' || dc.period_number, 'Active') as semester_name
      FROM student_profiles p
      JOIN users u ON p.user_id = u.id AND u.role = 'student'
      JOIN classes cls ON p.class_id = cls.id
      JOIN course_assignments ca ON ca.class_id = cls.id
      JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.is_active = TRUE
      JOIN courses c ON ca.course_id = c.id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = cls.dept_id
      LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
      WHERE cls.id = $1
-     ORDER BY p.roll_no ASC, c.name ASC, im.internal_type ASC`,
+     AND (dc.period_number IS NULL OR cls.current_semester_number IS NULL OR dc.period_number <= cls.current_semester_number)
+     ORDER BY dc.period_number DESC NULLS LAST, p.roll_no ASC, c.name ASC, im.internal_type ASC`,
     [class_id]
   );
   return rows;
@@ -92,7 +96,7 @@ const getInternalMarksByClass = async (class_id) => {
 const getInternalMarksByDepartment = async (dept_id) => {
   const { rows } = await pool.query(
     `SELECT u.id as student_id, u.full_name as student_name, p.roll_no, cls.name as class_name, 
-            COALESCE('Semester ' || sah.current_semester, 'Active') as semester_name,
+            COALESCE('Semester ' || dc.period_number, 'Active') as semester_name, dc.period_number,
             im.course_assignment_id, c.name as course_name, c.code as course_code,
             im.internal_type, im.marks_obtained, im.max_marks
      FROM student_profiles p
@@ -101,9 +105,11 @@ const getInternalMarksByDepartment = async (dept_id) => {
      JOIN course_assignments ca ON ca.class_id = cls.id
      JOIN student_academic_history sah ON sah.student_id = u.id AND sah.class_id = cls.id AND sah.is_active = TRUE
      JOIN courses c ON ca.course_id = c.id
+     LEFT JOIN department_courses dc ON dc.course_code = c.code AND dc.dept_id = cls.dept_id
      LEFT JOIN internal_marks im ON im.student_id = u.id AND im.course_assignment_id = ca.id
      WHERE cls.dept_id = $1
-     ORDER BY sah.current_year DESC NULLS LAST, sah.current_semester DESC NULLS LAST, cls.name ASC, p.roll_no ASC, c.name ASC, im.internal_type ASC`,
+     AND (dc.period_number IS NULL OR cls.current_semester_number IS NULL OR dc.period_number <= cls.current_semester_number)
+     ORDER BY dc.period_number DESC NULLS LAST, sah.current_year DESC NULLS LAST, sah.current_semester DESC NULLS LAST, cls.name ASC, p.roll_no ASC, c.name ASC, im.internal_type ASC`,
     [dept_id]
   );
   return rows;

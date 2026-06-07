@@ -6,8 +6,10 @@ function ClassInternals() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
-  const [internals, setInternals] = useState([]);
+  const [internals, setInternals] = useState({});
   const [loading, setLoading] = useState(false);
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   useEffect(() => {
     fetchClasses();
@@ -36,9 +38,16 @@ function ClassInternals() {
       setLoading(true);
       const data = await internalMarksAPI.getClassInternals(selectedClass);
       
-      // Group by student
-      const studentMap = {};
+      // Group by semester, then by student
+      const groupedBySem = {};
+      const sems = [];
       data.forEach(row => {
+        if (!groupedBySem[row.semester_name]) {
+          groupedBySem[row.semester_name] = { period_number: row.period_number, students: {} };
+          sems.push({ name: row.semester_name, period_number: row.period_number });
+        }
+        
+        const studentMap = groupedBySem[row.semester_name].students;
         if (!studentMap[row.student_id]) {
           studentMap[row.student_id] = {
             student_id: row.student_id,
@@ -64,13 +73,21 @@ function ClassInternals() {
         }
       });
       
-      const grouped = Object.values(studentMap).sort((a, b) => {
-        if(a.roll_no < b.roll_no) return -1;
-        if(a.roll_no > b.roll_no) return 1;
-        return 0;
+      Object.keys(groupedBySem).forEach(sem => {
+        groupedBySem[sem].studentsArray = Object.values(groupedBySem[sem].students).sort((a, b) => {
+          if(a.roll_no < b.roll_no) return -1;
+          if(a.roll_no > b.roll_no) return 1;
+          return 0;
+        });
       });
       
-      setInternals(grouped);
+      const uniqueSems = Array.from(new Map(sems.map(item => [item.name, item])).values());
+      uniqueSems.sort((a, b) => (b.period_number || 0) - (a.period_number || 0));
+      setSemesters(uniqueSems);
+      if (uniqueSems.length > 0) setSelectedSemester(uniqueSems[0].name);
+      else setSelectedSemester('');
+      
+      setInternals(groupedBySem);
     } catch (err) {
       alert(err.message || 'Failed to fetch class internals');
     } finally {
@@ -83,21 +100,29 @@ function ClassInternals() {
       <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }} onClick={() => navigate('/dashboard?tab=oversight')}>← Back</button>
       <h2>Class Internal Marks</h2>
       
-      <div style={{ marginBottom: '2rem' }}>
+      <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px' }}>
           <option value="">Select Class...</option>
           {classes.map(c => (
             <option key={c.id} value={c.id}>{c.name} - {c.year} Year {c.section}</option>
           ))}
         </select>
+        
+        {semesters.length > 0 && (
+          <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px' }}>
+            {semesters.map(s => (
+              <option key={s.name} value={s.name}>{s.name} {s.period_number === semesters[0].period_number ? '(Current)' : ''}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
-        internals.length > 0 ? (
+        Object.keys(internals).length > 0 && selectedSemester && internals[selectedSemester] ? (
           <div>
-            {internals.map(student => (
+            {internals[selectedSemester].studentsArray.map(student => (
               <div key={student.student_id} style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #ccc', borderRadius: '8px', background: '#fff' }}>
                 <h3 style={{ marginTop: 0 }}>{student.roll_no} - {student.student_name}</h3>
                 

@@ -30,7 +30,7 @@ function BatchStudents() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem' }} onClick={() => navigate('/dashboard?tab=classes')}>← Back</button>
+      <button style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', marginBottom: '1.5rem' }} onClick={() => navigate('/dashboard?tab=hod_batches')}>← Back</button>
       <h2 style={{ marginBottom: '1rem' }}>🧑‍🎓 Students in {cls?.name} (Year {cls?.year}, {cls?.section})</h2>
       
       {students.length === 0 ? (

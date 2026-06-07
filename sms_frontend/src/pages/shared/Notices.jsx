@@ -70,7 +70,7 @@ function Notices() {
           {canPost && (
             <Link to="/notices/post" className="dept-btn dept-btn--primary">+ Post Notice</Link>
           )}
-          <Link to="/dashboard" className="dept-btn dept-btn--secondary">← Dashboard</Link>
+          <Link to={role === 'admin' ? '/dashboard?tab=admin_inst_dept' : '/dashboard'} className="dept-btn dept-btn--secondary">← Dashboard</Link>
         </div>
       </div>
 

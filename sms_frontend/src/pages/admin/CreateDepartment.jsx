@@ -187,7 +187,7 @@ export default function CreateDepartment() {
       };
       await departmentCreationAPI.create(payload);
       setSuccess('Department created successfully!');
-      setTimeout(() => navigate('/dashboard?tab=admin'), 1500);
+      setTimeout(() => navigate('/dashboard?tab=admin_inst_dept'), 1500);
     } catch (e) {
       const details = e.message;
       setErrors([details]);
@@ -206,7 +206,7 @@ export default function CreateDepartment() {
           <button className="dept-btn dept-btn--secondary" onClick={saveDraft} disabled={saving}>
             {saving ? '⏳ Saving...' : '💾 Save Draft'}
           </button>
-          <button className="dept-btn dept-btn--outline" onClick={() => navigate('/dashboard?tab=admin')}>
+          <button className="dept-btn dept-btn--outline" onClick={() => navigate('/dashboard?tab=admin_inst_dept')}>
             ← Back
           </button>
         </div>
