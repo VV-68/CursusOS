@@ -131,6 +131,7 @@ export const departmentAPI = {
   },
   getCourses: (id) => fetch(`${BASE_URL}/api/departments/${id}/courses`, { headers: getHeaders(true) }).then(handleResponse),
   approveCourses: (id) => fetch(`${BASE_URL}/api/departments/${id}/courses/approve`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
+  rejectCourses: (id) => fetch(`${BASE_URL}/api/departments/${id}/courses/reject`, { method: 'PATCH', headers: getHeaders(true) }).then(handleResponse),
 };
 
 // ─── Semesters ─────────────────────────────────────────────────
@@ -467,7 +468,7 @@ export const departmentCreationAPI = {
     method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
   }).then(handleResponse),
 
-  getDetails: (id) => fetch(`${BASE_URL}/api/department-creation/${id}`, {
+  getDetails: (id, syllabus_id) => fetch(`${BASE_URL}/api/department-creation/${id}${syllabus_id ? `?syllabus_id=${syllabus_id}` : ''}`, {
     headers: getHeaders(true)
   }).then(handleResponse),
 
@@ -636,4 +637,51 @@ export const documentAPI = {
     });
     return handleResponse(response);
   }
+};
+
+// ─── Syllabuses ──────────────────────────────────────────────────────────
+export const syllabusAPI = {
+  list: (deptId) => fetch(`${BASE_URL}/api/syllabuses?dept_id=${deptId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  get: (id) => fetch(`${BASE_URL}/api/syllabuses/${id}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  create: (data) => fetch(`${BASE_URL}/api/syllabuses`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  update: (id, data) => fetch(`${BASE_URL}/api/syllabuses/${id}`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  delete: (id) => fetch(`${BASE_URL}/api/syllabuses/${id}`, {
+    method: 'DELETE', headers: getHeaders(true)
+  }).then(handleResponse),
+
+  getBatches: (deptId) => fetch(`${BASE_URL}/api/syllabuses/batches?dept_id=${deptId}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  requestAssignment: (data) => fetch(`${BASE_URL}/api/syllabuses/requests`, {
+    method: 'POST', headers: getHeaders(true), body: JSON.stringify(data)
+  }).then(handleResponse),
+
+  listRequests: (status) => fetch(`${BASE_URL}/api/syllabuses/requests/list${status ? `?status=${status}` : ''}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  reviewRequest: (id, status, remarks) => fetch(`${BASE_URL}/api/syllabuses/requests/${id}/review`, {
+    method: 'PATCH', headers: getHeaders(true), body: JSON.stringify({ status, remarks })
+  }).then(handleResponse),
+
+  getSyllabusesByStatus: (status = 'pending') => fetch(`${BASE_URL}/api/syllabuses/syllabuses-by-status?status=${status}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse),
+
+  getCourseGroupsByStatus: (status = 'pending') => fetch(`${BASE_URL}/api/syllabuses/courses-by-status?status=${status}`, {
+    headers: getHeaders(true)
+  }).then(handleResponse)
 };

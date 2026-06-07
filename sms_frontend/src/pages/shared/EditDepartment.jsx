@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { departmentCreationAPI, departmentAPI, getMe } from '../../services/api';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { departmentCreationAPI, departmentAPI, getMe, syllabusAPI } from '../../services/api';
 import PeriodCard from '../admin/PeriodCard';
 import PreviewPanel from '../admin/PreviewPanel';
 import '../admin/CreateDepartment.css';
@@ -251,7 +251,7 @@ function JsonUploadModal({ label, structureCount, onImport, onClose }) {
                 </thead>
                 <tbody>
                   {allCourses.map((c, i) => (
-                    <tr key={i}>
+                    <tr key={`all-course-${i}`}>
                       <td><span className="period-badge">{c.period_number}</span></td>
                       <td>{c.course_name}</td>
                       <td><code>{c.course_code}</code></td>
@@ -288,6 +288,9 @@ function JsonUploadModal({ label, structureCount, onImport, onClose }) {
 export default function EditDepartment() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const syllabusId = searchParams.get('syllabus_id');
+  const [syllabuses, setSyllabuses] = useState([]);
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -316,9 +319,13 @@ export default function EditDepartment() {
           setDeptId(targetId);
         }
         if (targetId) {
-          const dept = await departmentCreationAPI.getDetails(targetId);
-          const periods = normalizePeriods(dept);
-          setForm({
+            const [dept, syls] = await Promise.all([
+              departmentCreationAPI.getDetails(targetId, syllabusId),
+              syllabusAPI.list(targetId)
+            ]);
+            const periods = normalizePeriods(dept);
+            setSyllabuses(syls);
+            setForm({
             name: dept.name || '', code: dept.code || '',
             department_type: dept.department_type || 'semester_wise',
             structure_count: dept.structure_count || '',
@@ -336,7 +343,7 @@ export default function EditDepartment() {
       }
     };
     init();
-  }, [id]);
+  }, [id, syllabusId]);
 
   // ── Updaters ────────────────────────────────────────────
   const updateField = (field, value) => setForm(f => ({ ...f, [field]: value }));
@@ -481,11 +488,12 @@ export default function EditDepartment() {
             credits: parseFloat(c.credits) || 0,
             is_elective: !!c.is_elective
           }))
-        }))
+        })),
+        syllabus_id: syllabusId
       };
       await departmentCreationAPI.update(deptId, payload);
       setSuccess('Department updated successfully!');
-      setTimeout(() => navigate(role === 'admin' ? '/admin/departments' : '/dashboard'), 1500);
+      setTimeout(() => navigate(role === 'admin' ? '/admin/departments' : '/dashboard?tab=dept'), 1500);
     } catch (e) {
       setErrors([e.message]);
     } finally {
@@ -505,34 +513,73 @@ export default function EditDepartment() {
         <h1>{role === 'admin' ? '🏛️ Edit Department' : '📚 Edit Department Courses'}</h1>
         <div className="dept-wizard__header-actions" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           {role === 'admin' && form.periods.some(p => p.courses?.some(c => c.is_approved === false)) && (
-            <button 
-              className="dept-btn" 
-              style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}
-              onClick={async () => {
-                if (!window.confirm('Approve all pending courses for this department?')) return;
-                try {
-                  await departmentAPI.approveCourses(deptId);
-                  alert('Courses approved successfully');
-                  window.location.reload();
-                } catch (e) {
-                  alert('Error approving courses: ' + e.message);
-                }
-              }}
-            >
-              ✅ Approve Pending Courses
-            </button>
+            <>
+              <button 
+                className="dept-btn" 
+                style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}
+                onClick={async () => {
+                  if (!window.confirm('Approve all pending courses for this department?')) return;
+                  try {
+                    await departmentAPI.approveCourses(deptId);
+                    alert('Courses approved successfully');
+                    window.location.reload();
+                  } catch (e) {
+                    alert('Error approving courses: ' + e.message);
+                  }
+                }}
+              >
+                ✅ Approve Pending Courses
+              </button>
+              <button 
+                className="dept-btn" 
+                style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}
+                onClick={async () => {
+                  if (!window.confirm('Reject all pending courses for this department?')) return;
+                  try {
+                    await departmentAPI.rejectCourses(deptId);
+                    alert('Courses rejected successfully');
+                    window.location.reload();
+                  } catch (e) {
+                    alert('Error rejecting courses: ' + e.message);
+                  }
+                }}
+              >
+                ❌ Reject Pending Courses
+              </button>
+            </>
           )}
-          <button className="dept-btn dept-btn--outline" onClick={() => navigate(role === 'admin' ? '/admin/departments' : '/dashboard')}>
+          <button className="dept-btn dept-btn--outline" onClick={() => navigate(role === 'admin' ? '/admin/departments' : '/dashboard?tab=dept')}>
             ← Back
           </button>
         </div>
       </div>
 
+      {syllabuses.length > 0 && (
+        <div style={{ padding: '0 2rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <label style={{ fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>Editing Curriculum For:</label>
+          <select 
+            style={{ padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#1e293b', minWidth: '200px' }}
+            value={syllabusId || ''}
+            onChange={(e) => {
+              if (!window.confirm('Changing syllabus will load its specific curriculum. Unsaved changes will be lost. Continue?')) return;
+              const newId = e.target.value;
+              if (newId) setSearchParams({ syllabus_id: newId });
+              else setSearchParams({});
+            }}
+          >
+            <option value="">Default Syllabus (or Legacy)</option>
+            {syllabuses.map(s => (
+              <option key={s.id} value={s.id}>{s.name} {s.is_active ? '' : '(Inactive)'}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Steps */}
       <div className="dept-steps">
         {STEPS.map((s, i) => (
           <div
-            key={i}
+            key={`step-${i}`}
             className={`dept-step ${i === step ? 'active' : ''} ${i < step ? 'completed' : ''}`}
             onClick={() => { if (i < step) setStep(i); }}
             style={{ cursor: i < step ? 'pointer' : 'default' }}
@@ -559,6 +606,13 @@ export default function EditDepartment() {
         <div className="dept-alert dept-alert--success">
           <span className="dept-alert__icon">✅</span>
           <span>{success}</span>
+        </div>
+      )}
+      
+      {role === 'hod' && form.periods.some(p => p.courses?.some(c => c.is_approved === false)) && (
+        <div className="dept-alert dept-alert--info" style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#b45309' }}>
+          <span className="dept-alert__icon">⏳</span>
+          <span><strong>Pending Admin Approval:</strong> Some courses in this curriculum are waiting for administrator approval and won't be available for assignment yet.</span>
         </div>
       )}
 
@@ -624,7 +678,7 @@ export default function EditDepartment() {
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
                 {form.periods.map((p, i) => (
-                  <span key={i} style={{ padding: '.4rem .85rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600, background: 'linear-gradient(135deg, #e6f2ff, #cce5ff)', color: '#0056b3' }}>
+                  <span key={`p-badge-${i}`} style={{ padding: '.4rem .85rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600, background: 'linear-gradient(135deg, #e6f2ff, #cce5ff)', color: '#0056b3' }}>
                     {label} {p.period_number}
                   </span>
                 ))}
@@ -650,7 +704,7 @@ export default function EditDepartment() {
           </div>
           {form.periods.map((period, idx) => (
             <PeriodCard
-              key={period.period_number}
+              key={`pcard-${period.period_number}-${idx}`}
               period={period}
               periodIndex={idx}
               label={label}

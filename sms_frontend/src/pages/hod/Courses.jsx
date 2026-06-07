@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  departmentCreationAPI, getMe, userAPI, classAPI, courseAPI
+  departmentCreationAPI, getMe, userAPI, classAPI, courseAPI, syllabusAPI
 } from '../../services/api';
 import { periodLabel } from '../../utils/periodUtils';
 import '../admin/CreateDepartment.css';
@@ -35,6 +35,11 @@ function Courses() {
   const [assignModal, setAssignModal] = useState(null);
   const [assignForm, setAssignForm] = useState({ faculty1_id: '', faculty2_id: '' });
   const [assigning, setAssigning] = useState(false);
+
+  // Syllabus create modal
+  const [showSyllabusModal, setShowSyllabusModal] = useState(false);
+  const [syllabusForm, setSyllabusForm] = useState({ name: '', description: '' });
+  const [syllabusCreating, setSyllabusCreating] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -120,6 +125,23 @@ function Courses() {
     }
   };
 
+  const handleCreateSyllabus = async (e) => {
+    e.preventDefault();
+    if (!syllabusForm.name.trim()) return;
+    setSyllabusCreating(true);
+    try {
+      const created = await syllabusAPI.create(syllabusForm);
+      setShowSyllabusModal(false);
+      setSyllabusForm({ name: '', description: '' });
+      // Redirect to course upload page for the new syllabus
+      navigate(`/hod/department/edit?syllabus_id=${created.id}`);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSyllabusCreating(false);
+    }
+  };
+
   const coursesByPeriod = groupCoursesByPeriod(courses, applicablePeriods);
 
   const canShowCourses = !!selectedClass;
@@ -130,10 +152,22 @@ function Courses() {
       <div className="dept-wizard__header">
         <h1>📚 Manage Department Courses</h1>
         <div className="dept-wizard__header-actions">
+          <button
+            onClick={() => setShowSyllabusModal(true)}
+            style={{
+              padding: '0.45rem 1rem',
+              background: '#8b5cf6',
+              color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '.9rem',
+              boxShadow: '0 2px 8px rgba(139,92,246,.25)'
+            }}
+          >
+            📑 New Syllabus
+          </button>
           <Link to="/hod/department/edit" className="dept-btn dept-btn--outline">
             ✏️ Edit / Upload Courses
           </Link>
-          <Link to="/dashboard" className="dept-btn dept-btn--secondary">← Dashboard</Link>
+          <Link to="/dashboard?tab=dept" className="dept-btn dept-btn--secondary">← Dashboard</Link>
         </div>
       </div>
 
@@ -299,6 +333,45 @@ function Courses() {
                 <button type="button" className="dept-btn dept-btn--secondary" onClick={() => setAssignModal(null)}>Cancel</button>
                 <button type="submit" className="dept-btn dept-btn--success" disabled={assigning}>
                   {assigning ? 'Saving…' : 'Save Assignment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ── Syllabus Create Modal ── */}
+      {showSyllabusModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,86,179,0.15)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '1rem' }}
+          onClick={(e) => e.target === e.currentTarget && setShowSyllabusModal(false)}>
+          <div style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.9)', borderRadius: '20px', padding: '2rem', width: '90%', maxWidth: '480px', boxShadow: '0 25px 50px -12px rgba(0,123,255,0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem' }}>📑 Create New Syllabus</h2>
+              <button onClick={() => setShowSyllabusModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>×</button>
+            </div>
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#1e40af' }}>
+              ℹ️ After creating, you'll be taken to upload courses for this syllabus.
+            </div>
+            <form onSubmit={handleCreateSyllabus}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, fontSize: '0.88rem' }}>Syllabus Name *</label>
+                <input type="text" placeholder="e.g. 2024 Scheme" value={syllabusForm.name}
+                  onChange={e => setSyllabusForm({ ...syllabusForm, name: e.target.value })}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                  required />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, fontSize: '0.88rem' }}>Description</label>
+                <textarea placeholder="Optional description..." value={syllabusForm.description}
+                  onChange={e => setSyllabusForm({ ...syllabusForm, description: e.target.value })}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '70px', resize: 'vertical', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button type="button" onClick={() => setShowSyllabusModal(false)}
+                  style={{ padding: '0.5rem 1rem', background: '#64748b', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={syllabusCreating}
+                  style={{ padding: '0.5rem 1rem', background: syllabusCreating ? '#94a3b8' : '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', cursor: syllabusCreating ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+                  {syllabusCreating ? '⏳ Creating…' : '✓ Create & Upload Courses'}
                 </button>
               </div>
             </form>

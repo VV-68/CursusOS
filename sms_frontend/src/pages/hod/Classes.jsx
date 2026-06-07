@@ -20,6 +20,8 @@ function Classes() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
 
+
+
   useEffect(() => {
     init();
   }, []);
@@ -97,6 +99,8 @@ function Classes() {
     }
   };
 
+
+
   const handleSemesterToggle = async (cls, newValue) => {
     const currentIsEven = Number(cls.current_semester_number) % 2 === 0;
     const targetIsEven = newValue === 'even';
@@ -150,6 +154,7 @@ function Classes() {
             />
             Active Batches Only
           </label>
+
           <button
             onClick={() => navigate('/hod/batch-progression')}
             style={{
@@ -209,7 +214,7 @@ function Classes() {
               >
                 <option value="">Select...</option>
                 {[1, 2, 3, 4, 5].map(y => (
-                  <option key={y} value={y}>Year {y}</option>
+                  <option key={`year-${y}`} value={y}>Year {y}</option>
                 ))}
               </select>
             </div>

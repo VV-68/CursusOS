@@ -57,7 +57,7 @@ export default function PeriodCard({ period, periodIndex, label, onUpdate, onCop
           </div>
 
           {courses.map((course, ci) => (
-            <div className="course-row" key={ci}>
+            <div className="course-row" key={`course-${ci}`}>
               <div className="dept-field">
                 <input
                   type="text"

@@ -5,7 +5,7 @@ import {
   Mail, GraduationCap, CheckCircle, FileText, Paperclip, BookOpen, 
   BarChart, AlertTriangle, ClipboardList, Unlock, Building, 
   UserPlus, Users, CheckSquare, School, TrendingUp, Library,
-  Palmtree, Shield 
+  Palmtree, Shield, BookCopy 
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { departmentCreationAPI, departmentAPI, logout, getMe, noticeAPI } from '../services/api';
@@ -302,6 +302,7 @@ function Dashboard() {
           <DashCard to="/hod/classes" icon={<School size="1em" />} label="Manage Batches" description="Create and progress batches" />
           <DashCard to="/hod/batch-progression" icon={<TrendingUp size="1em" />} label="Batch Progression" description="Request promotions and deactivation" />
           <DashCard to="/hod/courses" icon={<Library size="1em" />} label="Manage Courses" description="Department course catalog" />
+          <DashCard to="/hod/syllabuses" icon={<BookCopy size="1em" />} label="Manage Syllabuses" description="Create & assign syllabuses" />
           <DashCard to="/hod/internals" icon={<BarChart size="1em" />} label="Dept Internals" description="View all class internal marks" />
           <DashCard to="/advisor/attendance/overrides" icon={<Unlock size="1em" />} label="Override Requests" description="Faculty attendance overrides" />
           <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Department holidays" />
@@ -316,6 +317,7 @@ function Dashboard() {
           <DashCard to="/admin/users?role=faculty&pending=true" icon={<CheckSquare size="1em" />} label="Faculty Verification" description="Verify unverified faculties" />
           <DashCard to="/admin/departments" icon={<Building size="1em" />} label="Manage Departments" description="Add or edit departments" />
           <DashCard to="/admin/batch-lifecycle" icon={<CheckCircle size="1em" />} label="Batch Lifecycle Requests" description="Approve promotion/deactivation" />
+          <DashCard to="/admin/syllabus-approvals" icon={<BookCopy size="1em" />} label="Syllabus Approvals" description="Review syllabus assignments" />
           <DashCard to="/notices/post" icon={<Megaphone size="1em" />} label="Post Notice" description="Publish announcements" />
           <DashCard to="/holidays" icon={<Palmtree size="1em" />} label="Manage Holidays" description="Institution holidays" />
         </DashSection>

@@ -89,7 +89,7 @@ const getAvailableCourses = async (req, res) => {
 
     const { rows: clsRows } = await pool.query(
       `SELECT c.id, c.dept_id, c.year, c.semester_id, c.name AS class_name, c.section,
-              d.department_type, d.structure_count, c.current_semester_number
+              d.department_type, d.structure_count, c.current_semester_number, c.syllabus_id
        FROM classes c
        JOIN departments d ON d.id = c.dept_id
        WHERE c.id = $1
@@ -125,8 +125,8 @@ const getAvailableCourses = async (req, res) => {
       });
     }
 
-    const { rows } = await pool.query(
-      `SELECT
+    let courseQuery = `
+      SELECT
          dc.id AS department_course_id,
          dc.course_code AS code,
          dc.course_name,
@@ -144,9 +144,18 @@ const getAvailableCourses = async (req, res) => {
        LEFT JOIN users u1 ON u1.id = ca.faculty1_id
        LEFT JOIN users u2 ON u2.id = ca.faculty2_id
        WHERE dc.dept_id = $2 AND dc.period_number = $3
-       ORDER BY dc.course_code`,
-      [class_id, cls.dept_id, targetPeriod]
-    );
+    `;
+    const params = [class_id, cls.dept_id, targetPeriod];
+    
+    if (cls.syllabus_id) {
+      params.push(cls.syllabus_id);
+      courseQuery += ` AND dc.syllabus_id = $${params.length}`;
+    } else {
+      courseQuery += ` AND (dc.syllabus_id = (SELECT id FROM syllabuses WHERE dept_id = $2 AND name = 'Default Syllabus' LIMIT 1) OR dc.syllabus_id IS NULL)`;
+    }
+    courseQuery += ` ORDER BY dc.course_code`;
+
+    const { rows } = await pool.query(courseQuery, params);
 
     res.json({
       class: {

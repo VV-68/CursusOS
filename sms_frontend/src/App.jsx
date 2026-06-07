@@ -14,6 +14,7 @@ import AdminDepartmentBatches from './pages/admin/AdminDepartmentBatches';
 import AssignHOD from './pages/admin/AssignHOD';
 import CreateDepartment from './pages/admin/CreateDepartment';
 import BatchLifecycleApprovals from './pages/admin/BatchLifecycleApprovals';
+import SyllabusApprovals from './pages/admin/SyllabusApprovals';
 import InstitutionSettings from './pages/admin/InstitutionSettings';
 import EditDepartment from './pages/shared/EditDepartment';
 import Classes from './pages/hod/Classes';
@@ -21,6 +22,7 @@ import AssignAdvisors from './pages/hod/AssignAdvisors';
 import BatchStudents from './pages/hod/BatchStudents';
 import ClassTimetableView from './pages/hod/ClassTimetableView';
 import Courses from './pages/hod/Courses';
+import SyllabusManager from './pages/hod/SyllabusManager';
 
 import AssignCourse from './pages/hod/AssignCourse';
 import BatchProgression from './pages/hod/BatchProgression';
@@ -156,6 +158,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/admin/syllabus-approvals" element={
+            <ProtectedRoute roles={['admin']}>
+              <SyllabusApprovals />
+            </ProtectedRoute>
+          } />
+
           <Route path="/hod/department/edit" element={
             <ProtectedRoute roles={['hod']}>
               <EditDepartment />
@@ -203,6 +211,12 @@ function App() {
           <Route path="/hod/internals" element={
             <ProtectedRoute roles={['hod', 'admin']}>
               <DepartmentInternals />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hod/syllabuses" element={
+            <ProtectedRoute roles={['hod']}>
+              <SyllabusManager />
             </ProtectedRoute>
           } />
 

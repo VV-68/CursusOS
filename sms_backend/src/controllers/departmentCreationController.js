@@ -79,7 +79,8 @@ const createFullDepartment = async (req, res) => {
       structure_count: parseInt(structure_count),
       description: (description || '').trim(),
       periods,
-      institution_id: req.user.institution_id
+      institution_id: req.user.institution_id,
+      created_by: req.user.id
     });
 
     await logAudit(req.user.id, 'DEPARTMENT_FULL_CREATED', 'department', result.department.id, null, {
@@ -110,7 +111,7 @@ const createFullDepartment = async (req, res) => {
 const updateFullDepartment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, code, department_type, structure_count, description, periods } = req.body;
+    const { name, code, department_type, structure_count, description, periods, syllabus_id } = req.body;
 
     // ── Validation ──────────────────────────────────────────────
     const errors = [];
@@ -191,7 +192,8 @@ const updateFullDepartment = async (req, res) => {
         department_type,
         structure_count: parseInt(structure_count),
         description: description ? description.trim() : '',
-        periods
+        periods,
+        syllabus_id
       },
       req.user.role,
       req.user.dept_id
@@ -238,7 +240,8 @@ const updateFullDepartment = async (req, res) => {
  */
 const getFullDepartment = async (req, res) => {
   try {
-    const result = await deptCreationModel.getFullDepartment(req.params.id);
+    const { syllabus_id } = req.query;
+    const result = await deptCreationModel.getFullDepartment(req.params.id, syllabus_id);
     if (!result) return res.status(404).json({ error: 'Department not found' });
     res.json(result);
   } catch (err) {

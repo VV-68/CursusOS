@@ -357,4 +357,40 @@ const approveCourses = async (req, res) => {
   }
 };
 
-module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange, approveCourses };
+const rejectCourses = async (req, res) => {
+  try {
+    const { id: dept_id } = req.params;
+    
+    // Admin checking institution match
+    const deptRes = await pool.query("SELECT institution_id, hod_id FROM departments WHERE id = $1", [dept_id]);
+    if (deptRes.rows.length === 0) return res.status(404).json({ error: 'Department not found' });
+    
+    if (req.user.institution_id && deptRes.rows[0].institution_id !== req.user.institution_id) {
+      return res.status(403).json({ error: 'Department not in your institution' });
+    }
+
+    // Mark as rejected
+    const { rows } = await pool.query(
+      `UPDATE department_courses SET is_rejected = true WHERE dept_id = $1 AND is_approved = false RETURNING id`,
+      [dept_id]
+    );
+
+    await logAudit(req.user.id, 'COURSES_REJECTED', 'department', dept_id, null, { count: rows.length });
+    
+    if (deptRes.rows[0].hod_id) {
+      try {
+        const { notifyUser } = require('../services/notificationService');
+        await notifyUser(req.user.id, deptRes.rows[0].hod_id, `Your uploaded courses have been rejected by the admin.`);
+      } catch (e) {
+        console.error('Failed to notify HOD of courses rejection', e);
+      }
+    }
+
+    res.json({ message: `${rows.length} courses rejected successfully` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllDepartments, createDepartment, assignHOD, getClassesInDepartment, uploadMiddleware, uploadCourses, getDeptCourses, approveHODChange, rejectHODChange, approveCourses, rejectCourses };

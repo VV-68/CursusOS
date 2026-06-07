@@ -73,6 +73,7 @@ const institutionRoutes = require("./routes/institutionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const progressionRoutes = require("./routes/progressionRoutes");
 const holidaysRoutes = require("./routes/holidaysRoutes");
+const syllabusRoutes = require("./routes/syllabusRoutes");
 
 
 app.use("/api/users", userRoutes);
@@ -96,6 +97,7 @@ app.use("/api/institutions", institutionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/progression", progressionRoutes);
 app.use("/api/holidays", holidaysRoutes);
+app.use("/api/syllabuses", syllabusRoutes);
 
 
 // Global Error Handler

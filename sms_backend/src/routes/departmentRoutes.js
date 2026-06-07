@@ -38,6 +38,12 @@ router.patch('/:id/courses/approve',
   departmentController.approveCourses
 );
 
+// PATCH /api/departments/:id/courses/reject → admin
+router.patch('/:id/courses/reject',
+  authMiddleware, roleGuard('admin'),
+  departmentController.rejectCourses
+);
+
 // GET /api/departments/:id/courses
 router.get('/:id/courses',
   authMiddleware,

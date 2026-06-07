@@ -17,7 +17,7 @@ const createFullDepartment = async (departmentData) => {
   try {
     await client.query('BEGIN');
 
-    const { name, code, department_type, structure_count, description, periods } = departmentData;
+    const { name, code, department_type, structure_count, description, periods, created_by } = departmentData;
 
     // 1. Insert department
     const { rows: deptRows } = await client.query(
@@ -27,6 +27,15 @@ const createFullDepartment = async (departmentData) => {
       [name, code, department_type, structure_count, description || '', departmentData.institution_id]
     );
     const department = deptRows[0];
+
+    // 1.5 Insert default syllabus
+    const { rows: sylRows } = await client.query(
+      `INSERT INTO syllabuses (dept_id, name, description, is_active, created_by)
+       VALUES ($1, 'Default Syllabus', 'Auto-created during department setup', true, $2)
+       RETURNING *`,
+      [department.id, created_by]
+    );
+    const defaultSyllabus = sylRows[0];
 
     // 2. Insert all courses (skip empty ones)
     const insertedCourses = [];
@@ -38,8 +47,8 @@ const createFullDepartment = async (departmentData) => {
             if (!course.course_name || !course.course_name.trim() || !course.course_code || !course.course_code.trim()) continue;
 
             const { rows: courseRows } = await client.query(
-              `INSERT INTO department_courses (dept_id, period_number, course_name, course_code, credits, is_elective)
-               VALUES ($1, $2, $3, $4, $5, $6)
+              `INSERT INTO department_courses (dept_id, period_number, course_name, course_code, credits, is_elective, syllabus_id)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
                RETURNING *`,
               [
                 department.id,
@@ -47,7 +56,8 @@ const createFullDepartment = async (departmentData) => {
                 course.course_name.trim(),
                 course.course_code.trim().toUpperCase(),
                 course.credits || 0,
-                course.is_elective || false
+                course.is_elective || false,
+                defaultSyllabus.id
               ]
             );
             insertedCourses.push(courseRows[0]);
@@ -90,7 +100,7 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
       }
     }
 
-    const { name, code, department_type, structure_count, description, periods } = departmentData;
+    const { name, code, department_type, structure_count, description, periods, syllabus_id } = departmentData;
 
     // 1. Update department (only admin can change core details like code, type, structure_count?
     // Wait, requirement says HOD can "Reorganize semester/year structure". Let's allow updating structure_count for HOD too, or just let them update courses.
@@ -124,7 +134,21 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
     // Wait, the migration `migrate_department_creation.js` created `department_courses`. 
     // Are there other tables linking to `department_courses`?
     // Looking at the migration, `department_courses` doesn't have child tables. So deleting and re-inserting is fine.
-    await client.query('DELETE FROM department_courses WHERE dept_id = $1', [deptId]);
+    // Resolve target syllabus
+    let targetSyllabusId = syllabus_id;
+    if (!targetSyllabusId) {
+      const { rows: sylRows } = await client.query(
+        `SELECT id FROM syllabuses WHERE dept_id = $1 AND name = 'Default Syllabus' LIMIT 1`,
+        [deptId]
+      );
+      if (sylRows.length) targetSyllabusId = sylRows[0].id;
+    }
+
+    if (targetSyllabusId) {
+      await client.query('DELETE FROM department_courses WHERE dept_id = $1 AND syllabus_id = $2', [deptId, targetSyllabusId]);
+    } else {
+      await client.query('DELETE FROM department_courses WHERE dept_id = $1 AND syllabus_id IS NULL', [deptId]);
+    }
 
     const insertedCourses = [];
     if (periods && Array.isArray(periods)) {
@@ -135,8 +159,8 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
             if (!course.course_name || !course.course_name.trim() || !course.course_code || !course.course_code.trim()) continue;
 
             const { rows: courseRows } = await client.query(
-              `INSERT INTO department_courses (dept_id, period_number, course_name, course_code, credits, is_elective, is_approved)
-               VALUES ($1, $2, $3, $4, $5, $6, $7)
+              `INSERT INTO department_courses (dept_id, period_number, course_name, course_code, credits, is_elective, is_approved, syllabus_id)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                RETURNING *`,
               [
                 deptId,
@@ -145,7 +169,8 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
                 course.course_code.trim().toUpperCase(),
                 course.credits || 0,
                 course.is_elective || false,
-                role === 'admin'
+                role === 'admin',
+                targetSyllabusId || null
               ]
             );
             insertedCourses.push(courseRows[0]);
@@ -176,7 +201,7 @@ const updateFullDepartment = async (deptId, departmentData, role, hodDeptId) => 
 /**
  * Get full department details with courses grouped by period.
  */
-const getFullDepartment = async (deptId) => {
+const getFullDepartment = async (deptId, syllabusId = null) => {
   const { rows: deptRows } = await pool.query(
     `SELECT d.*, u.full_name AS hod_name, pu.full_name AS pending_hod_name
      FROM departments d
@@ -189,12 +214,20 @@ const getFullDepartment = async (deptId) => {
 
   const department = deptRows[0];
 
-  const { rows: courses } = await pool.query(
-    `SELECT * FROM department_courses
-     WHERE dept_id = $1
-     ORDER BY period_number ASC, course_name ASC`,
-    [deptId]
-  );
+  let courseQuery = `SELECT * FROM department_courses WHERE dept_id = $1`;
+  const params = [deptId];
+  
+  if (syllabusId) {
+    courseQuery += ` AND syllabus_id = $2`;
+    params.push(syllabusId);
+  } else {
+    // Fallback to Default Syllabus if none specified
+    courseQuery += ` AND (syllabus_id = (SELECT id FROM syllabuses WHERE dept_id = $1 AND name = 'Default Syllabus' LIMIT 1) OR syllabus_id IS NULL)`;
+  }
+  
+  courseQuery += ` ORDER BY period_number ASC, course_name ASC`;
+
+  const { rows: courses } = await pool.query(courseQuery, params);
 
   // Group courses by period
   const periodMap = {};
@@ -287,7 +320,7 @@ const getManageCourses = async (deptId, filters = {}) => {
 
   if (class_id) {
     const { rows: clsRows } = await pool.query(
-      `SELECT id, name, year, section FROM classes WHERE id = $1 AND dept_id = $2`,
+      `SELECT id, name, year, section, syllabus_id FROM classes WHERE id = $1 AND dept_id = $2`,
       [class_id, deptId]
     );
     if (!clsRows.length) throw new Error('CLASS_NOT_FOUND');
@@ -300,11 +333,19 @@ const getManageCourses = async (deptId, filters = {}) => {
   }
 
   let courseQuery = `
-    SELECT dc.id, dc.period_number, dc.course_name, dc.course_code, dc.credits, dc.is_elective, dc.is_approved
+    SELECT dc.id, dc.period_number, dc.course_name, dc.course_code, dc.credits, dc.is_elective, dc.is_approved, dc.syllabus_id
     FROM department_courses dc
     WHERE dc.dept_id = $1
   `;
   const params = [deptId];
+  
+  if (classMeta && classMeta.syllabus_id) {
+    params.push(classMeta.syllabus_id);
+    courseQuery += ` AND dc.syllabus_id = $${params.length}`;
+  } else {
+    courseQuery += ` AND (dc.syllabus_id = (SELECT id FROM syllabuses WHERE dept_id = $1 AND name = 'Default Syllabus' LIMIT 1) OR dc.syllabus_id IS NULL)`;
+  }
+
   if (periodNumbers && periodNumbers.length) {
     params.push(periodNumbers);
     courseQuery += ` AND dc.period_number = ANY($${params.length}::int[])`;
