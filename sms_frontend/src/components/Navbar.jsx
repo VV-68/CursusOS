@@ -82,8 +82,9 @@ function Navbar() {
 
             <button
               type="button"
+              className="btn btn-primary"
               onClick={handleLogout}
-              style={{ background: '#e74c3c', color: '#fff', border: 'none', padding: '0.35rem 0.9rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500' }}
+              style={{ padding: '0.35rem 0.9rem', borderRadius: '4px', fontSize: '0.85rem', fontWeight: '500' }}
             >
               Logout
             </button>
